@@ -1,0 +1,26 @@
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:mysql}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  cors:
+    allowed-origin: ${APP_FRONTEND_ORIGIN:http://localhost:5173}
+  jwt:
+    secret: ${APP_JWT_SECRET:1234567890123456789012345678901234567890123456789012345678901234}
+    access-expiration-minutes: ${APP_JWT_EXP_MIN:720}
+
+  tmap:
+    app-key: ${TMAP_APP_KEY:58gaUoZNnGcuRTIDz7hD5PxkVw8wd6nxyZYwhVc0}
