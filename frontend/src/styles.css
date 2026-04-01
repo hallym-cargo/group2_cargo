@@ -934,3 +934,5 @@ textarea { resize: vertical; }
     height: 360px;
   }
 }
+
+label { display:block; font-size:12px; color: var(--text-soft); font-weight:600; margin-bottom:6px; }

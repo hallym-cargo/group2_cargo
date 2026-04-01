@@ -23,19 +23,25 @@ public class ShipmentService {
     private final StatusHistoryRepository statusHistoryRepository;
     private final ShipmentBookmarkRepository shipmentBookmarkRepository;
     private final ShipmentRealtimePublisher realtimePublisher;
+    private final FinanceService financeService;
+    private final UserRepository userRepository;
 
     public ShipmentService(ShipmentRepository shipmentRepository,
                            OfferRepository offerRepository,
                            LocationLogRepository locationLogRepository,
                            StatusHistoryRepository statusHistoryRepository,
                            ShipmentBookmarkRepository shipmentBookmarkRepository,
-                           ShipmentRealtimePublisher realtimePublisher) {
+                           ShipmentRealtimePublisher realtimePublisher,
+                           FinanceService financeService,
+                           UserRepository userRepository) {
         this.shipmentRepository = shipmentRepository;
         this.offerRepository = offerRepository;
         this.locationLogRepository = locationLogRepository;
         this.statusHistoryRepository = statusHistoryRepository;
         this.shipmentBookmarkRepository = shipmentBookmarkRepository;
         this.realtimePublisher = realtimePublisher;
+        this.financeService = financeService;
+        this.userRepository = userRepository;
     }
 
     public ShipmentDtos.ShipmentResponse createShipment(User shipper, ShipmentDtos.CreateShipmentRequest request) {
@@ -215,6 +221,9 @@ public class ShipmentService {
         shipment.setStatus(ShipmentStatus.COMPLETED);
         shipment.setCompletedAt(LocalDateTime.now());
         shipmentRepository.save(shipment);
+        Offer acceptedOffer = shipment.getAcceptedOfferId() != null ? offerRepository.findById(shipment.getAcceptedOfferId()).orElse(null) : null;
+        User adminUser = userRepository.findAll().stream().filter(user -> user.getRole() == UserRole.ADMIN).findFirst().orElse(null);
+        financeService.settleCompletedShipment(shipment, acceptedOffer, adminUser);
         logStatus(shipment, before, ShipmentStatus.COMPLETED, driver.getEmail(), "운반 완료");
         ShipmentDtos.ShipmentResponse response = toResponse(shipment, driver);
         realtimePublisher.publishShipmentUpdated(response);

@@ -30,6 +30,14 @@ export const updateLocation = async (shipmentId, payload) => (await api.post(`/a
 export const completeTrip = async (shipmentId) => (await api.post(`/api/shipments/${shipmentId}/complete`)).data
 export const toggleBookmark = async (shipmentId) => (await api.post(`/api/shipments/${shipmentId}/bookmark`)).data
 
+
+export const fetchFinanceSummary = async () => (await api.get('/api/finance/summary')).data
+export const fetchFinanceTransactions = async () => (await api.get('/api/finance/transactions')).data
+
+export const fetchRatingsDashboard = async () => (await api.get('/api/ratings/dashboard')).data
+export const createRating = async (shipmentId, payload) => (await api.post(`/api/ratings/shipments/${shipmentId}`, payload)).data
+export const fetchAdminRecentRatings = async () => (await api.get('/api/ratings/admin/recent')).data
+
 export const fetchAdminDashboard = async () => (await api.get('/api/admin/dashboard')).data
 export const fetchAdminMembers = async () => (await api.get('/api/admin/members')).data
 export const updateMemberRole = async (memberId, role) => (await api.patch(`/api/admin/members/${memberId}/role`, { role })).data

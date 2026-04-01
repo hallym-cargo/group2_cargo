@@ -29,6 +29,11 @@ import {
   fetchShipment,
   fetchShipments,
   forceShipmentStatus,
+  fetchFinanceSummary,
+  fetchFinanceTransactions,
+  fetchRatingsDashboard,
+  createRating,
+  fetchAdminRecentRatings,
   login,
   resolveAdminDispute,
   signup,
@@ -56,6 +61,8 @@ const memberStatusText = (status) => ({ ACTIVE: '정상', PENDING: '대기', SUS
 const inquiryStatusText = (status) => ({ RECEIVED: '접수', ANSWERED: '답변완료', CLOSED: '종결' }[status] || status)
 const formatCurrency = (value) => value == null ? '-' : `${Number(value).toLocaleString('ko-KR')}원`
 const formatDate = (value) => value ? new Date(value).toLocaleString('ko-KR', { hour12: false }) : '-'
+const transactionTypeText = (type) => ({ SPEND: '지출', EARN: '수익', FEE: '수수료' }[type] || type)
+const renderStars = (score = 0) => '★'.repeat(score) + '☆'.repeat(Math.max(0, 5 - score))
 
 const roleThemeMeta = {
   SHIPPER: {
@@ -159,6 +166,11 @@ export default function App() {
   const [adminReports, setAdminReports] = useState([])
   const [adminDisputes, setAdminDisputes] = useState([])
   const [adminLogs, setAdminLogs] = useState([])
+  const [financeSummary, setFinanceSummary] = useState(null)
+  const [financeTransactions, setFinanceTransactions] = useState([])
+  const [ratingsDashboard, setRatingsDashboard] = useState(null)
+  const [adminRecentRatings, setAdminRecentRatings] = useState([])
+  const [ratingDrafts, setRatingDrafts] = useState({})
   const [noticeForm, setNoticeForm] = useState(emptyNotice)
   const [faqForm, setFaqForm] = useState(emptyFaq)
   const [editingNoticeId, setEditingNoticeId] = useState(null)
@@ -240,6 +252,10 @@ export default function App() {
     setAdminReports([])
     setAdminDisputes([])
     setAdminLogs([])
+    setFinanceSummary(null)
+    setFinanceTransactions([])
+    setRatingsDashboard(null)
+    setAdminRecentRatings([])
   }
 
   const loadPublic = async () => {
@@ -282,6 +298,52 @@ export default function App() {
     setAdminLogs(logs)
   }
 
+  const loadFinance = async () => {
+    if (!isLoggedIn) return
+    const [summaryData, transactionsData] = await Promise.all([
+      fetchFinanceSummary(),
+      fetchFinanceTransactions(),
+    ])
+    setFinanceSummary(summaryData)
+    setFinanceTransactions(transactionsData)
+  }
+
+  const loadRatings = async () => {
+    if (!isLoggedIn) return
+    if (isAdmin) {
+      setAdminRecentRatings(await fetchAdminRecentRatings())
+      return
+    }
+    setRatingsDashboard(await fetchRatingsDashboard())
+  }
+
+  const handleCreateRating = async (shipmentId, counterpartName) => {
+    try {
+      const draft = ratingDrafts[shipmentId] || { score: 5, comment: '' }
+      const score = Number(draft.score || 0)
+
+      if (score < 1 || score > 5) {
+        setMessage('평점은 1점부터 5점까지 선택해 주세요.')
+        return
+      }
+
+      await createRating(shipmentId, {
+        score,
+        comment: (draft.comment || '').trim(),
+      })
+
+      setMessage(`${counterpartName || '상대방'}에게 평점이 등록되었습니다.`)
+      setRatingDrafts((prev) => ({
+        ...prev,
+        [shipmentId]: { score: 5, comment: '' },
+      }))
+      await loadRatings()
+    } catch (err) {
+      console.error(err)
+      setMessage(err.response?.data?.message || '평가 등록 실패')
+    }
+  }
+
   useEffect(() => { loadPublic().catch(() => {}) }, [])
   useEffect(() => {
     const classes = ['theme-public', 'theme-shipper', 'theme-driver', 'theme-admin']
@@ -293,9 +355,13 @@ export default function App() {
     if (!isLoggedIn) return
     if (isAdmin) {
       loadAdmin().catch(err => setMessage(err.response?.data?.message || '관리자 데이터 로드 실패'))
+      loadFinance().catch(() => {})
+      loadRatings().catch(() => {})
     } else {
       loadShipments().catch(err => setMessage(err.response?.data?.message || '목록 로드 실패'))
       loadBookmarks().catch(() => {})
+      loadFinance().catch(() => {})
+      loadRatings().catch(() => {})
     }
   }, [isLoggedIn, isAdmin])
   useEffect(() => { if (selectedId && isLoggedIn && !isAdmin) loadDetail(selectedId).catch(err => setMessage(err.response?.data?.message || '상세 로드 실패')) }, [selectedId, isLoggedIn, isAdmin])
@@ -307,10 +373,12 @@ export default function App() {
       onConnect: () => {
         client.subscribe('/topic/shipments', () => {
           loadPublic().catch(() => {})
-          if (isAdmin) loadAdmin().catch(() => {})
+          if (isAdmin) { loadAdmin().catch(() => {}); loadFinance().catch(() => {}); loadRatings().catch(() => {}) }
           else if (isLoggedIn) {
             loadShipments().catch(() => {})
             loadBookmarks().catch(() => {})
+            loadFinance().catch(() => {})
+            loadRatings().catch(() => {})
             if (selectedId) loadDetail(selectedId).catch(() => {})
           }
         })
@@ -482,9 +550,9 @@ export default function App() {
       <div className="public-shell">
         <header className="public-header">
           <div className="identity-block">
-            <div className="identity-mark">LF</div>
+            <div className="identity-mark">HC</div>
             <div>
-              <div className="identity-title">LogixFlow</div>
+              <div className="identity-title">hallym-cargo</div>
               <div className="identity-subtitle">운송 운영 관리 플랫폼</div>
             </div>
           </div>
@@ -625,12 +693,12 @@ export default function App() {
 
   if (isAdmin) {
     const navItems = [
-      ['overview', '운영 개요'], ['members', '회원 관리'], ['shipments', '화물 관리'], ['notices', '공지 관리'], ['faqs', 'FAQ 관리'], ['inquiries', '문의 관리'], ['issues', '신고 / 분쟁'],
+      ['overview', '운영 개요'], ['members', '회원 관리'], ['shipments', '화물 관리'], ['finance', '수익 관리'], ['ratings', '평점 관리'], ['notices', '공지 관리'], ['faqs', 'FAQ 관리'], ['inquiries', '문의 관리'], ['issues', '신고 / 분쟁'],
     ]
     return (
       <div className="console-shell">
         <aside className="console-sidebar">
-          <div className="console-logo"><div className="identity-mark">LF</div><div><strong>LogixFlow</strong><small>Administrator Console</small></div></div>
+          <div className="console-logo"><div className="identity-mark">HC</div><div><strong>LogixFlow</strong><small>Administrator Console</small></div></div>
           <div className="sidebar-profile"><strong>{auth.name}</strong><span>{roleText(auth.role)}</span><small>{auth.email}</small></div>
           <nav className="sidebar-nav">
             {navItems.map(([key, label]) => <button key={key} className={dashboardTab === key ? 'nav-link active' : 'nav-link'} onClick={() => setDashboardTab(key)}>{label}</button>)}
@@ -707,6 +775,34 @@ export default function App() {
             </div>
           )}
 
+
+          {dashboardTab === 'finance' && (
+            <div className="page-stack">
+              <div className="kpi-grid">
+                <div className="kpi-card"><span>플랫폼 수익</span><strong>{formatCurrency(financeSummary?.totalPlatformRevenue)}</strong><p>수수료율 {financeSummary?.serviceFeeRate ?? 3}% 기준</p></div>
+                <div className="kpi-card"><span>총 거래 수</span><strong>{financeSummary?.transactionCount ?? 0}건</strong></div>
+                <div className="kpi-card"><span>완료 화물</span><strong>{financeSummary?.completedShipmentCount ?? 0}건</strong></div>
+                <div className="kpi-card"><span>총 정산 원금</span><strong>{formatCurrency(financeTransactions.filter(item => item.type === 'SPEND').reduce((sum, item) => sum + (item.grossAmount || 0), 0))}</strong></div>
+              </div>
+              <div className="surface"><SectionTitle title="플랫폼 수익 거래 내역" desc="화주 지출, 차주 정산, 관리자 수수료 수익이 같은 화물 단위로 묶여 기록됩니다." /><table className="board-table compact"><thead><tr><th>유형</th><th>화물</th><th>거래액</th><th>수수료</th><th>실수익</th><th>일시</th></tr></thead><tbody>{financeTransactions.map(item => <tr key={item.id}><td>{transactionTypeText(item.type)}</td><td>{item.shipmentTitle || '-'}<small>#{item.shipmentId || '-'}</small></td><td>{formatCurrency(item.grossAmount)}</td><td>{formatCurrency(item.feeAmount)}</td><td>{formatCurrency(item.netAmount)}</td><td>{formatDate(item.createdAt)}</td></tr>)}</tbody></table></div>
+            </div>
+          )}
+
+          {dashboardTab === 'ratings' && (
+            <div className="page-stack">
+              <div className="kpi-grid">
+                <div className="kpi-card"><span>최근 평점 수</span><strong>{adminRecentRatings.length}건</strong><p>최근 20개 평가를 확인합니다.</p></div>
+                <div className="kpi-card"><span>평균 점수</span><strong>{adminRecentRatings.length ? (adminRecentRatings.reduce((sum, item) => sum + item.score, 0) / adminRecentRatings.length).toFixed(2) : '0.00'}</strong><p>전체 최근 등록 기준</p></div>
+                <div className="kpi-card"><span>5점 비율</span><strong>{adminRecentRatings.length ? Math.round((adminRecentRatings.filter(item => item.score === 5).length / adminRecentRatings.length) * 100) : 0}%</strong></div>
+                <div className="kpi-card"><span>운영 체크</span><strong>{adminRecentRatings.some(item => item.score <= 2) ? '주의 필요' : '양호'}</strong></div>
+              </div>
+              <div className="surface">
+                <SectionTitle title="최근 등록 평점" desc="화주와 차주가 서로에게 남긴 최신 평가입니다." />
+                <table className="board-table compact"><thead><tr><th>화물</th><th>평가자</th><th>대상</th><th>점수</th><th>코멘트</th><th>일시</th></tr></thead><tbody>{adminRecentRatings.map(item => <tr key={item.id}><td>{item.shipmentTitle}<small>#{item.shipmentId}</small></td><td>{item.fromUserName}</td><td>{item.toUserName}</td><td>{renderStars(item.score)} ({item.score})</td><td>{item.comment || '-'}</td><td>{formatDate(item.createdAt)}</td></tr>)}</tbody></table>
+              </div>
+            </div>
+          )}
+
           {dashboardTab === 'notices' && (
             <div className="page-stack">
               <div className="surface form-surface">
@@ -745,11 +841,11 @@ export default function App() {
     )
   }
 
-  const navItems = [['overview', '운영 개요'], ['board', '배차 보드'], ['register', auth.role === 'SHIPPER' ? '화물 등록' : '입찰 가이드'], ['bookmarks', '즐겨찾기']]
+  const navItems = [['overview', '운영 개요'], ['board', '배차 보드'], ['register', auth.role === 'SHIPPER' ? '화물 등록' : '입찰 가이드'], ['finance', '돈 관리'], ['ratings', '평점 관리'], ['bookmarks', '즐겨찾기']]
   return (
     <div className="console-shell user-console">
       <aside className="console-sidebar">
-        <div className="console-logo"><div className="identity-mark">LF</div><div><strong>LogixFlow</strong><small>Operations Dashboard</small></div></div>
+        <div className="console-logo"><div className="identity-mark">HC</div><div><strong>LogixFlow</strong><small>Operations Dashboard</small></div></div>
         <div className="sidebar-profile"><strong>{auth.name}</strong><span>{roleText(auth.role)}</span><small>{auth.email}</small></div>
         <nav className="sidebar-nav">{navItems.map(([key, label]) => <button key={key} className={dashboardTab === key ? 'nav-link active' : 'nav-link'} onClick={() => setDashboardTab(key)}>{label}</button>)}</nav>
         <div className="side-mini-kpis"><div><span>전체</span><strong>{summary.total}</strong></div><div><span>입찰중</span><strong>{summary.bidding}</strong></div><div><span>운행중</span><strong>{summary.live}</strong></div><div><span>완료</span><strong>{summary.completed}</strong></div></div>
@@ -759,7 +855,7 @@ export default function App() {
         <div className="console-topbar">
           <div>
             <div className="eyebrow">USER OPERATIONS</div>
-            <h1>{dashboardTab === 'overview' ? '운영 현황' : dashboardTab === 'board' ? '배차 보드' : dashboardTab === 'register' ? (auth.role === 'SHIPPER' ? '화물 등록' : '입찰 가이드') : '즐겨찾기'}</h1>
+            <h1>{dashboardTab === 'overview' ? '운영 현황' : dashboardTab === 'board' ? '배차 보드' : dashboardTab === 'register' ? (auth.role === 'SHIPPER' ? '화물 등록' : '입찰 가이드') : dashboardTab === 'finance' ? '돈 관리' : dashboardTab === 'ratings' ? '평점 관리' : '즐겨찾기'}</h1>
             <p className="section-desc">{roleTheme?.tone}을 적용해 {auth.role === 'SHIPPER' ? '요청과 확정' : '주행과 ETA'}를 더 빠르게 읽을 수 있도록 조정했습니다.</p>
           </div>
           <div className="toolbar-inline"><span className={`role-chip role-chip-${roleTheme?.accent || 'shipper'}`}>{roleTheme?.label}</span><input className="toolbar-search" placeholder="제목, 지역, 화물 종류 검색" value={shipmentKeyword} onChange={(e) => setShipmentKeyword(e.target.value)} />{auth.role === 'DRIVER' && <div className="chip-group"><button className={driverBoardTag === 'ALL' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('ALL')}>전체</button><button className={driverBoardTag === 'BIDDING' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('BIDDING')}>입찰중</button><button className={driverBoardTag === 'MY_BIDS' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('MY_BIDS')}>내 입찰</button><button className={driverBoardTag === 'MY_ASSIGNED' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('MY_ASSIGNED')}>내 확정</button><button className={driverBoardTag === 'MY_TRANSIT' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('MY_TRANSIT')}>내 운반중</button></div>}<select value={shipmentFilter} onChange={(e) => setShipmentFilter(e.target.value)}><option value="ALL">전체 상태</option><option value="BIDDING">입찰중</option><option value="CONFIRMED">확정</option><option value="IN_TRANSIT">운반중</option><option value="COMPLETED">완료</option></select></div>
@@ -804,11 +900,38 @@ export default function App() {
                 {selected ? (<>
                   <SectionTitle title="역할별 액션" desc={`${roleText(auth.role)} 기준으로 표시됩니다.`} />
                   <div className="surface-sub role-side-guide"><strong>{roleTheme?.label}</strong><p className="section-desc">{auth.role === 'SHIPPER' ? '화주는 입찰 비교와 차주 확정, 운행 확인이 핵심입니다.' : '차주는 입찰 등록, 운반 시작, ETA 기준 완료 전환이 핵심입니다.'}</p></div>
-                  {auth.role === 'DRIVER' && selected.status === 'BIDDING' && !selected.hasMyOffer && <div className="form-stack"><input placeholder="제안 금액" value={offerForm.price} onChange={(e) => setOfferForm({ ...offerForm, price: e.target.value })} /><textarea rows="4" placeholder="제안 메시지" value={offerForm.message} onChange={(e) => setOfferForm({ ...offerForm, message: e.target.value })} /><button className="btn btn-primary" onClick={handleCreateOffer}>입찰 제안</button></div>}{auth.role === 'DRIVER' && selected.status === 'BIDDING' && selected.hasMyOffer && <div className="surface-sub"><strong>이미 이 배차에 입찰했습니다.</strong><p className="section-desc">내 입찰 태그가 붙은 배차는 화주 선택 결과를 기다리면 됩니다.</p></div>}
+                  {auth.role === 'DRIVER' && selected.status === 'BIDDING' && !selected.hasMyOffer && <div className="form-stack"><div className="surface-sub"><strong>정산 안내</strong><p className="section-desc">차주는 확정 금액에서 3% 수수료를 제외한 나머지 금액을 받습니다. 예를 들어 100,000원 제안이 확정되면 97,000원이 정산됩니다.</p></div><input placeholder="제안 금액" value={offerForm.price} onChange={(e) => setOfferForm({ ...offerForm, price: e.target.value })} /><textarea rows="4" placeholder="제안 메시지" value={offerForm.message} onChange={(e) => setOfferForm({ ...offerForm, message: e.target.value })} /><button className="btn btn-primary" onClick={handleCreateOffer}>입찰 제안</button></div>}{auth.role === 'DRIVER' && selected.status === 'BIDDING' && selected.hasMyOffer && <div className="surface-sub"><strong>이미 이 배차에 입찰했습니다.</strong><p className="section-desc">내 입찰 태그가 붙은 배차는 화주 선택 결과를 기다리면 됩니다.</p></div>}
                   {auth.role === 'SHIPPER' && <div className="list-stack">{(selected.offers || []).length ? selected.offers.map(offer => <div key={offer.id} className="offer-card"><div className="detail-head"><strong>{offer.driverName}</strong><span className="badge badge-neutral">{offer.status}</span></div><p>{formatCurrency(offer.price)}</p><small>{offer.message || '메시지 없음'}</small>{selected.status === 'BIDDING' && offer.status === 'PENDING' && <button className="btn btn-primary small" onClick={() => handleAcceptOffer(offer.id)}>이 차주 확정</button>}</div>) : <div className="empty-box small">등록된 제안이 없습니다.</div>}</div>}
                   {auth.role === 'DRIVER' && selected.assignedDriverName === auth.name && <div className="form-stack">{selected.status === 'CONFIRMED' && <button className="btn btn-primary" onClick={handleStart}>운반 시작</button>}{selected.status === 'IN_TRANSIT' && <><div className="surface-sub"><strong>자동 이동 시뮬레이션</strong><p className="section-desc">운반 시작 시 예상 시간에 맞춰 트럭이 출발지에서 도착지까지 자동으로 이동합니다. 위치 입력 없이 지도에서 진행률과 남은 시간을 바로 확인할 수 있습니다.</p></div><button className="btn btn-primary" onClick={handleComplete} disabled={!selected.tracking?.completable}>운송 완료</button>{!selected.tracking?.completable && <small>예상 도착 시간이 지나야 완료 가능합니다.</small>}</>}</div>}
                 </>) : <div className="empty-box">상세를 선택하면 액션이 표시됩니다.</div>}
               </div>
+            </div>
+          </div>
+        )}
+
+
+        {dashboardTab === 'finance' && financeSummary && (
+          <div className="page-stack">
+            <div className="kpi-grid">
+              {auth.role === 'SHIPPER' ? (
+                <>
+                  <div className="kpi-card"><span>총 사용 금액</span><strong>{formatCurrency(financeSummary.totalSpent)}</strong><p>완료 정산 기준 누적</p></div>
+                  <div className="kpi-card"><span>지불 수수료</span><strong>{formatCurrency(0)}</strong><p>수수료는 차주 정산 금액에서만 차감됩니다.</p></div>
+                  <div className="kpi-card"><span>완료 배차</span><strong>{financeSummary.completedShipmentCount}건</strong></div>
+                  <div className="kpi-card"><span>거래 건수</span><strong>{financeSummary.transactionCount}건</strong></div>
+                </>
+              ) : (
+                <>
+                  <div className="kpi-card"><span>총 수익 원금</span><strong>{formatCurrency(financeSummary.totalGrossEarned)}</strong><p>수수료 차감 전</p></div>
+                  <div className="kpi-card"><span>실수익</span><strong>{formatCurrency(financeSummary.totalNetEarned)}</strong><p>{financeSummary.serviceFeeRate}% 수수료 차감 후</p></div>
+                  <div className="kpi-card"><span>차감 수수료</span><strong>{formatCurrency(financeSummary.totalFeePaid)}</strong></div>
+                  <div className="kpi-card"><span>완료 운행</span><strong>{financeSummary.completedShipmentCount}건</strong></div>
+                </>
+              )}
+            </div>
+            <div className="surface">
+              <SectionTitle title={auth.role === 'SHIPPER' ? '지출 내역' : '정산 내역'} desc={auth.role === 'SHIPPER' ? '화주는 확정된 운임 총액만 결제하며, 플랫폼 수수료는 차주 정산 금액에서만 차감됩니다.' : '차주는 거래 원금, 수수료, 실제 정산 금액을 한 번에 확인합니다.'} />
+              <table className="board-table compact"><thead><tr><th>유형</th><th>화물</th><th>거래액</th><th>수수료</th><th>최종 반영액</th><th>일시</th></tr></thead><tbody>{financeTransactions.map(item => <tr key={item.id}><td>{transactionTypeText(item.type)}</td><td>{item.shipmentTitle || '-'}<small>#{item.shipmentId || '-'}</small></td><td>{formatCurrency(item.grossAmount)}</td><td>{formatCurrency(item.feeAmount)}</td><td>{formatCurrency(item.netAmount)}</td><td>{formatDate(item.createdAt)}</td></tr>)}</tbody></table>
             </div>
           </div>
         )}
@@ -819,6 +942,58 @@ export default function App() {
 
         {dashboardTab === 'register' && auth.role !== 'SHIPPER' && (
           <div className="surface"><SectionTitle title="입찰 운영 가이드" desc="차주 기준 업무 흐름을 요약했습니다." /><div className="list-stack"><div className="list-row block"><strong>1. 입찰중 배차 선택</strong><span>구간, 화물 종류, 예상 시간 확인 후 제안을 등록합니다.</span></div><div className="list-row block"><strong>2. 화주 확정 이후 운반 시작</strong><span>확정된 건만 운반 시작 버튼이 열립니다.</span></div><div className="list-row block"><strong>3. 자동 주행 트래킹</strong><span>운반 시작과 동시에 귀여운 트럭 아이콘이 예상 시간에 맞춰 출발지에서 도착지까지 자동 이동합니다.</span></div></div></div>
+        )}
+
+        {dashboardTab === 'ratings' && ratingsDashboard && (
+          <div className="page-stack">
+            <div className="kpi-grid">
+              <div className="kpi-card"><span>내 평균 평점</span><strong>{Number(ratingsDashboard.receivedSummary?.averageScore || 0).toFixed(2)}</strong><p>상대방이 남긴 평가 기준</p></div>
+              <div className="kpi-card"><span>누적 평가 수</span><strong>{ratingsDashboard.receivedSummary?.totalCount || 0}건</strong></div>
+              <div className="kpi-card"><span>평가 대기</span><strong>{ratingsDashboard.pendingRatings?.length || 0}건</strong><p>완료 화물 중 아직 작성하지 않은 평가</p></div>
+              <div className="kpi-card"><span>내가 작성한 평가</span><strong>{ratingsDashboard.givenRatings?.length || 0}건</strong></div>
+            </div>
+            <div className="console-grid two">
+              <div className="surface">
+                <SectionTitle title="평가 대기 화물" desc="완료된 거래에 대해 상대방을 평가할 수 있습니다." />
+                <div className="list-stack">
+                  {(ratingsDashboard.pendingRatings || []).length ? ratingsDashboard.pendingRatings.map(item => {
+                    const draft = ratingDrafts[item.shipmentId] || { score: 5, comment: '' }
+                    return <div key={item.shipmentId} className="offer-card">
+                      <div className="detail-head"><div><strong>{item.shipmentTitle}</strong><small>{item.counterpartName} · {roleText(item.counterpartRole)}</small></div><span className="badge badge-neutral">{formatDate(item.completedAt)}</span></div>
+                      <div className="split-2">
+                        <div>
+                          <label>점수</label>
+                          <select value={draft.score} onChange={(e) => setRatingDrafts({ ...ratingDrafts, [item.shipmentId]: { ...draft, score: e.target.value } })}>
+                            {[5,4,3,2,1].map(score => <option key={score} value={score}>{score}점</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label>미리보기</label>
+                          <div className="surface-sub"><strong>{renderStars(Number(draft.score || 0))}</strong></div>
+                        </div>
+                      </div>
+                      <textarea rows="3" placeholder="거래 경험을 남겨주세요" value={draft.comment} onChange={(e) => setRatingDrafts({ ...ratingDrafts, [item.shipmentId]: { ...draft, comment: e.target.value } })} />
+                      <button className="btn btn-primary" onClick={() => handleCreateRating(item.shipmentId, item.counterpartName)}>평가 등록</button>
+                    </div>
+                  }) : <div className="empty-box small">평가 대기 중인 완료 화물이 없습니다.</div>}
+                </div>
+              </div>
+              <div className="content-stack">
+                <div className="surface">
+                  <SectionTitle title="최근 받은 평점" desc="상대방이 남긴 최신 평가를 확인합니다." />
+                  <div className="list-stack">
+                    {(ratingsDashboard.receivedSummary?.recentRatings || []).length ? ratingsDashboard.receivedSummary.recentRatings.map(item => <div key={item.id} className="list-row block"><strong>{renderStars(item.score)} · {item.fromUserName}</strong><small>{item.shipmentTitle} · {formatDate(item.createdAt)}</small><div>{item.comment || '코멘트 없음'}</div></div>) : <div className="empty-box small">아직 받은 평점이 없습니다.</div>}
+                  </div>
+                </div>
+                <div className="surface">
+                  <SectionTitle title="내가 남긴 평가" desc="최근 작성한 평가 기록입니다." />
+                  <div className="list-stack">
+                    {(ratingsDashboard.givenRatings || []).length ? ratingsDashboard.givenRatings.slice(0, 8).map(item => <div key={item.id} className="list-row block"><strong>{renderStars(item.score)} · {item.toUserName}</strong><small>{item.shipmentTitle} · {formatDate(item.createdAt)}</small><div>{item.comment || '코멘트 없음'}</div></div>) : <div className="empty-box small">아직 등록한 평가가 없습니다.</div>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {dashboardTab === 'bookmarks' && (
