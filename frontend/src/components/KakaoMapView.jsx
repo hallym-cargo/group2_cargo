@@ -148,13 +148,10 @@ function buildTruckContent(progress, remainingMinutes) {
 export default function KakaoMapView({ shipment }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
-  const markerRefs = useRef([])
   const truckOverlayRef = useRef(null)
   const polylineRef = useRef(null)
   const tickRef = useRef(null)
   const pauseUntilRef = useRef(0)
-  const resumeRef = useRef(null)
-  const userInteractingRef = useRef(false)
   const boundsAppliedRef = useRef(false)
 
   const [error, setError] = useState('')
@@ -238,8 +235,8 @@ export default function KakaoMapView({ shipment }) {
         truckOverlayRef.current = null
       }
 
-      // ❗ 처음 1번만 생성
-      if (!truckOverlayRef.current) {
+      // ❗ 운반중일 때만 생성
+      if (shipment.status === 'IN_TRANSIT' && !truckOverlayRef.current) {
         const latlng = new kakao.maps.LatLng(points.current.lat, points.current.lng)
 
         truckOverlayRef.current = new kakao.maps.CustomOverlay({
@@ -251,6 +248,12 @@ export default function KakaoMapView({ shipment }) {
         })
 
         truckOverlayRef.current.setMap(map)
+      }
+
+      // ❗ 운반중 아닐 때 제거
+      if (shipment.status !== 'IN_TRANSIT' && truckOverlayRef.current) {
+        truckOverlayRef.current.setMap(null)
+        truckOverlayRef.current = null
       }
 
     })
