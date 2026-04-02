@@ -24,6 +24,14 @@ public class ShipmentDtos {
         @NotBlank private String destinationAddress;
         @NotNull private Double destinationLat;
         @NotNull private Double destinationLng;
+        private List<String> cargoImageDataUrls;
+        private List<String> cargoImageNames;
+    }
+
+    @Data
+    public static class CompleteShipmentRequest {
+        @NotBlank private String completionImageDataUrl;
+        private String completionImageName;
     }
 
     @Data
@@ -57,7 +65,21 @@ public class ShipmentDtos {
         private Double estimatedDistanceKm;
         private ShipmentStatus status;
         private String shipperName;
+        private Long shipperId;
+        private Double shipperAverageRating;
+        private Long shipperRatingCount;
+        private String shipperBio;
+        private String shipperProfileImageUrl;
+        private String shipperContactEmail;
+        private String shipperContactPhone;
         private String assignedDriverName;
+        private Long assignedDriverId;
+        private Double assignedDriverAverageRating;
+        private Long assignedDriverRatingCount;
+        private String assignedDriverBio;
+        private String assignedDriverProfileImageUrl;
+        private String assignedDriverContactEmail;
+        private String assignedDriverContactPhone;
         private Long acceptedOfferId;
         private boolean bookmarked;
         private boolean hasMyOffer;
@@ -73,6 +95,8 @@ public class ShipmentDtos {
         private List<OfferResponse> offers;
         private TrackingResponse tracking;
         private List<StatusHistoryResponse> histories;
+        private List<String> cargoImageUrls;
+        private String completionImageUrl;
     }
 
     @Data
@@ -80,6 +104,13 @@ public class ShipmentDtos {
     public static class OfferResponse {
         private Long id;
         private String driverName;
+        private Long driverId;
+        private Double driverAverageRating;
+        private Long driverRatingCount;
+        private String driverBio;
+        private String driverProfileImageUrl;
+        private String driverContactEmail;
+        private String driverContactPhone;
         private Integer price;
         private String message;
         private OfferStatus status;

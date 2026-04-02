@@ -75,8 +75,10 @@ public class ShipmentController {
 
     @PostMapping("/{shipmentId}/complete")
     @PreAuthorize("hasRole('DRIVER')")
-    public ShipmentDtos.ShipmentResponse complete(@PathVariable Long shipmentId, Authentication authentication) {
-        return shipmentService.completeTrip(shipmentId, currentUser(authentication));
+    public ShipmentDtos.ShipmentResponse complete(@PathVariable Long shipmentId,
+                                                  @Valid @RequestBody ShipmentDtos.CompleteShipmentRequest request,
+                                                  Authentication authentication) {
+        return shipmentService.completeTrip(shipmentId, currentUser(authentication), request);
     }
 
     @PostMapping("/{shipmentId}/bookmark")

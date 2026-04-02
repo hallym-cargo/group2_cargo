@@ -299,6 +299,13 @@ export default function KakaoMapView({ shipment }) {
         pauseUntilRef.current = Date.now() + INTERACTION_PAUSE_MS;
       });
 
+      kakao.maps.event.addListener(map, "dragstart", () => {
+        pauseUntilRef.current = Date.now() + INTERACTION_PAUSE_MS;
+      });
+      kakao.maps.event.addListener(map, "zoom_start", () => {
+        pauseUntilRef.current = Date.now() + INTERACTION_PAUSE_MS;
+      });
+
       if (truckOverlayRef.current) {
         truckOverlayRef.current.setMap(null);
         truckOverlayRef.current = null;

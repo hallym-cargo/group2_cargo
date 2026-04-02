@@ -22,26 +22,32 @@ public class ShipmentService {
     private final LocationLogRepository locationLogRepository;
     private final StatusHistoryRepository statusHistoryRepository;
     private final ShipmentBookmarkRepository shipmentBookmarkRepository;
+    private final ShipmentImageRepository shipmentImageRepository;
     private final ShipmentRealtimePublisher realtimePublisher;
     private final FinanceService financeService;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     public ShipmentService(ShipmentRepository shipmentRepository,
                            OfferRepository offerRepository,
                            LocationLogRepository locationLogRepository,
                            StatusHistoryRepository statusHistoryRepository,
                            ShipmentBookmarkRepository shipmentBookmarkRepository,
+                           ShipmentImageRepository shipmentImageRepository,
                            ShipmentRealtimePublisher realtimePublisher,
                            FinanceService financeService,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           UserService userService) {
         this.shipmentRepository = shipmentRepository;
         this.offerRepository = offerRepository;
         this.locationLogRepository = locationLogRepository;
         this.statusHistoryRepository = statusHistoryRepository;
         this.shipmentBookmarkRepository = shipmentBookmarkRepository;
+        this.shipmentImageRepository = shipmentImageRepository;
         this.realtimePublisher = realtimePublisher;
         this.financeService = financeService;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     public ShipmentDtos.ShipmentResponse createShipment(User shipper, ShipmentDtos.CreateShipmentRequest request) {
@@ -65,6 +71,7 @@ public class ShipmentService {
                 .status(ShipmentStatus.BIDDING)
                 .build();
         shipmentRepository.save(shipment);
+        saveCargoImages(shipment, request.getCargoImageDataUrls(), request.getCargoImageNames());
         logStatus(shipment, ShipmentStatus.REQUESTED, ShipmentStatus.BIDDING, shipper.getEmail(), "화물 등록");
         ShipmentDtos.ShipmentResponse response = toResponse(shipment, shipper);
         realtimePublisher.publishShipmentUpdated(response);
@@ -208,7 +215,7 @@ public class ShipmentService {
         return trackingResponse;
     }
 
-    public ShipmentDtos.ShipmentResponse completeTrip(Long shipmentId, User driver) {
+    public ShipmentDtos.ShipmentResponse completeTrip(Long shipmentId, User driver, ShipmentDtos.CompleteShipmentRequest request) {
         Shipment shipment = getById(shipmentId);
         if (shipment.getAssignedDriver() == null || !shipment.getAssignedDriver().getId().equals(driver.getId())) {
             throw new RuntimeException("배정된 차주만 완료할 수 있습니다.");
@@ -217,10 +224,19 @@ public class ShipmentService {
         if (!isCompletable(shipment, remainingMinutes)) {
             throw new RuntimeException("예상 도착 시간 이전에는 완료할 수 없습니다.");
         }
+        if (request == null || request.getCompletionImageDataUrl() == null || request.getCompletionImageDataUrl().isBlank()) {
+            throw new RuntimeException("배송 완료 사진을 등록해야 완료 처리할 수 있습니다.");
+        }
         ShipmentStatus before = shipment.getStatus();
         shipment.setStatus(ShipmentStatus.COMPLETED);
         shipment.setCompletedAt(LocalDateTime.now());
         shipmentRepository.save(shipment);
+        shipmentImageRepository.save(ShipmentImage.builder()
+                .shipment(shipment)
+                .type(ShipmentImageType.COMPLETION)
+                .originalName(request.getCompletionImageName())
+                .dataUrl(request.getCompletionImageDataUrl())
+                .build());
         Offer acceptedOffer = shipment.getAcceptedOfferId() != null ? offerRepository.findById(shipment.getAcceptedOfferId()).orElse(null) : null;
         User adminUser = userRepository.findAll().stream().filter(user -> user.getRole() == UserRole.ADMIN).findFirst().orElse(null);
         financeService.settleCompletedShipment(shipment, acceptedOffer, adminUser);
@@ -243,6 +259,22 @@ public class ShipmentService {
             bookmarked = true;
         }
         return ShipmentDtos.ToggleBookmarkResponse.builder().bookmarked(bookmarked).build();
+    }
+
+
+    private void saveCargoImages(Shipment shipment, List<String> dataUrls, List<String> names) {
+        if (dataUrls == null || dataUrls.isEmpty()) return;
+        for (int i = 0; i < dataUrls.size(); i++) {
+            String dataUrl = dataUrls.get(i);
+            if (dataUrl == null || dataUrl.isBlank()) continue;
+            String name = names != null && i < names.size() ? names.get(i) : null;
+            shipmentImageRepository.save(ShipmentImage.builder()
+                    .shipment(shipment)
+                    .type(ShipmentImageType.CARGO)
+                    .originalName(name)
+                    .dataUrl(dataUrl)
+                    .build());
+        }
     }
 
     private boolean isCompletable(Shipment shipment, Integer remainingMinutes) {
@@ -277,6 +309,8 @@ public class ShipmentService {
             canAccessDetail = shipment.getStatus() == ShipmentStatus.BIDDING || hasMyOffer || assignedToMe;
         }
         ShipmentDtos.TrackingResponse trackingResponse = resolveTracking(shipment, latestLocation);
+        var shipperProfile = userService.toPublicProfile(shipment.getShipper());
+        var assignedDriverProfile = shipment.getAssignedDriver() != null ? userService.toPublicProfile(shipment.getAssignedDriver()) : null;
 
         return ShipmentDtos.ShipmentResponse.builder()
                 .id(shipment.getId())
@@ -294,7 +328,21 @@ public class ShipmentService {
                 .estimatedDistanceKm(shipment.getEstimatedDistanceKm())
                 .status(shipment.getStatus())
                 .shipperName(shipment.getShipper().getName())
+                .shipperId(shipment.getShipper().getId())
+                .shipperAverageRating(shipperProfile.getAverageRating())
+                .shipperRatingCount(shipperProfile.getRatingCount())
+                .shipperBio(shipperProfile.getBio())
+                .shipperProfileImageUrl(shipperProfile.getProfileImageUrl())
+                .shipperContactEmail(shipperProfile.getContactEmail())
+                .shipperContactPhone(shipperProfile.getContactPhone())
                 .assignedDriverName(shipment.getAssignedDriver() != null ? shipment.getAssignedDriver().getName() : null)
+                .assignedDriverId(shipment.getAssignedDriver() != null ? shipment.getAssignedDriver().getId() : null)
+                .assignedDriverAverageRating(assignedDriverProfile != null ? assignedDriverProfile.getAverageRating() : null)
+                .assignedDriverRatingCount(assignedDriverProfile != null ? assignedDriverProfile.getRatingCount() : null)
+                .assignedDriverBio(assignedDriverProfile != null ? assignedDriverProfile.getBio() : null)
+                .assignedDriverProfileImageUrl(assignedDriverProfile != null ? assignedDriverProfile.getProfileImageUrl() : null)
+                .assignedDriverContactEmail(assignedDriverProfile != null ? assignedDriverProfile.getContactEmail() : null)
+                .assignedDriverContactPhone(assignedDriverProfile != null ? assignedDriverProfile.getContactPhone() : null)
                 .acceptedOfferId(shipment.getAcceptedOfferId())
                 .bookmarked(bookmarked)
                 .hasMyOffer(hasMyOffer)
@@ -317,6 +365,10 @@ public class ShipmentService {
                         .note(history.getNote())
                         .createdAt(history.getCreatedAt())
                         .build()).toList())
+                .cargoImageUrls(shipmentImageRepository.findByShipmentAndTypeOrderByCreatedAtAsc(shipment, ShipmentImageType.CARGO)
+                        .stream().map(ShipmentImage::getDataUrl).toList())
+                .completionImageUrl(shipmentImageRepository.findTopByShipmentAndTypeOrderByCreatedAtDesc(shipment, ShipmentImageType.COMPLETION)
+                        .map(ShipmentImage::getDataUrl).orElse(null))
                 .build();
     }
 
@@ -377,6 +429,13 @@ public class ShipmentService {
         return ShipmentDtos.OfferResponse.builder()
                 .id(offer.getId())
                 .driverName(offer.getDriver().getName())
+                .driverId(offer.getDriver().getId())
+                .driverAverageRating(userService.toPublicProfile(offer.getDriver()).getAverageRating())
+                .driverRatingCount(userService.toPublicProfile(offer.getDriver()).getRatingCount())
+                .driverBio(userService.toPublicProfile(offer.getDriver()).getBio())
+                .driverProfileImageUrl(userService.toPublicProfile(offer.getDriver()).getProfileImageUrl())
+                .driverContactEmail(userService.toPublicProfile(offer.getDriver()).getContactEmail())
+                .driverContactPhone(userService.toPublicProfile(offer.getDriver()).getContactPhone())
                 .price(offer.getPrice())
                 .message(offer.getMessage())
                 .status(offer.getStatus())
