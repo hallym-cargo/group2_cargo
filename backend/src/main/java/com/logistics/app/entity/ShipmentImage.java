@@ -18,6 +18,7 @@ public class ShipmentImage {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shipment_id", nullable = false)
     private Shipment shipment;
 
     @Enumerated(EnumType.STRING)
@@ -26,7 +27,7 @@ public class ShipmentImage {
     private String originalName;
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT")
     private String dataUrl;
 
     private LocalDateTime createdAt;
