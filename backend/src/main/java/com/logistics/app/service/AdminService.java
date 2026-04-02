@@ -28,13 +28,14 @@ public class AdminService {
     private final StatusHistoryRepository statusHistoryRepository;
     private final ShipmentRealtimePublisher realtimePublisher;
     private final PublicService publicService;
+    private final RatingRepository ratingRepository;
 
     public AdminService(UserRepository userRepository, ShipmentRepository shipmentRepository, OfferRepository offerRepository,
                         NoticeRepository noticeRepository, FaqRepository faqRepository,
                         CustomerInquiryRepository customerInquiryRepository, InquiryAnswerRepository inquiryAnswerRepository,
                         ReportRepository reportRepository, DisputeRepository disputeRepository,
                         AdminActionLogRepository adminActionLogRepository, StatusHistoryRepository statusHistoryRepository,
-                        ShipmentRealtimePublisher realtimePublisher, PublicService publicService) {
+                        ShipmentRealtimePublisher realtimePublisher, PublicService publicService, RatingRepository ratingRepository) {
         this.userRepository = userRepository;
         this.shipmentRepository = shipmentRepository;
         this.offerRepository = offerRepository;
@@ -48,6 +49,7 @@ public class AdminService {
         this.statusHistoryRepository = statusHistoryRepository;
         this.realtimePublisher = realtimePublisher;
         this.publicService = publicService;
+        this.ratingRepository = ratingRepository;
     }
 
     @Transactional(readOnly = true)
@@ -244,7 +246,21 @@ public class AdminService {
     }
 
     private AdminDtos.MemberRow toMemberRow(User user) {
-        return AdminDtos.MemberRow.builder().id(user.getId()).email(user.getEmail()).name(user.getName()).role(user.getRole()).status(user.getStatus()).companyName(user.getCompanyName()).vehicleType(user.getVehicleType()).phone(user.getPhone()).createdAt(user.getCreatedAt()).build();
+        var ratings = ratingRepository.findByToUserOrderByCreatedAtDesc(user);
+        double average = ratings.stream().mapToInt(Rating::getScore).average().orElse(0);
+        return AdminDtos.MemberRow.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .companyName(user.getCompanyName())
+                .vehicleType(user.getVehicleType())
+                .phone(user.getPhone())
+                .averageRating(average)
+                .ratingCount(ratings.size())
+                .createdAt(user.getCreatedAt())
+                .build();
     }
 
     private AdminDtos.ShipmentAdminRow toShipmentRow(Shipment shipment) {

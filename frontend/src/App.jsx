@@ -34,6 +34,8 @@ import {
   fetchRatingsDashboard,
   createRating,
   fetchAdminRecentRatings,
+  fetchMyProfile,
+  updateMyProfile,
   login,
   resolveAdminDispute,
   signup,
@@ -49,6 +51,7 @@ const emptyShipment = {
   title: '', cargoType: '', weightKg: '', description: '',
   originAddress: '', originLat: 37.5665, originLng: 126.978,
   destinationAddress: '', destinationLat: 37.4979, destinationLng: 127.0276,
+  cargoImageDataUrls: [], cargoImageNames: [],
 }
 const emptySignup = { email: '', password: '', name: '', role: 'SHIPPER', companyName: '', vehicleType: '', phone: '' }
 const emptyInquiry = { companyName: '', contactName: '', email: '', phone: '', inquiryType: '도입 문의', message: '' }
@@ -63,6 +66,14 @@ const formatCurrency = (value) => value == null ? '-' : `${Number(value).toLocal
 const formatDate = (value) => value ? new Date(value).toLocaleString('ko-KR', { hour12: false }) : '-'
 const transactionTypeText = (type) => ({ SPEND: '지출', EARN: '수익', FEE: '수수료' }[type] || type)
 const renderStars = (score = 0) => '★'.repeat(score) + '☆'.repeat(Math.max(0, 5 - score))
+const formatRatingSummary = (avg, count) => count ? `${Number(avg || 0).toFixed(1)}점 (${count}명)` : '평점 없음'
+
+const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve({ dataUrl: reader.result, name: file.name })
+  reader.onerror = reject
+  reader.readAsDataURL(file)
+})
 
 const roleThemeMeta = {
   SHIPPER: {
@@ -117,6 +128,27 @@ function buildAdminAlerts(adminDashboard, reports, disputes, inquiries) {
   ]
 }
 
+
+function ProfilePreviewCard({ title, profile }) {
+  if (!profile) return null
+  return (
+    <div className="surface-sub"> 
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        {profile.profileImageUrl ? <img src={profile.profileImageUrl} alt={title} className="image-preview-thumb" style={{ width: 64, height: 64, objectFit: 'cover' }} /> : <div className="identity-mark" style={{ width: 56, height: 56 }}>{(profile.name || '?').slice(0,1)}</div>}
+        <div style={{ flex: 1 }}>
+          <strong>{title}</strong>
+          <div className="section-desc" style={{ marginTop: 4 }}>{profile.name} · {roleText(profile.role)}</div>
+          <div className="section-desc" style={{ marginTop: 4 }}>평점 {formatRatingSummary(profile.averageRating, profile.ratingCount)} · 완료 거래 {profile.completedCount || 0}건</div>
+          {profile.companyName && <div className="section-desc" style={{ marginTop: 4 }}>회사명: {profile.companyName}</div>}
+          {profile.vehicleType && <div className="section-desc" style={{ marginTop: 4 }}>차량 정보: {profile.vehicleType}</div>}
+          {profile.bio && <p className="section-desc" style={{ marginTop: 6 }}>{profile.bio}</p>}
+          {(profile.contactEmail || profile.contactPhone) && <div className="section-desc" style={{ marginTop: 6 }}>{profile.contactEmail || ''}{profile.contactEmail && profile.contactPhone ? ' · ' : ''}{profile.contactPhone || ''}</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SectionTitle({ eyebrow, title, desc, action }) {
   return (
     <div className="section-title-row">
@@ -136,6 +168,7 @@ export default function App() {
     email: localStorage.getItem('email') || '',
     name: localStorage.getItem('name') || '',
     role: localStorage.getItem('role') || '',
+    profileCompleted: localStorage.getItem('profileCompleted') === 'true',
   }))
   const [message, setMessage] = useState('')
   const [authMode, setAuthMode] = useState('login')
@@ -150,7 +183,9 @@ export default function App() {
   const [bookmarks, setBookmarks] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [selected, setSelected] = useState(null)
-  const [dashboardTab, setDashboardTab] = useState('overview')
+  const [dashboardTab, setDashboardTab] = useState('home')
+  const [profile, setProfile] = useState(null)
+  const [profileForm, setProfileForm] = useState({ bio: '', profileImageUrl: '', paymentMethod: '', contactEmail: '', contactPhone: '' })
   const [shipmentForm, setShipmentForm] = useState(emptyShipment)
   const [offerForm, setOfferForm] = useState({ price: '', message: '' })
   const [shipmentFilter, setShipmentFilter] = useState('ALL')
@@ -173,6 +208,7 @@ export default function App() {
   const [ratingDrafts, setRatingDrafts] = useState({})
   const [noticeForm, setNoticeForm] = useState(emptyNotice)
   const [faqForm, setFaqForm] = useState(emptyFaq)
+  const [completionProof, setCompletionProof] = useState({ dataUrl: '', name: '' })
   const [editingNoticeId, setEditingNoticeId] = useState(null)
   const [editingFaqId, setEditingFaqId] = useState(null)
   const [inquiryAnswerDraft, setInquiryAnswerDraft] = useState({})
@@ -229,6 +265,7 @@ export default function App() {
     localStorage.setItem('email', data.email)
     localStorage.setItem('name', data.name)
     localStorage.setItem('role', data.role)
+    localStorage.setItem('profileCompleted', String(!!data.profileCompleted))
     setAuth(data)
   }
 
@@ -236,7 +273,7 @@ export default function App() {
     localStorage.clear()
     stompClientRef.current?.deactivate()
     stompClientRef.current = null
-    setAuth({ token: '', email: '', name: '', role: '' })
+    setAuth({ token: '', email: '', name: '', role: '', profileCompleted: false })
     setDashboardTab('overview')
     setSelectedId(null)
     setSelected(null)
@@ -256,6 +293,7 @@ export default function App() {
     setFinanceTransactions([])
     setRatingsDashboard(null)
     setAdminRecentRatings([])
+    setCompletionProof({ dataUrl: '', name: '' })
   }
 
   const loadPublic = async () => {
@@ -316,6 +354,19 @@ export default function App() {
     }
     setRatingsDashboard(await fetchRatingsDashboard())
   }
+  const loadProfile = async () => {
+    if (!isLoggedIn || isAdmin) return
+    const data = await fetchMyProfile()
+    setProfile(data)
+    setProfileForm({
+      bio: data.bio || '',
+      profileImageUrl: data.profileImageUrl || '',
+      paymentMethod: data.paymentMethod || '',
+      contactEmail: data.contactEmail || '',
+      contactPhone: data.contactPhone || '',
+    })
+  }
+
 
   const handleCreateRating = async (shipmentId, counterpartName) => {
     try {
@@ -344,6 +395,54 @@ export default function App() {
     }
   }
 
+
+  const handleSaveProfile = async () => {
+    try {
+      const saved = await updateMyProfile(profileForm)
+      setProfile(saved)
+      const updatedAuth = { ...auth, profileCompleted: !!saved.profileCompleted }
+      localStorage.setItem('profileCompleted', String(!!saved.profileCompleted))
+      setAuth(updatedAuth)
+      setMessage('회원정보가 저장되었습니다.')
+      if (dashboardTab === 'overview') {
+        // keep on my page after save
+      }
+    } catch (err) {
+      console.error(err)
+      setMessage(err.response?.data?.message || '회원정보 저장 실패')
+    }
+  }
+
+  const handleShipmentImagesChange = async (event) => {
+    try {
+      const files = Array.from(event.target.files || []).slice(0, 5)
+      const converted = await Promise.all(files.map(fileToDataUrl))
+      setShipmentForm((prev) => ({
+        ...prev,
+        cargoImageDataUrls: converted.map((item) => item.dataUrl),
+        cargoImageNames: converted.map((item) => item.name),
+      }))
+    } catch (err) {
+      console.error(err)
+      setMessage('화물 사진을 읽지 못했습니다.')
+    }
+  }
+
+  const handleCompletionProofChange = async (event) => {
+    try {
+      const file = event.target.files?.[0]
+      if (!file) {
+        setCompletionProof({ dataUrl: '', name: '' })
+        return
+      }
+      const converted = await fileToDataUrl(file)
+      setCompletionProof(converted)
+    } catch (err) {
+      console.error(err)
+      setMessage('완료 사진을 읽지 못했습니다.')
+    }
+  }
+
   useEffect(() => { loadPublic().catch(() => {}) }, [])
   useEffect(() => {
     const classes = ['theme-public', 'theme-shipper', 'theme-driver', 'theme-admin']
@@ -362,6 +461,7 @@ export default function App() {
       loadBookmarks().catch(() => {})
       loadFinance().catch(() => {})
       loadRatings().catch(() => {})
+      loadProfile().catch(() => {})
     }
   }, [isLoggedIn, isAdmin])
   useEffect(() => { if (selectedId && isLoggedIn && !isAdmin) loadDetail(selectedId).catch(err => setMessage(err.response?.data?.message || '상세 로드 실패')) }, [selectedId, isLoggedIn, isAdmin])
@@ -398,8 +498,8 @@ export default function App() {
     try {
       const data = await login(loginForm)
       syncAuth(data)
-      setDashboardTab('overview')
-      setMessage('로그인되었습니다.')
+      setDashboardTab(data.profileCompleted ? 'home' : 'overview')
+      setMessage(data.profileCompleted ? '로그인되었습니다. 공개 메인 페이지에서도 역할별 기능으로 이동할 수 있습니다.' : '첫 로그인입니다. 선택 정보만 입력해도 되니 회원정보를 한 번 확인해 주세요.')
     } catch (err) {
       setMessage(err.response?.data?.message || '로그인 실패')
     }
@@ -409,7 +509,8 @@ export default function App() {
       const data = await signup(signupForm)
       syncAuth(data)
       setSignupForm(emptySignup)
-      setMessage('회원가입이 완료되었습니다.')
+      setDashboardTab('overview')
+      setMessage('회원가입이 완료되었습니다. 첫 로그인이라 회원정보 수정 페이지로 안내합니다.')
     } catch (err) {
       setMessage(err.response?.data?.message || '회원가입 실패')
     }
@@ -426,7 +527,16 @@ export default function App() {
   }
   const handleCreateShipment = async () => {
     try {
-      const created = await createShipment({ ...shipmentForm, weightKg: Number(shipmentForm.weightKg || 0), originLat: Number(shipmentForm.originLat), originLng: Number(shipmentForm.originLng), destinationLat: Number(shipmentForm.destinationLat), destinationLng: Number(shipmentForm.destinationLng) })
+      const created = await createShipment({
+        ...shipmentForm,
+        weightKg: Number(shipmentForm.weightKg || 0),
+        originLat: Number(shipmentForm.originLat),
+        originLng: Number(shipmentForm.originLng),
+        destinationLat: Number(shipmentForm.destinationLat),
+        destinationLng: Number(shipmentForm.destinationLng),
+        cargoImageDataUrls: shipmentForm.cargoImageDataUrls || [],
+        cargoImageNames: shipmentForm.cargoImageNames || [],
+      })
       setShipmentForm(emptyShipment)
       setDashboardTab('board')
       setSelectedId(created.id)
@@ -466,7 +576,15 @@ export default function App() {
   }
   const handleComplete = async () => {
     try {
-      await completeTrip(selectedId)
+      if (!completionProof.dataUrl) {
+        setMessage('배송 완료 사진을 먼저 등록해 주세요.')
+        return
+      }
+      await completeTrip(selectedId, {
+        completionImageDataUrl: completionProof.dataUrl,
+        completionImageName: completionProof.name,
+      })
+      setCompletionProof({ dataUrl: '', name: '' })
       setMessage('운반이 완료되었습니다.')
       await Promise.all([loadShipments(), loadDetail(selectedId)])
     } catch (err) {
@@ -545,8 +663,7 @@ export default function App() {
     }
   }
 
-  if (!isLoggedIn) {
-    return (
+  const renderPublicHome = () => (
       <div className="public-shell">
         <header className="public-header">
           <div className="identity-block">
@@ -559,7 +676,7 @@ export default function App() {
           <nav className="header-actions">
             <button className="btn btn-ghost" onClick={() => document.getElementById('board')?.scrollIntoView({ behavior: 'smooth' })}>공개 배차</button>
             <button className="btn btn-ghost" onClick={() => document.getElementById('notice-faq')?.scrollIntoView({ behavior: 'smooth' })}>공지 / FAQ</button>
-            <button className="btn btn-primary" onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}>{authMode === 'login' ? '회원가입' : '로그인'}</button>
+            {isLoggedIn ? <><button className="btn btn-primary" onClick={() => setDashboardTab('overview')}>마이페이지</button><button className="btn btn-secondary" onClick={logout}>로그아웃</button></> : <button className="btn btn-primary" onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}>{authMode === 'login' ? '회원가입' : '로그인'}</button>}
           </nav>
         </header>
 
@@ -576,34 +693,53 @@ export default function App() {
             </div>
           </div>
           <div className="hero-panel auth-card">
-            <SectionTitle eyebrow="ACCOUNT ACCESS" title={authMode === 'login' ? '운영 계정 로그인' : '회원가입'} desc="샘플 계정: shipper@test.com / driver@test.com / admin@test.com 비밀번호는 모두 1111" />
-            <div className="segmented">
-              <button className={authMode === 'login' ? 'active' : ''} onClick={() => setAuthMode('login')}>로그인</button>
-              <button className={authMode === 'signup' ? 'active' : ''} onClick={() => setAuthMode('signup')}>회원가입</button>
-            </div>
-            {authMode === 'login' ? (
-              <div className="form-stack compact-form">
-                <input placeholder="이메일" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
-                <input type="password" placeholder="비밀번호" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
-                <button className="btn btn-primary" onClick={handleLogin}>로그인</button>
-              </div>
-            ) : (
-              <div className="form-stack compact-form">
-                <div className="split-2">
-                  <input placeholder="이름" value={signupForm.name} onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })} />
-                  <select value={signupForm.role} onChange={(e) => setSignupForm({ ...signupForm, role: e.target.value })}>
-                    <option value="SHIPPER">화주</option>
-                    <option value="DRIVER">차주</option>
-                  </select>
+            {isLoggedIn ? (
+              <>
+                <SectionTitle eyebrow="ACCOUNT ACCESS" title={`${auth.name}님으로 로그인됨`} desc="로그인한 뒤에도 공개 메인 페이지에 머무를 수 있고, 필요한 순간에만 마이페이지로 이동할 수 있습니다." />
+                <div className="list-stack">
+                  <div className="list-row block">
+                    <strong>{auth.name}</strong>
+                    <span>{roleText(auth.role)} · {auth.email}</span>
+                  </div>
+                  <div className="table-actions">
+                    <button className="btn btn-primary" onClick={() => setDashboardTab('overview')}>마이페이지</button>
+                    <button className="btn btn-secondary" onClick={logout}>로그아웃</button>
+                  </div>
+                  {!!message && <div className="alert-info">{message}</div>}
                 </div>
-                <input placeholder="이메일" value={signupForm.email} onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })} />
-                <input type="password" placeholder="비밀번호" value={signupForm.password} onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })} />
-                <input placeholder="연락처" value={signupForm.phone} onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })} />
-                {signupForm.role === 'SHIPPER' ? <input placeholder="회사명" value={signupForm.companyName} onChange={(e) => setSignupForm({ ...signupForm, companyName: e.target.value })} /> : <input placeholder="차량 종류" value={signupForm.vehicleType} onChange={(e) => setSignupForm({ ...signupForm, vehicleType: e.target.value })} />}
-                <button className="btn btn-primary" onClick={handleSignup}>회원가입</button>
-              </div>
+              </>
+            ) : (
+              <>
+                <SectionTitle eyebrow="ACCOUNT ACCESS" title={authMode === 'login' ? '운영 계정 로그인' : '회원가입'} desc="샘플 계정: shipper@test.com / driver@test.com / admin@test.com 비밀번호는 모두 1111" />
+                <div className="segmented">
+                  <button className={authMode === 'login' ? 'active' : ''} onClick={() => setAuthMode('login')}>로그인</button>
+                  <button className={authMode === 'signup' ? 'active' : ''} onClick={() => setAuthMode('signup')}>회원가입</button>
+                </div>
+                {authMode === 'login' ? (
+                  <div className="form-stack compact-form">
+                    <input placeholder="이메일" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
+                    <input type="password" placeholder="비밀번호" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
+                    <button className="btn btn-primary" onClick={handleLogin}>로그인</button>
+                  </div>
+                ) : (
+                  <div className="form-stack compact-form">
+                    <div className="split-2">
+                      <input placeholder="이름" value={signupForm.name} onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })} />
+                      <select value={signupForm.role} onChange={(e) => setSignupForm({ ...signupForm, role: e.target.value })}>
+                        <option value="SHIPPER">화주</option>
+                        <option value="DRIVER">차주</option>
+                      </select>
+                    </div>
+                    <input placeholder="이메일" value={signupForm.email} onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })} />
+                    <input type="password" placeholder="비밀번호" value={signupForm.password} onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })} />
+                    <input placeholder="연락처" value={signupForm.phone} onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })} />
+                    {signupForm.role === 'SHIPPER' ? <input placeholder="회사명" value={signupForm.companyName} onChange={(e) => setSignupForm({ ...signupForm, companyName: e.target.value })} /> : <input placeholder="차량 종류" value={signupForm.vehicleType} onChange={(e) => setSignupForm({ ...signupForm, vehicleType: e.target.value })} />}
+                    <button className="btn btn-primary" onClick={handleSignup}>회원가입</button>
+                  </div>
+                )}
+                {!!message && <div className="alert-info">{message}</div>}
+              </>
             )}
-            {!!message && <div className="alert-info">{message}</div>}
           </div>
         </section>
 
@@ -688,19 +824,23 @@ export default function App() {
           </div>
         </section>
       </div>
-    )
+  )
+
+  if (!isLoggedIn || dashboardTab === 'home') {
+    return renderPublicHome()
   }
 
   if (isAdmin) {
     const navItems = [
-      ['overview', '운영 개요'], ['members', '회원 관리'], ['shipments', '화물 관리'], ['finance', '수익 관리'], ['ratings', '평점 관리'], ['notices', '공지 관리'], ['faqs', 'FAQ 관리'], ['inquiries', '문의 관리'], ['issues', '신고 / 분쟁'],
+      ['overview', '마이페이지'], ['members', '회원 관리'], ['shipments', '화물 관리'], ['finance', '수익 관리'], ['ratings', '평점 관리'], ['notices', '공지 관리'], ['faqs', 'FAQ 관리'], ['inquiries', '문의 관리'], ['issues', '신고 / 분쟁'],
     ]
     return (
       <div className="console-shell">
         <aside className="console-sidebar">
-          <div className="console-logo"><div className="identity-mark">HC</div><div><strong>LogixFlow</strong><small>Administrator Console</small></div></div>
+          <div className="console-logo"><div className="identity-mark">HC</div><div><strong>hallym-cargo</strong><small>Administrator Console</small></div></div>
           <div className="sidebar-profile"><strong>{auth.name}</strong><span>{roleText(auth.role)}</span><small>{auth.email}</small></div>
           <nav className="sidebar-nav">
+            <button className="btn btn-ghost block" onClick={() => setDashboardTab('home')}>메인 페이지로 이동</button>
             {navItems.map(([key, label]) => <button key={key} className={dashboardTab === key ? 'nav-link active' : 'nav-link'} onClick={() => setDashboardTab(key)}>{label}</button>)}
           </nav>
           <button className="btn btn-secondary block" onClick={logout}>로그아웃</button>
@@ -709,7 +849,7 @@ export default function App() {
           <div className="console-topbar">
             <div>
               <div className="eyebrow">ADMIN CONTROL</div>
-              <h1>운영 관리자</h1>
+              <h1>{dashboardTab === 'overview' ? '마이페이지' : dashboardTab === 'members' ? '회원 관리' : dashboardTab === 'shipments' ? '화물 관리' : dashboardTab === 'finance' ? '수익 관리' : dashboardTab === 'ratings' ? '평점 관리' : dashboardTab === 'notices' ? '공지 관리' : dashboardTab === 'faqs' ? 'FAQ 관리' : dashboardTab === 'inquiries' ? '문의 관리' : '신고 / 분쟁'}</h1>
               <p className="section-desc">바이올렛 계열 테마로 리스크, 문의, 분쟁, 전체 운영 상황을 빠르게 구분하도록 조정했습니다.</p>
             </div>
             <div className="toolbar-inline">
@@ -764,7 +904,7 @@ export default function App() {
           {dashboardTab === 'members' && (
             <div className="surface">
               <SectionTitle title="회원 관리" desc="역할 변경과 계정 상태 관리를 한 표에서 처리합니다." />
-              <table className="board-table compact"><thead><tr><th>회원</th><th>역할</th><th>상태</th><th>연락처</th><th>관리</th></tr></thead><tbody>{adminMembers.map(member => <tr key={member.id}><td><strong>{member.name}</strong><small>{member.email}</small></td><td>{roleText(member.role)}</td><td>{memberStatusText(member.status)}</td><td>{member.phone || '-'}</td><td><div className="table-actions"><select value={member.role} onChange={(e) => handleUpdateMember(member.id, 'role', e.target.value)}><option value="SHIPPER">화주</option><option value="DRIVER">차주</option><option value="ADMIN">관리자</option></select><select value={member.status} onChange={(e) => handleUpdateMember(member.id, 'status', e.target.value)}><option value="ACTIVE">정상</option><option value="PENDING">대기</option><option value="SUSPENDED">정지</option><option value="DELETED">삭제</option></select></div></td></tr>)}</tbody></table>
+              <table className="board-table compact"><thead><tr><th>회원</th><th>역할</th><th>상태</th><th>평점</th><th>연락처</th><th>관리</th></tr></thead><tbody>{adminMembers.map(member => <tr key={member.id}><td><strong>{member.name}</strong><small>{member.email}</small></td><td>{roleText(member.role)}</td><td>{memberStatusText(member.status)}</td><td>{formatRatingSummary(member.averageRating, member.ratingCount)}</td><td>{member.phone || '-'}</td><td><div className="table-actions"><select value={member.role} onChange={(e) => handleUpdateMember(member.id, 'role', e.target.value)}><option value="SHIPPER">화주</option><option value="DRIVER">차주</option><option value="ADMIN">관리자</option></select><select value={member.status} onChange={(e) => handleUpdateMember(member.id, 'status', e.target.value)}><option value="ACTIVE">정상</option><option value="PENDING">대기</option><option value="SUSPENDED">정지</option><option value="DELETED">삭제</option></select></div></td></tr>)}</tbody></table>
             </div>
           )}
 
@@ -841,13 +981,16 @@ export default function App() {
     )
   }
 
-  const navItems = [['overview', '운영 개요'], ['board', '배차 보드'], ['register', auth.role === 'SHIPPER' ? '화물 등록' : '입찰 가이드'], ['finance', '돈 관리'], ['ratings', '평점 관리'], ['bookmarks', '즐겨찾기']]
+  const navItems = [['overview', '마이페이지'], ['board', '배차 보드'], ['register', auth.role === 'SHIPPER' ? '화물 등록' : '입찰 가이드'], ['finance', '돈 관리'], ['ratings', '평점 관리'], ['bookmarks', '즐겨찾기']]
   return (
     <div className="console-shell user-console">
       <aside className="console-sidebar">
-        <div className="console-logo"><div className="identity-mark">HC</div><div><strong>LogixFlow</strong><small>Operations Dashboard</small></div></div>
+        <div className="console-logo"><div className="identity-mark">HC</div><div><strong>hallym-cargo</strong><small>Operations Dashboard</small></div></div>
         <div className="sidebar-profile"><strong>{auth.name}</strong><span>{roleText(auth.role)}</span><small>{auth.email}</small></div>
-        <nav className="sidebar-nav">{navItems.map(([key, label]) => <button key={key} className={dashboardTab === key ? 'nav-link active' : 'nav-link'} onClick={() => setDashboardTab(key)}>{label}</button>)}</nav>
+        <nav className="sidebar-nav">
+          <button className="btn btn-ghost block" onClick={() => setDashboardTab('home')}>메인 페이지로 이동</button>
+          {navItems.map(([key, label]) => <button key={key} className={dashboardTab === key ? 'nav-link active' : 'nav-link'} onClick={() => setDashboardTab(key)}>{label}</button>)}
+        </nav>
         <div className="side-mini-kpis"><div><span>전체</span><strong>{summary.total}</strong></div><div><span>입찰중</span><strong>{summary.bidding}</strong></div><div><span>운행중</span><strong>{summary.live}</strong></div><div><span>완료</span><strong>{summary.completed}</strong></div></div>
         <button className="btn btn-secondary block" onClick={logout}>로그아웃</button>
       </aside>
@@ -855,7 +998,7 @@ export default function App() {
         <div className="console-topbar">
           <div>
             <div className="eyebrow">USER OPERATIONS</div>
-            <h1>{dashboardTab === 'overview' ? '운영 현황' : dashboardTab === 'board' ? '배차 보드' : dashboardTab === 'register' ? (auth.role === 'SHIPPER' ? '화물 등록' : '입찰 가이드') : dashboardTab === 'finance' ? '돈 관리' : dashboardTab === 'ratings' ? '평점 관리' : '즐겨찾기'}</h1>
+            <h1>{dashboardTab === 'overview' ? '마이페이지' : dashboardTab === 'board' ? '배차 보드' : dashboardTab === 'register' ? (auth.role === 'SHIPPER' ? '화물 등록' : '입찰 가이드') : dashboardTab === 'finance' ? '돈 관리' : dashboardTab === 'ratings' ? '평점 관리' : '즐겨찾기'}</h1>
             <p className="section-desc">{roleTheme?.tone}을 적용해 {auth.role === 'SHIPPER' ? '요청과 확정' : '주행과 ETA'}를 더 빠르게 읽을 수 있도록 조정했습니다.</p>
           </div>
           <div className="toolbar-inline"><span className={`role-chip role-chip-${roleTheme?.accent || 'shipper'}`}>{roleTheme?.label}</span><input className="toolbar-search" placeholder="제목, 지역, 화물 종류 검색" value={shipmentKeyword} onChange={(e) => setShipmentKeyword(e.target.value)} />{auth.role === 'DRIVER' && <div className="chip-group"><button className={driverBoardTag === 'ALL' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('ALL')}>전체</button><button className={driverBoardTag === 'BIDDING' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('BIDDING')}>입찰중</button><button className={driverBoardTag === 'MY_BIDS' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('MY_BIDS')}>내 입찰</button><button className={driverBoardTag === 'MY_ASSIGNED' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('MY_ASSIGNED')}>내 확정</button><button className={driverBoardTag === 'MY_TRANSIT' ? 'chip active' : 'chip'} onClick={() => setDriverBoardTag('MY_TRANSIT')}>내 운반중</button></div>}<select value={shipmentFilter} onChange={(e) => setShipmentFilter(e.target.value)}><option value="ALL">전체 상태</option><option value="BIDDING">입찰중</option><option value="CONFIRMED">확정</option><option value="IN_TRANSIT">운반중</option><option value="COMPLETED">완료</option></select></div>
@@ -864,6 +1007,26 @@ export default function App() {
 
         {dashboardTab === 'overview' && (
           <div className="page-stack">
+            {!auth.profileCompleted && <div className="alert-info">첫 로그인입니다. 아래 선택 입력 정보를 저장하면 다음 로그인부터는 바로 메인 페이지로 이동합니다.</div>}
+            <div className="admin-grid-2">
+              <div className="surface">
+                <SectionTitle title="회원정보 수정" desc="현재 회원가입 필수 정보는 유지하고, 아래 정보는 선택으로 추가할 수 있습니다." />
+                <div className="form-stack">
+                  <input placeholder="프로필 사진 URL" value={profileForm.profileImageUrl} onChange={(e) => setProfileForm({ ...profileForm, profileImageUrl: e.target.value })} />
+                  <textarea rows="4" placeholder="자기소개" value={profileForm.bio} onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })} />
+                  <input placeholder="결제 수단 메모" value={profileForm.paymentMethod} onChange={(e) => setProfileForm({ ...profileForm, paymentMethod: e.target.value })} />
+                  <div className="split-2">
+                    <input placeholder="추가 이메일" value={profileForm.contactEmail} onChange={(e) => setProfileForm({ ...profileForm, contactEmail: e.target.value })} />
+                    <input placeholder="추가 연락처" value={profileForm.contactPhone} onChange={(e) => setProfileForm({ ...profileForm, contactPhone: e.target.value })} />
+                  </div>
+                  <button className="btn btn-primary" onClick={handleSaveProfile}>회원정보 저장</button>
+                </div>
+              </div>
+              <div className="surface">
+                <SectionTitle title="내 공개 프로필 미리보기" desc="거래 상대가 거래 전에 볼 수 있는 정보입니다." />
+                <ProfilePreviewCard title="내 프로필" profile={profile ? { ...profile, role: auth.role } : { ...profileForm, name: auth.name, role: auth.role, companyName: signupForm.companyName, vehicleType: signupForm.vehicleType, averageRating: profile?.averageRating, ratingCount: profile?.ratingCount, completedCount: profile?.completedCount }} />
+              </div>
+            </div>
             <section className={`role-banner role-banner-${roleTheme?.accent || 'shipper'}`}>
               <div>
                 <div className="eyebrow">ROLE FOCUSED THEME</div>
@@ -892,6 +1055,9 @@ export default function App() {
                 {selected ? (<>
                   <div className="detail-head"><div><div className="eyebrow">SHIPMENT DETAIL</div><h3>{selected.title}</h3></div><div className="table-actions"><button className={selected.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'} onClick={() => handleToggleBookmark(selected.id)}>★ 즐겨찾기</button><span className={`badge badge-${selected.status.toLowerCase()}`}>{statusText(selected.status)}</span></div></div>
                   <div className="detail-stat-grid"><div><span>출발지</span><strong>{selected.originAddress}</strong></div><div><span>도착지</span><strong>{selected.destinationAddress}</strong></div><div><span>입찰 현황</span><strong>{selected.offerCount}건 / {formatCurrency(selected.bestOfferPrice)}</strong></div><div><span>배정 차주</span><strong>{selected.assignedDriverName || '미확정'}</strong></div><div><span>현재 위치</span><strong>{selected.tracking?.roughLocation || '미등록'}</strong></div><div><span>남은 시간</span><strong>{selected.tracking?.remainingMinutes ?? selected.estimatedMinutes}분</strong></div></div>
+                  {!!selected.cargoImageUrls?.length && <div className="surface-sub"><strong>등록 화물 사진</strong><div className="image-preview-row">{selected.cargoImageUrls.map((src, idx) => <img key={idx} src={src} alt={`cargo-detail-${idx}`} className="image-preview-thumb" />)}</div></div>}
+                  {!!selected.completionImageUrl && <div className="surface-sub"><strong>배송 완료 사진</strong><div className="image-preview-row"><img src={selected.completionImageUrl} alt="completion" className="image-preview-thumb" /></div></div>}
+                  <ProfilePreviewCard title={auth.role === 'DRIVER' ? '거래 전 확인할 화주 정보' : '거래 전 확인할 차주 정보'} profile={auth.role === 'DRIVER' ? { name: selected.shipperName, role: 'SHIPPER', companyName: selected.companyName, bio: selected.shipperBio, profileImageUrl: selected.shipperProfileImageUrl, contactEmail: selected.shipperContactEmail, contactPhone: selected.shipperContactPhone, averageRating: selected.shipperAverageRating, ratingCount: selected.shipperRatingCount, completedCount: undefined } : (selected.assignedDriverName ? { name: selected.assignedDriverName, role: 'DRIVER', bio: selected.assignedDriverBio, profileImageUrl: selected.assignedDriverProfileImageUrl, contactEmail: selected.assignedDriverContactEmail, contactPhone: selected.assignedDriverContactPhone, averageRating: selected.assignedDriverAverageRating, ratingCount: selected.assignedDriverRatingCount, completedCount: undefined } : null)} />
                   <KakaoMapView shipment={selected} />
                   <div className="surface-sub"><SectionTitle title="상태 타임라인" /><div className="list-stack">{(selected.histories || []).map(history => <div className="list-row block" key={history.id}><strong>{statusText(history.toStatus)}</strong><span>{history.note} · {history.actorEmail}</span><small>{formatDate(history.createdAt)}</small></div>)}</div></div>
                 </>) : <div className="empty-box">배차를 선택해 주세요.</div>}
@@ -901,8 +1067,8 @@ export default function App() {
                   <SectionTitle title="역할별 액션" desc={`${roleText(auth.role)} 기준으로 표시됩니다.`} />
                   <div className="surface-sub role-side-guide"><strong>{roleTheme?.label}</strong><p className="section-desc">{auth.role === 'SHIPPER' ? '화주는 입찰 비교와 차주 확정, 운행 확인이 핵심입니다.' : '차주는 입찰 등록, 운반 시작, ETA 기준 완료 전환이 핵심입니다.'}</p></div>
                   {auth.role === 'DRIVER' && selected.status === 'BIDDING' && !selected.hasMyOffer && <div className="form-stack"><div className="surface-sub"><strong>정산 안내</strong><p className="section-desc">차주는 확정 금액에서 3% 수수료를 제외한 나머지 금액을 받습니다. 예를 들어 100,000원 제안이 확정되면 97,000원이 정산됩니다.</p></div><input placeholder="제안 금액" value={offerForm.price} onChange={(e) => setOfferForm({ ...offerForm, price: e.target.value })} /><textarea rows="4" placeholder="제안 메시지" value={offerForm.message} onChange={(e) => setOfferForm({ ...offerForm, message: e.target.value })} /><button className="btn btn-primary" onClick={handleCreateOffer}>입찰 제안</button></div>}{auth.role === 'DRIVER' && selected.status === 'BIDDING' && selected.hasMyOffer && <div className="surface-sub"><strong>이미 이 배차에 입찰했습니다.</strong><p className="section-desc">내 입찰 태그가 붙은 배차는 화주 선택 결과를 기다리면 됩니다.</p></div>}
-                  {auth.role === 'SHIPPER' && <div className="list-stack">{(selected.offers || []).length ? selected.offers.map(offer => <div key={offer.id} className="offer-card"><div className="detail-head"><strong>{offer.driverName}</strong><span className="badge badge-neutral">{offer.status}</span></div><p>{formatCurrency(offer.price)}</p><small>{offer.message || '메시지 없음'}</small>{selected.status === 'BIDDING' && offer.status === 'PENDING' && <button className="btn btn-primary small" onClick={() => handleAcceptOffer(offer.id)}>이 차주 확정</button>}</div>) : <div className="empty-box small">등록된 제안이 없습니다.</div>}</div>}
-                  {auth.role === 'DRIVER' && selected.assignedDriverName === auth.name && <div className="form-stack">{selected.status === 'CONFIRMED' && <button className="btn btn-primary" onClick={handleStart}>운반 시작</button>}{selected.status === 'IN_TRANSIT' && <><div className="surface-sub"><strong>자동 이동 시뮬레이션</strong><p className="section-desc">운반 시작 시 예상 시간에 맞춰 트럭이 출발지에서 도착지까지 자동으로 이동합니다. 위치 입력 없이 지도에서 진행률과 남은 시간을 바로 확인할 수 있습니다.</p></div><button className="btn btn-primary" onClick={handleComplete} disabled={!selected.tracking?.completable}>운송 완료</button>{!selected.tracking?.completable && <small>예상 도착 시간이 지나야 완료 가능합니다.</small>}</>}</div>}
+                  {auth.role === 'SHIPPER' && <div className="list-stack">{(selected.offers || []).length ? selected.offers.map(offer => <div key={offer.id} className="offer-card"><div className="detail-head"><strong>{offer.driverName}</strong><span className="badge badge-neutral">{offer.status}</span></div><div className="section-desc">평점 {formatRatingSummary(offer.driverAverageRating, offer.driverRatingCount)}</div>{offer.driverBio && <small>{offer.driverBio}</small>}<p>{formatCurrency(offer.price)}</p><small>{offer.message || '메시지 없음'}</small>{selected.status === 'BIDDING' && offer.status === 'PENDING' && <button className="btn btn-primary small" onClick={() => handleAcceptOffer(offer.id)}>이 차주 확정</button>}</div>) : <div className="empty-box small">등록된 제안이 없습니다.</div>}</div>}
+                  {auth.role === 'DRIVER' && selected.assignedDriverName === auth.name && <div className="form-stack">{selected.status === 'CONFIRMED' && <button className="btn btn-primary" onClick={handleStart}>운반 시작</button>}{selected.status === 'IN_TRANSIT' && <><div className="surface-sub"><strong>자동 이동 시뮬레이션</strong><p className="section-desc">운반 시작 시 예상 시간에 맞춰 트럭이 출발지에서 도착지까지 자동으로 이동합니다. 위치 입력 없이 지도에서 진행률과 남은 시간을 바로 확인할 수 있습니다.</p></div><div className="surface-sub"><strong>배송 완료 사진 등록</strong><p className="section-desc">완료 처리 전에 현장 사진 1장을 반드시 등록해야 합니다.</p><input type="file" accept="image/*" onChange={handleCompletionProofChange} />{completionProof.dataUrl && <div className="image-preview-row"><img src={completionProof.dataUrl} alt="completion-proof" className="image-preview-thumb" /></div>}</div><button className="btn btn-primary" onClick={handleComplete} disabled={!selected.tracking?.completable || !completionProof.dataUrl}>운송 완료</button>{!selected.tracking?.completable && <small>예상 도착 시간이 지나야 완료 가능합니다.</small>}{selected.tracking?.completable && !completionProof.dataUrl && <small>완료 사진을 등록하면 완료 버튼이 활성화됩니다.</small>}</>}</div>}
                 </>) : <div className="empty-box">상세를 선택하면 액션이 표시됩니다.</div>}
               </div>
             </div>
@@ -937,7 +1103,7 @@ export default function App() {
         )}
 
         {dashboardTab === 'register' && auth.role === 'SHIPPER' && (
-          <div className="surface form-surface"><SectionTitle title="신규 화물 등록" desc="주소를 입력해 바로 지도에 찍고, 지도 클릭으로 좌표와 주소를 자동 입력할 수 있습니다." /><div className="form-stack"><div className="split-2"><input placeholder="배차명" value={shipmentForm.title} onChange={(e) => setShipmentForm({ ...shipmentForm, title: e.target.value })} /><input placeholder="화물 종류" value={shipmentForm.cargoType} onChange={(e) => setShipmentForm({ ...shipmentForm, cargoType: e.target.value })} /></div><div className="split-2"><input placeholder="중량(kg)" value={shipmentForm.weightKg} onChange={(e) => setShipmentForm({ ...shipmentForm, weightKg: e.target.value })} /><input placeholder="상세 설명" value={shipmentForm.description} onChange={(e) => setShipmentForm({ ...shipmentForm, description: e.target.value })} /></div><ShipmentLocationPicker value={shipmentForm} onChange={setShipmentForm} /><button className="btn btn-primary" onClick={handleCreateShipment}>화물 등록</button></div></div>
+          <div className="surface form-surface"><SectionTitle title="신규 화물 등록" desc="주소를 입력해 바로 지도에 찍고, 지도 클릭으로 좌표와 주소를 자동 입력할 수 있습니다." /><div className="form-stack"><div className="split-2"><input placeholder="배차명" value={shipmentForm.title} onChange={(e) => setShipmentForm({ ...shipmentForm, title: e.target.value })} /><input placeholder="화물 종류" value={shipmentForm.cargoType} onChange={(e) => setShipmentForm({ ...shipmentForm, cargoType: e.target.value })} /></div><div className="split-2"><input placeholder="중량(kg)" value={shipmentForm.weightKg} onChange={(e) => setShipmentForm({ ...shipmentForm, weightKg: e.target.value })} /><input placeholder="상세 설명" value={shipmentForm.description} onChange={(e) => setShipmentForm({ ...shipmentForm, description: e.target.value })} /></div><div className="surface-sub"><strong>화물 사진 등록</strong><p className="section-desc">출발 전 화물 상태 확인용 사진을 최대 5장까지 첨부할 수 있습니다.</p><input type="file" accept="image/*" multiple onChange={handleShipmentImagesChange} />{(shipmentForm.cargoImageDataUrls || []).length > 0 && <div className="image-preview-row">{shipmentForm.cargoImageDataUrls.map((src, idx) => <img key={idx} src={src} alt={`cargo-${idx}`} className="image-preview-thumb" />)}</div>}</div><ShipmentLocationPicker value={shipmentForm} onChange={setShipmentForm} /><button className="btn btn-primary" onClick={handleCreateShipment}>화물 등록</button></div></div>
         )}
 
         {dashboardTab === 'register' && auth.role !== 'SHIPPER' && (

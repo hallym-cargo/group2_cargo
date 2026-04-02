@@ -34,6 +34,8 @@ public class AdminDtos {
         private String companyName;
         private String vehicleType;
         private String phone;
+        private Double averageRating;
+        private long ratingCount;
         private LocalDateTime createdAt;
     }
 
