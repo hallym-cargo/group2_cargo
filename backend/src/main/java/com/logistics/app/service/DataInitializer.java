@@ -2,10 +2,14 @@ package com.logistics.app.service;
 
 import com.logistics.app.entity.*;
 import com.logistics.app.repository.*;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+@Transactional
 @Component
 public class DataInitializer implements CommandLineRunner {
 
