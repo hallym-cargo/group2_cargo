@@ -230,12 +230,18 @@ export default function KakaoMapView({ shipment }) {
 
       const map = mapInstanceRef.current
 
+      kakao.maps.event.addListener(map, 'dragstart', () => {
+        pauseUntilRef.current = Date.now() + INTERACTION_PAUSE_MS
+      })
+      kakao.maps.event.addListener(map, 'zoom_start', () => {
+        pauseUntilRef.current = Date.now() + INTERACTION_PAUSE_MS
+      })
+
       if (truckOverlayRef.current) {
         truckOverlayRef.current.setMap(null)
         truckOverlayRef.current = null
       }
 
-      // ❗ 운반중일 때만 생성
       if (shipment.status === 'IN_TRANSIT' && !truckOverlayRef.current) {
         const latlng = new kakao.maps.LatLng(points.current.lat, points.current.lng)
 
@@ -250,16 +256,14 @@ export default function KakaoMapView({ shipment }) {
         truckOverlayRef.current.setMap(map)
       }
 
-      // ❗ 운반중 아닐 때 제거
       if (shipment.status !== 'IN_TRANSIT' && truckOverlayRef.current) {
         truckOverlayRef.current.setMap(null)
         truckOverlayRef.current = null
       }
-
     })
 
     return () => { cancelled = true }
-  }, [shipment?.id])
+  }, [shipment?.id, shipment?.status, points, trackingMeta])
 
   useEffect(() => {
     if (polylineRef.current) {
@@ -291,7 +295,6 @@ export default function KakaoMapView({ shipment }) {
 
     const map = mapInstanceRef.current
 
-    // 기존 polyline 제거 (중요)
     if (polylineRef.current) {
       polylineRef.current.setMap(null)
     }

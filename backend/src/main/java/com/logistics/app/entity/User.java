@@ -35,6 +35,14 @@ public class User {
     private String companyName;
     private String vehicleType;
 
+    @Column(length = 1000)
+    private String bio;
+    private String profileImageUrl;
+    private String paymentMethod;
+    private String contactEmail;
+    private String contactPhone;
+    private Boolean profileCompleted;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -44,6 +52,9 @@ public class User {
         this.updatedAt = LocalDateTime.now();
         if (status == null) {
             status = UserStatus.ACTIVE;
+        }
+        if (profileCompleted == null) {
+            profileCompleted = false;
         }
     }
 

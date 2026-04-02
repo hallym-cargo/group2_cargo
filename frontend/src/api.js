@@ -16,6 +16,10 @@ export const login = async (payload) => (await api.post('/auth/login', payload))
 export const signup = async (payload) => (await api.post('/auth/signup', payload)).data
 
 export const fetchPublicOverview = async () => (await api.get('/public/overview')).data
+export const fetchMyProfile = async () => (await api.get('/api/users/me/profile')).data
+export const updateMyProfile = async (payload) => (await api.put('/api/users/me/profile', payload)).data
+export const fetchPublicProfile = async (userId) => (await api.get(`/api/users/${userId}/public-profile`)).data
+
 export const createInquiry = async (payload) => (await api.post('/public/inquiries', payload)).data
 export const fetchDrivingRoute = async ({ startLat, startLng, endLat, endLng }) => (await api.get('/public/routes/driving', { params: { startLat, startLng, endLat, endLng } })).data
 
@@ -27,7 +31,7 @@ export const createOffer = async (shipmentId, payload) => (await api.post(`/api/
 export const acceptOffer = async (offerId) => (await api.post(`/api/shipments/offers/${offerId}/accept`)).data
 export const startTrip = async (shipmentId) => (await api.post(`/api/shipments/${shipmentId}/start`)).data
 export const updateLocation = async (shipmentId, payload) => (await api.post(`/api/shipments/${shipmentId}/locations`, payload)).data
-export const completeTrip = async (shipmentId) => (await api.post(`/api/shipments/${shipmentId}/complete`)).data
+export const completeTrip = async (shipmentId, payload) => (await api.post(`/api/shipments/${shipmentId}/complete`, payload)).data
 export const toggleBookmark = async (shipmentId) => (await api.post(`/api/shipments/${shipmentId}/bookmark`)).data
 
 
