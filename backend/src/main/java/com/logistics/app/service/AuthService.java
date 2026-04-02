@@ -66,6 +66,7 @@ public class AuthService {
         response.setEmail(user.getEmail());
         response.setName(user.getName());
         response.setRole(user.getRole());
+        response.setProfileCompleted(Boolean.TRUE.equals(user.getProfileCompleted()));
         return response;
     }
 }

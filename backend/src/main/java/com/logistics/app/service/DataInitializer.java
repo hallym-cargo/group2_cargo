@@ -19,6 +19,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CustomerInquiryRepository customerInquiryRepository;
     private final ReportRepository reportRepository;
     private final DisputeRepository disputeRepository;
+    private final MoneyTransactionRepository moneyTransactionRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(UserRepository userRepository,
@@ -31,6 +32,7 @@ public class DataInitializer implements CommandLineRunner {
                            CustomerInquiryRepository customerInquiryRepository,
                            ReportRepository reportRepository,
                            DisputeRepository disputeRepository,
+                           MoneyTransactionRepository moneyTransactionRepository,
                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.shipmentRepository = shipmentRepository;
@@ -42,6 +44,7 @@ public class DataInitializer implements CommandLineRunner {
         this.customerInquiryRepository = customerInquiryRepository;
         this.reportRepository = reportRepository;
         this.disputeRepository = disputeRepository;
+        this.moneyTransactionRepository = moneyTransactionRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -54,7 +57,7 @@ public class DataInitializer implements CommandLineRunner {
                 .role(UserRole.ADMIN)
                 .status(UserStatus.ACTIVE)
                 .phone("02-1234-5678")
-                .companyName("LogixFlow 운영센터")
+                .companyName("hallym-cargo 운영센터")
                 .build()));
         if (noticeRepository.count() == 0) {
             noticeRepository.save(Notice.builder().category("플랫폼 공지").title("신규 운영 콘솔 v4가 적용되었습니다.").summary("관리자 회원 관리, 문의 답변, 공지/FAQ 관리, 분쟁 처리 기능이 추가되었습니다.").pinned(true).build());
@@ -105,10 +108,43 @@ public class DataInitializer implements CommandLineRunner {
             statusHistoryRepository.save(StatusHistory.builder().shipment(bidding).fromStatus(ShipmentStatus.REQUESTED).toStatus(ShipmentStatus.BIDDING).actorEmail(shipper.getEmail()).note("샘플 화물 등록").build());
             offerRepository.save(Offer.builder().shipment(bidding).driver(driver).price(72000).message("냉장차량 즉시 배차 가능").build());
 
+            Shipment completed = shipmentRepository.save(Shipment.builder()
+                    .shipper(shipper)
+                    .assignedDriver(driver)
+                    .title("생활용품 야간 납품 완료")
+                    .cargoType("생활용품")
+                    .weightKg(520.0)
+                    .description("완료 정산 샘플 데이터")
+                    .originAddress("경기도 하남시 풍산동")
+                    .originLat(37.5505)
+                    .originLng(127.1888)
+                    .destinationAddress("서울특별시 강동구 성내동")
+                    .destinationLat(37.5287)
+                    .destinationLng(127.1257)
+                    .estimatedMinutes(32)
+                    .estimatedDistanceKm(14.2)
+                    .status(ShipmentStatus.COMPLETED)
+                    .startedAt(java.time.LocalDateTime.now().minusHours(4))
+                    .estimatedArrivalAt(java.time.LocalDateTime.now().minusHours(3).minusMinutes(25))
+                    .completedAt(java.time.LocalDateTime.now().minusHours(3).minusMinutes(20))
+                    .build());
+            Offer completedOffer = offerRepository.save(Offer.builder().shipment(completed).driver(driver).price(91000).message("야간 배송 완료 가능").status(OfferStatus.ACCEPTED).build());
+            completed.setAcceptedOfferId(completedOffer.getId());
+            shipmentRepository.save(completed);
+            statusHistoryRepository.save(StatusHistory.builder().shipment(completed).fromStatus(ShipmentStatus.BIDDING).toStatus(ShipmentStatus.CONFIRMED).actorEmail(shipper.getEmail()).note("샘플 차주 확정").build());
+            statusHistoryRepository.save(StatusHistory.builder().shipment(completed).fromStatus(ShipmentStatus.CONFIRMED).toStatus(ShipmentStatus.IN_TRANSIT).actorEmail(driver.getEmail()).note("운반 시작").build());
+            statusHistoryRepository.save(StatusHistory.builder().shipment(completed).fromStatus(ShipmentStatus.IN_TRANSIT).toStatus(ShipmentStatus.COMPLETED).actorEmail(driver.getEmail()).note("운반 완료").build());
+            if (moneyTransactionRepository.count() == 0) {
+                int fee = (int) Math.floor(completedOffer.getPrice() * 0.03);
+                int net = completedOffer.getPrice() - fee;
+                moneyTransactionRepository.save(MoneyTransaction.builder().user(shipper).shipment(completed).type(TransactionType.SPEND).grossAmount(completedOffer.getPrice()).feeAmount(0).netAmount(completedOffer.getPrice()).description("배차 완료 결제").build());
+                moneyTransactionRepository.save(MoneyTransaction.builder().user(driver).shipment(completed).type(TransactionType.EARN).grossAmount(completedOffer.getPrice()).feeAmount(fee).netAmount(net).description("운행 완료 정산").build());
+                moneyTransactionRepository.save(MoneyTransaction.builder().user(admin).shipment(completed).type(TransactionType.FEE).grossAmount(completedOffer.getPrice()).feeAmount(fee).netAmount(fee).description("플랫폼 수수료 수익").build());
+            }
+
             Shipment transit = shipmentRepository.save(Shipment.builder()
                     .shipper(shipper)
                     .assignedDriver(driver)
-                    .acceptedOfferId(1L)
                     .title("전자부품 정시 납품")
                     .cargoType("전자부품")
                     .weightKg(280.0)
@@ -125,6 +161,9 @@ public class DataInitializer implements CommandLineRunner {
                     .startedAt(java.time.LocalDateTime.now().minusMinutes(20))
                     .estimatedArrivalAt(java.time.LocalDateTime.now().plusMinutes(44))
                     .build());
+            Offer transitOffer = offerRepository.save(Offer.builder().shipment(transit).driver(driver).price(88000).message("즉시 픽업 가능합니다").status(OfferStatus.ACCEPTED).build());
+            transit.setAcceptedOfferId(transitOffer.getId());
+            shipmentRepository.save(transit);
             statusHistoryRepository.save(StatusHistory.builder().shipment(transit).fromStatus(ShipmentStatus.BIDDING).toStatus(ShipmentStatus.CONFIRMED).actorEmail(shipper.getEmail()).note("샘플 차주 확정").build());
             statusHistoryRepository.save(StatusHistory.builder().shipment(transit).fromStatus(ShipmentStatus.CONFIRMED).toStatus(ShipmentStatus.IN_TRANSIT).actorEmail(driver.getEmail()).note("운반 시작").build());
             locationLogRepository.save(LocationLog.builder().shipment(transit).driver(driver).latitude(37.4442).longitude(126.8787).roughLocation("안양 인근 이동중").remainingMinutes(27).build());

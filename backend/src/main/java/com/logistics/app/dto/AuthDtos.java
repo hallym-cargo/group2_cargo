@@ -34,5 +34,6 @@ public class AuthDtos {
         private String email;
         private String name;
         private UserRole role;
+        private Boolean profileCompleted;
     }
 }

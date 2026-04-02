@@ -148,13 +148,11 @@ function buildTruckContent(progress, remainingMinutes) {
 export default function KakaoMapView({ shipment }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
-  const markerRefs = useRef([])
   const truckOverlayRef = useRef(null)
   const polylineRef = useRef(null)
   const tickRef = useRef(null)
   const pauseUntilRef = useRef(0)
-  const resumeRef = useRef(null)
-  const userInteractingRef = useRef(false)
+  const boundsAppliedRef = useRef(false)
 
   const [error, setError] = useState('')
   const [nowTick, setNowTick] = useState(Date.now())
@@ -216,11 +214,7 @@ export default function KakaoMapView({ shipment }) {
   }, [shipment, trackingMeta, routeState])
 
   useEffect(() => {
-    if (!shipment || !points || !trackingMeta) return
-    if (!KAKAO_APP_KEY) {
-      setError('VITE_KAKAO_MAP_APP_KEY가 설정되지 않아 실제 지도 대신 좌표만 표시됩니다.')
-      return
-    }
+    if (!shipment || !points) return
 
     let cancelled = false
 
@@ -232,71 +226,98 @@ export default function KakaoMapView({ shipment }) {
           center: new kakao.maps.LatLng(points.current.lat, points.current.lng),
           level: 7,
         })
-        mapInstanceRef.current.addOverlayMapTypeId(kakao.maps.MapTypeId.TRAFFIC)
-
-        const markUserInteraction = () => {
-          userInteractingRef.current = true
-          pauseUntilRef.current = Date.now() + INTERACTION_PAUSE_MS
-          if (resumeRef.current) clearTimeout(resumeRef.current)
-          resumeRef.current = setTimeout(() => {
-            userInteractingRef.current = false
-          }, INTERACTION_PAUSE_MS)
-        }
-
-        kakao.maps.event.addListener(mapInstanceRef.current, 'dragstart', markUserInteraction)
-        kakao.maps.event.addListener(mapInstanceRef.current, 'zoom_start', markUserInteraction)
       }
 
       const map = mapInstanceRef.current
-      markerRefs.current.forEach((overlay) => overlay.setMap?.(null))
-      markerRefs.current = []
-      polylineRef.current?.setMap?.(null)
-      truckOverlayRef.current?.setMap?.(null)
 
-      const originLatLng = new kakao.maps.LatLng(points.origin.lat, points.origin.lng)
-      const currentLatLng = new kakao.maps.LatLng(points.current.lat, points.current.lng)
-      const destinationLatLng = new kakao.maps.LatLng(points.destination.lat, points.destination.lng)
-
-      const path = routeState.coords.length
-        ? routeState.coords.map((p) => new kakao.maps.LatLng(p.lat, p.lng))
-        : [originLatLng, currentLatLng, destinationLatLng]
-
-      polylineRef.current = new kakao.maps.Polyline({
-        path,
-        strokeWeight: 5,
-        strokeColor: '#2563eb',
-        strokeOpacity: 0.9,
-        strokeStyle: 'solid',
+      kakao.maps.event.addListener(map, 'dragstart', () => {
+        pauseUntilRef.current = Date.now() + INTERACTION_PAUSE_MS
       })
-      polylineRef.current.setMap(map)
-
-      const originMarker = new kakao.maps.Marker({ map, position: originLatLng, title: '출발지' })
-      const destinationMarker = new kakao.maps.Marker({ map, position: destinationLatLng, title: '도착지' })
-      const originWindow = new kakao.maps.InfoWindow({ content: '<div style="padding:6px 10px;font-size:12px;">출발지</div>' })
-      const destinationWindow = new kakao.maps.InfoWindow({ content: '<div style="padding:6px 10px;font-size:12px;">도착지</div>' })
-      originWindow.open(map, originMarker)
-      destinationWindow.open(map, destinationMarker)
-      markerRefs.current.push(originMarker, destinationMarker, originWindow, destinationWindow)
-
-      truckOverlayRef.current = new kakao.maps.CustomOverlay({
-        position: currentLatLng,
-        content: buildTruckContent(trackingMeta.progress, trackingMeta.remainingMinutes),
-        yAnchor: 0.55,
-        xAnchor: 0.5,
-        zIndex: 4,
+      kakao.maps.event.addListener(map, 'zoom_start', () => {
+        pauseUntilRef.current = Date.now() + INTERACTION_PAUSE_MS
       })
-      truckOverlayRef.current.setMap(map)
 
-      const bounds = new kakao.maps.LatLngBounds()
-      path.forEach((latlng) => bounds.extend(latlng))
-      map.setBounds(bounds)
-      setError('')
-    }).catch((e) => {
-      if (!cancelled) setError(e.message || '지도를 불러오지 못했습니다.')
+      if (truckOverlayRef.current) {
+        truckOverlayRef.current.setMap(null)
+        truckOverlayRef.current = null
+      }
+
+      if (shipment.status === 'IN_TRANSIT' && !truckOverlayRef.current) {
+        const latlng = new kakao.maps.LatLng(points.current.lat, points.current.lng)
+
+        truckOverlayRef.current = new kakao.maps.CustomOverlay({
+          position: latlng,
+          content: buildTruckContent(trackingMeta.progress, trackingMeta.remainingMinutes),
+          yAnchor: 0.55,
+          xAnchor: 0.5,
+          zIndex: 4,
+        })
+
+        truckOverlayRef.current.setMap(map)
+      }
+
+      if (shipment.status !== 'IN_TRANSIT' && truckOverlayRef.current) {
+        truckOverlayRef.current.setMap(null)
+        truckOverlayRef.current = null
+      }
     })
 
     return () => { cancelled = true }
-  }, [shipment, points, trackingMeta, routeState])
+  }, [shipment?.id, shipment?.status, points, trackingMeta])
+
+  useEffect(() => {
+    if (polylineRef.current) {
+      polylineRef.current.setMap(null)
+      polylineRef.current = null
+    }
+  }, [shipment?.id])
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.kakao?.maps) return
+    if (!routeState.coords.length) return
+    if (boundsAppliedRef.current) return
+
+    const map = mapInstanceRef.current
+    const bounds = new window.kakao.maps.LatLngBounds()
+
+    routeState.coords.forEach((coord) => {
+      bounds.extend(new window.kakao.maps.LatLng(coord.lat, coord.lng))
+    })
+
+    map.setBounds(bounds)
+    boundsAppliedRef.current = true
+
+  }, [routeState.coords])
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.kakao?.maps) return
+    if (!routeState.coords.length) return
+
+    const map = mapInstanceRef.current
+
+    if (polylineRef.current) {
+      polylineRef.current.setMap(null)
+    }
+
+    const path = routeState.coords.map(
+      (coord) => new window.kakao.maps.LatLng(coord.lat, coord.lng)
+    )
+
+    polylineRef.current = new window.kakao.maps.Polyline({
+      path,
+      strokeWeight: 4,
+      strokeColor: '#2F6BFF',
+      strokeOpacity: 0.9,
+      strokeStyle: 'solid',
+    })
+
+    polylineRef.current.setMap(map)
+
+  }, [routeState.coords])
+
+  useEffect(() => {
+    boundsAppliedRef.current = false
+  }, [shipment?.id])
 
   useEffect(() => {
     if (!shipment || !trackingMeta || !points || !truckOverlayRef.current) return undefined
@@ -320,11 +341,7 @@ export default function KakaoMapView({ shipment }) {
       const latlng = new window.kakao.maps.LatLng(current.lat, current.lng)
       truckOverlayRef.current.setPosition(latlng)
       truckOverlayRef.current.setContent(buildTruckContent(progress, remainingMinutes))
-
-      if (!userInteractingRef.current && mapInstanceRef.current) {
-        mapInstanceRef.current.panTo(latlng)
-      }
-    }, 1000)
+    }, 500)
 
     tickRef.current = timer
     return () => {
