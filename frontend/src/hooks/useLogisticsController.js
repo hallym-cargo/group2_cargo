@@ -28,6 +28,7 @@ import {
   fetchFinanceTransactions,
   fetchMyProfile,
   fetchPublicOverview,
+  fetchPublicUsers,
   fetchRatingsDashboard,
   fetchShipment,
   fetchShipments,
@@ -65,6 +66,8 @@ export function useLogisticsController() {
   const [publicSelectedId, setPublicSelectedId] = useState(null)
   const [publicStatusFilter, setPublicStatusFilter] = useState('ALL')
   const [inquiryForm, setInquiryForm] = useState(emptyInquiry)
+  const [publicUsers, setPublicUsers] = useState([])
+  const [publicUserKeyword, setPublicUserKeyword] = useState('')
 
   const [shipments, setShipments] = useState([])
   const [bookmarks, setBookmarks] = useState([])
@@ -78,6 +81,7 @@ export function useLogisticsController() {
   const [shipmentFilter, setShipmentFilter] = useState('ALL')
   const [driverBoardTag, setDriverBoardTag] = useState('ALL')
   const [shipmentKeyword, setShipmentKeyword] = useState('')
+  const [routePage, setRoutePage] = useState('main')
 
   const [adminDashboard, setAdminDashboard] = useState(null)
   const [adminMembers, setAdminMembers] = useState([])
@@ -99,6 +103,9 @@ export function useLogisticsController() {
   const [editingNoticeId, setEditingNoticeId] = useState(null)
   const [editingFaqId, setEditingFaqId] = useState(null)
   const [inquiryAnswerDraft, setInquiryAnswerDraft] = useState({})
+
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
 
   const stompClientRef = useRef(null)
   const isLoggedIn = !!auth.token
@@ -148,6 +155,27 @@ export function useLogisticsController() {
     ]
   }, [auth.role])
 
+  const searchPublicUsers = async (role, keyword = publicUserKeyword) => {
+    try {
+      const data = await fetchPublicUsers(role, keyword)
+      setPublicUsers(data)
+      setPublicUserKeyword(keyword)
+      setRoutePage(role === 'SHIPPER' ? 'shippers' : 'drivers')
+    } catch (err) {
+      console.error(err)
+      setMessage(err.response?.data?.message || '회원 검색 실패')
+    }
+  }
+
+  const resetPublicUserSearch = async (role) => {
+    await searchPublicUsers(role, '')
+  }
+
+  const openPublicUserPage = async (role) => {
+    setPublicUserKeyword('')
+    await searchPublicUsers(role, '')
+  }
+
   const syncAuth = (data) => {
     localStorage.setItem('token', data.token)
     localStorage.setItem('email', data.email)
@@ -182,6 +210,7 @@ export function useLogisticsController() {
     setRatingsDashboard(null)
     setAdminRecentRatings([])
     setCompletionProof({ dataUrl: '', name: '' })
+    setRoutePage('main')
   }
 
   const loadPublic = async () => {
@@ -192,9 +221,15 @@ export function useLogisticsController() {
 
   const loadShipments = async () => {
     if (!isLoggedIn || isAdmin) return
-    const data = await fetchShipments()
-    setShipments(data)
-    if (!selectedId && data.length) setSelectedId(data[0].id)
+
+    const res = await fetchShipments(page, 10)
+
+    setShipments(res.content)
+    setTotalPages(res.totalPages)
+
+    if (!selectedId && res.content.length) {
+      setSelectedId(res.content[0].id)
+    }
   }
 
   const loadBookmarks = async () => {
@@ -311,7 +346,7 @@ export function useLogisticsController() {
     }
   }
 
-  useEffect(() => { loadPublic().catch(() => {}) }, [])
+  useEffect(() => { loadPublic().catch(() => { }) }, [])
   useEffect(() => {
     const classes = ['theme-public', 'theme-shipper', 'theme-driver', 'theme-admin']
     document.body.classList.remove(...classes)
@@ -323,16 +358,21 @@ export function useLogisticsController() {
     if (!isLoggedIn) return
     if (isAdmin) {
       loadAdmin().catch(err => setMessage(err.response?.data?.message || '관리자 데이터 로드 실패'))
-      loadFinance().catch(() => {})
-      loadRatings().catch(() => {})
+      loadFinance().catch(() => { })
+      loadRatings().catch(() => { })
     } else {
       loadShipments().catch(err => setMessage(err.response?.data?.message || '목록 로드 실패'))
-      loadBookmarks().catch(() => {})
-      loadFinance().catch(() => {})
-      loadRatings().catch(() => {})
-      loadProfile().catch(() => {})
+      loadBookmarks().catch(() => { })
+      loadFinance().catch(() => { })
+      loadRatings().catch(() => { })
+      loadProfile().catch(() => { })
     }
   }, [isLoggedIn, isAdmin])
+
+  useEffect(() => {
+    if (!isLoggedIn || isAdmin) return
+    loadShipments().catch(() => { })
+  }, [page])
 
   useEffect(() => {
     if (selectedId && isLoggedIn && !isAdmin) loadDetail(selectedId).catch(err => setMessage(err.response?.data?.message || '상세 로드 실패'))
@@ -344,19 +384,19 @@ export function useLogisticsController() {
       reconnectDelay: 4000,
       onConnect: () => {
         client.subscribe('/topic/shipments', () => {
-          loadPublic().catch(() => {})
-          if (isAdmin) { loadAdmin().catch(() => {}); loadFinance().catch(() => {}); loadRatings().catch(() => {}) }
+          loadPublic().catch(() => { })
+          if (isAdmin) { loadAdmin().catch(() => { }); loadFinance().catch(() => { }); loadRatings().catch(() => { }) }
           else if (isLoggedIn) {
-            loadShipments().catch(() => {})
-            loadBookmarks().catch(() => {})
-            loadFinance().catch(() => {})
-            loadRatings().catch(() => {})
-            if (selectedId) loadDetail(selectedId).catch(() => {})
+            loadShipments().catch(() => { })
+            loadBookmarks().catch(() => { })
+            loadFinance().catch(() => { })
+            loadRatings().catch(() => { })
+            if (selectedId) loadDetail(selectedId).catch(() => { })
           }
         })
         if (selectedId) {
           client.subscribe(`/topic/shipments/${selectedId}`, () => {
-            if (!isAdmin && isLoggedIn && selectedId) loadDetail(selectedId).catch(() => {})
+            if (!isAdmin && isLoggedIn && selectedId) loadDetail(selectedId).catch(() => { })
           })
         }
       },
@@ -461,6 +501,7 @@ export function useLogisticsController() {
       }
       await completeTrip(selectedId, { completionImageDataUrl: completionProof.dataUrl, completionImageName: completionProof.name })
       setCompletionProof({ dataUrl: '', name: '' })
+      setRoutePage('main')
       setMessage('운반이 완료되었습니다.')
       await Promise.all([loadShipments(), loadDetail(selectedId)])
     } catch (err) {
@@ -547,8 +588,8 @@ export function useLogisticsController() {
 
   return {
     API_BASE_URL,
-    auth, setAuth, message, setMessage, authMode, setAuthMode, loginForm, setLoginForm, signupForm, setSignupForm,
-    publicData, publicSelectedId, setPublicSelectedId, publicStatusFilter, setPublicStatusFilter, inquiryForm, setInquiryForm,
+    auth, setAuth, page, setPage, totalPages, routePage, setRoutePage, message, setMessage, authMode, setAuthMode, loginForm, setLoginForm, signupForm, setSignupForm,
+    publicData, publicSelectedId, setPublicSelectedId, publicStatusFilter, setPublicStatusFilter, inquiryForm, setInquiryForm, publicUsers, publicUserKeyword, setPublicUserKeyword,
     shipments, bookmarks, selectedId, setSelectedId, selected, dashboardTab, setDashboardTab, profile, profileForm, setProfileForm,
     shipmentForm, setShipmentForm, offerForm, setOfferForm, shipmentFilter, setShipmentFilter, driverBoardTag, setDriverBoardTag,
     shipmentKeyword, setShipmentKeyword, adminDashboard, adminMembers, adminShipments, adminNotices, adminFaqs, adminInquiries,
@@ -557,6 +598,7 @@ export function useLogisticsController() {
     editingFaqId, setEditingFaqId, inquiryAnswerDraft, setInquiryAnswerDraft, isLoggedIn, isAdmin, roleTheme, publicBoard,
     selectedPublic, filteredShipments, summary, userAlerts, adminAlerts, roleQuickActions, logout, handleLogin, handleSignup,
     handleInquiry, handleCreateShipment, handleCreateOffer, handleAcceptOffer, handleStart, handleComplete, handleToggleBookmark,
+    searchPublicUsers, resetPublicUserSearch, openPublicUserPage,
     handleUpdateMember, handleForceShipmentStatus, submitNotice, submitFaq, handleAnswerInquiry, handleResolveDispute,
     handleSaveProfile, handleShipmentImagesChange, handleCompletionProofChange, loadAdmin, loadPublic, deleteAdminFaq, deleteAdminNotice,
   }

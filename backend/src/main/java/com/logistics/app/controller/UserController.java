@@ -7,6 +7,8 @@ import com.logistics.app.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -26,6 +28,11 @@ public class UserController {
     @PutMapping("/me/profile")
     public UserDtos.ProfileResponse updateMyProfile(@RequestBody UserDtos.UpdateProfileRequest request, Authentication authentication) {
         return userService.updateMyProfile(currentUser(authentication), request);
+    }
+
+    @GetMapping("/public-search")
+    public List<UserDtos.PublicUserListItem> publicUsers(@RequestParam String role, @RequestParam(required = false, defaultValue = "") String keyword) {
+        return userService.searchPublicUsers(role, keyword);
     }
 
     @GetMapping("/{userId}/public-profile")
