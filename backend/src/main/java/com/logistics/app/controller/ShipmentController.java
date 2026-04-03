@@ -37,7 +37,12 @@ public class ShipmentController {
         return shipmentService.listBookmarks(currentUser(authentication));
     }
 
-    @GetMapping("/{shipmentId}")
+    @GetMapping("/page")
+    public Page<ShipmentDtos.ShipmentResponse> getShipments(Pageable pageable, Authentication authentication) {
+        return shipmentService.getShipmentList(pageable, currentUser(authentication));
+    }
+    
+    @GetMapping("/{shipmentId:\\d+}")
     public ShipmentDtos.ShipmentResponse get(@PathVariable Long shipmentId, Authentication authentication) {
         return shipmentService.getShipment(shipmentId, currentUser(authentication));
     }
@@ -92,10 +97,5 @@ public class ShipmentController {
 
     private User currentUser(Authentication authentication) {
         return authService.getCurrentUser(authentication.getName());
-    }
-    
-    @GetMapping("/page")
-    public Page<ShipmentDtos.ShipmentResponse> getShipments(Pageable pageable, Authentication authentication) {
-        return shipmentService.getShipmentList(pageable, currentUser(authentication));
     }
 }
