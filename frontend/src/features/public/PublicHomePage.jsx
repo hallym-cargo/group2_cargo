@@ -15,6 +15,7 @@ export default function PublicHomePage({ controller }) {
         setAuthMode={controller.setAuthMode}
         setDashboardTab={controller.setDashboardTab}
         logout={controller.logout}
+        controller={controller}
       />
       <PublicHeroSection controller={controller} />
       <PublicBoardSection controller={controller} />

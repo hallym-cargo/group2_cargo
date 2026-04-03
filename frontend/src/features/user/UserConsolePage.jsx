@@ -9,6 +9,7 @@ import UserOverviewTab from './tabs/UserOverviewTab'
 import UserRatingsTab from './tabs/UserRatingsTab'
 import UserRegisterDriverTab from './tabs/UserRegisterDriverTab'
 import UserRegisterShipperTab from './tabs/UserRegisterShipperTab'
+import TransportStatus from '../../pages/TransportStatus';
 
 function resolveTitle(authRole, dashboardTab) {
   if (dashboardTab === 'register') {
@@ -34,6 +35,10 @@ function resolveTabComponent(authRole, dashboardTab) {
 }
 
 export default function UserConsolePage({ controller }) {
+
+  if (controller.page === 'status') {
+    return <TransportStatus />;
+  }
   const title = resolveTitle(controller.auth.role, controller.dashboardTab)
   const ActiveTab = resolveTabComponent(controller.auth.role, controller.dashboardTab)
 

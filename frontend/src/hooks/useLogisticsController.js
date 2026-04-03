@@ -78,6 +78,7 @@ export function useLogisticsController() {
   const [shipmentFilter, setShipmentFilter] = useState('ALL')
   const [driverBoardTag, setDriverBoardTag] = useState('ALL')
   const [shipmentKeyword, setShipmentKeyword] = useState('')
+  const [page, setPage] = useState('main');
 
   const [adminDashboard, setAdminDashboard] = useState(null)
   const [adminMembers, setAdminMembers] = useState([])
@@ -559,5 +560,7 @@ export function useLogisticsController() {
     handleInquiry, handleCreateShipment, handleCreateOffer, handleAcceptOffer, handleStart, handleComplete, handleToggleBookmark,
     handleUpdateMember, handleForceShipmentStatus, submitNotice, submitFaq, handleAnswerInquiry, handleResolveDispute,
     handleSaveProfile, handleShipmentImagesChange, handleCompletionProofChange, loadAdmin, loadPublic, deleteAdminFaq, deleteAdminNotice,
+    page,
+  setPage,
   }
 }
