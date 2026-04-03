@@ -8,7 +8,60 @@ export default function UserBoardTab({ controller }) {
 
   return (
     <div className="page-stack">
-      <div className="surface table-surface"><SectionTitle title="배차 보드" desc="행을 클릭하면 상세와 지도, 역할별 액션이 함께 열립니다." /><table className="board-table"><thead><tr><th></th><th>상태</th><th>배차명</th><th>태그</th><th>구간</th><th>입찰</th><th>차주</th><th>예상</th></tr></thead><tbody>{filteredShipments.map(item => <tr key={item.id} className={selectedId === item.id ? 'is-selected' : ''} onClick={() => { if (item.canAccessDetail !== false) setSelectedId(item.id) }}><td><button className={item.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'} onClick={(e) => { e.stopPropagation(); handleToggleBookmark(item.id) }}>★</button></td><td><span className={`badge badge-${item.status.toLowerCase()}`}>{statusText(item.status)}</span></td><td><strong>{item.title}</strong><small>{item.cargoType}</small></td><td>{auth.role === 'DRIVER' ? <div className="chip-group">{item.assignedToMe && <span className="tag tag-dark">내 배차</span>}{!item.assignedToMe && item.hasMyOffer && <span className="tag">내 입찰</span>}{!item.assignedToMe && !item.hasMyOffer && item.status === 'BIDDING' && <span className="tag">공개</span>}</div> : <span className="tag">{roleText(auth.role)}</span>}</td><td>{item.originAddress} → {item.destinationAddress}</td><td>{item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}</td><td>{item.assignedDriverName || '-'}</td><td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td></tr>)}</tbody></table></div>
+      <div className="surface table-surface">
+        <SectionTitle title="배차 보드" desc="행을 클릭하면 상세와 지도, 역할별 액션이 함께 열립니다." />
+        <table className="board-table">
+          <thead>
+            <tr>
+              <th>
+              </th>
+              <th>상태</th>
+              <th>배차명</th>
+              <th>태그</th>
+              <th>구간</th>
+              <th>입찰</th>
+              <th>차주</th>
+              <th>예상</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredShipments.map(item => <tr key={item.id} className={selectedId === item.id ? 'is-selected' : ''} onClick={() => { if (item.canAccessDetail !== false) setSelectedId(item.id) }}>
+              <td>
+                <button className={item.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'} onClick={(e) => { e.stopPropagation(); handleToggleBookmark(item.id) }}>★</button>
+                </td>
+                <td>
+                  <span className={`badge badge-${item.status.toLowerCase()}`}>{statusText(item.status)}</span>
+                </td>
+                <td>
+                  <strong>{item.title}</strong>
+                  <small>{item.cargoType}</small>
+                </td>
+                <td>{auth.role === 'DRIVER' ? <div className="chip-group">{item.assignedToMe && <span className="tag tag-dark">내 배차</span>}{!item.assignedToMe && item.hasMyOffer && <span className="tag">내 입찰</span>}{!item.assignedToMe && !item.hasMyOffer && item.status === 'BIDDING' && <span className="tag">공개</span>}</div> : <span className="tag">{roleText(auth.role)}</span>}</td>
+                <td>{item.originAddress} → {item.destinationAddress}</td>
+                <td>{item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}</td>
+                <td>{item.assignedDriverName || '-'}</td>
+                <td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td>
+                </tr>)}
+          </tbody>
+        </table>
+      </div>
+      {/* 페이징 UI 추가 */}
+      <div style={{ marginTop: '16px', textAlign: 'center' }}>
+        <button disabled={controller.page === 0} onClick={() => controller.setPage(controller.page - 1)}>
+          이전
+        </button>
+
+        <span style={{ margin: '0 12px' }}>
+          {controller.page + 1} / {controller.totalPages}
+        </span>
+
+        <button
+          disabled={controller.page >= controller.totalPages - 1}
+          onClick={() => controller.setPage(controller.page + 1)}
+        >
+          다음
+        </button>
+      </div>
       <div className="detail-layout">
         <div className="surface">
           {selected ? (<><div className="detail-head"><div><div className="eyebrow">SHIPMENT DETAIL</div><h3>{selected.title}</h3></div><div className="table-actions"><button className={selected.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'} onClick={() => handleToggleBookmark(selected.id)}>★ 즐겨찾기</button><span className={`badge badge-${selected.status.toLowerCase()}`}>{statusText(selected.status)}</span></div></div><div className="detail-stat-grid"><div><span>출발지</span><strong>{selected.originAddress}</strong></div><div><span>도착지</span><strong>{selected.destinationAddress}</strong></div><div><span>입찰 현황</span><strong>{selected.offerCount}건 / {formatCurrency(selected.bestOfferPrice)}</strong></div><div><span>배정 차주</span><strong>{selected.assignedDriverName || '미확정'}</strong></div><div><span>현재 위치</span><strong>{selected.tracking?.roughLocation || '미등록'}</strong></div><div><span>남은 시간</span><strong>{selected.tracking?.remainingMinutes ?? selected.estimatedMinutes}분</strong></div></div>{!!selected.cargoImageUrls?.length && <div className="surface-sub"><strong>등록 화물 사진</strong><div className="image-preview-row">{selected.cargoImageUrls.map((src, idx) => <img key={idx} src={src} alt={`cargo-detail-${idx}`} className="image-preview-thumb" />)}</div></div>}{!!selected.completionImageUrl && <div className="surface-sub"><strong>배송 완료 사진</strong><div className="image-preview-row"><img src={selected.completionImageUrl} alt="completion" className="image-preview-thumb" /></div></div>}<ProfilePreviewCard title={auth.role === 'DRIVER' ? '거래 전 확인할 화주 정보' : '거래 전 확인할 차주 정보'} profile={auth.role === 'DRIVER' ? { name: selected.shipperName, role: 'SHIPPER', companyName: selected.companyName, bio: selected.shipperBio, profileImageUrl: selected.shipperProfileImageUrl, contactEmail: selected.shipperContactEmail, contactPhone: selected.shipperContactPhone, averageRating: selected.shipperAverageRating, ratingCount: selected.shipperRatingCount, completedCount: undefined } : (selected.assignedDriverName ? { name: selected.assignedDriverName, role: 'DRIVER', bio: selected.assignedDriverBio, profileImageUrl: selected.assignedDriverProfileImageUrl, contactEmail: selected.assignedDriverContactEmail, contactPhone: selected.assignedDriverContactPhone, averageRating: selected.assignedDriverAverageRating, ratingCount: selected.assignedDriverRatingCount, completedCount: undefined } : null)} /><KakaoMapView shipment={selected} /><div className="surface-sub"><SectionTitle title="상태 타임라인" /><div className="list-stack">{(selected.histories || []).map(history => <div className="list-row block" key={history.id}><strong>{statusText(history.toStatus)}</strong><span>{history.note} · {history.actorEmail}</span><small>{formatDate(history.createdAt)}</small></div>)}</div></div></>) : <div className="empty-box">배차를 선택해 주세요.</div>}

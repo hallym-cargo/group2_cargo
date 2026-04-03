@@ -1,10 +1,14 @@
 package com.logistics.app.controller;
 
 import com.logistics.app.dto.ShipmentDtos;
+import com.logistics.app.entity.Shipment;
 import com.logistics.app.entity.User;
 import com.logistics.app.service.AuthService;
 import com.logistics.app.service.ShipmentService;
 import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -88,5 +92,10 @@ public class ShipmentController {
 
     private User currentUser(Authentication authentication) {
         return authService.getCurrentUser(authentication.getName());
+    }
+    
+    @GetMapping("/page")
+    public Page<ShipmentDtos.ShipmentResponse> getShipments(Pageable pageable, Authentication authentication) {
+        return shipmentService.getShipmentList(pageable, currentUser(authentication));
     }
 }

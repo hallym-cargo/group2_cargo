@@ -100,6 +100,9 @@ export function useLogisticsController() {
   const [editingFaqId, setEditingFaqId] = useState(null)
   const [inquiryAnswerDraft, setInquiryAnswerDraft] = useState({})
 
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+
   const stompClientRef = useRef(null)
   const isLoggedIn = !!auth.token
   const isAdmin = auth.role === 'ADMIN'
@@ -192,9 +195,15 @@ export function useLogisticsController() {
 
   const loadShipments = async () => {
     if (!isLoggedIn || isAdmin) return
-    const data = await fetchShipments()
-    setShipments(data)
-    if (!selectedId && data.length) setSelectedId(data[0].id)
+
+    const res = await fetchShipments(page, 10)
+
+    setShipments(res.content)
+    setTotalPages(res.totalPages)
+
+    if (!selectedId && res.content.length) {
+      setSelectedId(res.content[0].id)
+    }
   }
 
   const loadBookmarks = async () => {
@@ -311,7 +320,7 @@ export function useLogisticsController() {
     }
   }
 
-  useEffect(() => { loadPublic().catch(() => {}) }, [])
+  useEffect(() => { loadPublic().catch(() => { }) }, [])
   useEffect(() => {
     const classes = ['theme-public', 'theme-shipper', 'theme-driver', 'theme-admin']
     document.body.classList.remove(...classes)
@@ -323,16 +332,21 @@ export function useLogisticsController() {
     if (!isLoggedIn) return
     if (isAdmin) {
       loadAdmin().catch(err => setMessage(err.response?.data?.message || '관리자 데이터 로드 실패'))
-      loadFinance().catch(() => {})
-      loadRatings().catch(() => {})
+      loadFinance().catch(() => { })
+      loadRatings().catch(() => { })
     } else {
       loadShipments().catch(err => setMessage(err.response?.data?.message || '목록 로드 실패'))
-      loadBookmarks().catch(() => {})
-      loadFinance().catch(() => {})
-      loadRatings().catch(() => {})
-      loadProfile().catch(() => {})
+      loadBookmarks().catch(() => { })
+      loadFinance().catch(() => { })
+      loadRatings().catch(() => { })
+      loadProfile().catch(() => { })
     }
   }, [isLoggedIn, isAdmin])
+
+  useEffect(() => {
+    if (!isLoggedIn || isAdmin) return
+    loadShipments().catch(() => { })
+  }, [page])
 
   useEffect(() => {
     if (selectedId && isLoggedIn && !isAdmin) loadDetail(selectedId).catch(err => setMessage(err.response?.data?.message || '상세 로드 실패'))
@@ -344,19 +358,19 @@ export function useLogisticsController() {
       reconnectDelay: 4000,
       onConnect: () => {
         client.subscribe('/topic/shipments', () => {
-          loadPublic().catch(() => {})
-          if (isAdmin) { loadAdmin().catch(() => {}); loadFinance().catch(() => {}); loadRatings().catch(() => {}) }
+          loadPublic().catch(() => { })
+          if (isAdmin) { loadAdmin().catch(() => { }); loadFinance().catch(() => { }); loadRatings().catch(() => { }) }
           else if (isLoggedIn) {
-            loadShipments().catch(() => {})
-            loadBookmarks().catch(() => {})
-            loadFinance().catch(() => {})
-            loadRatings().catch(() => {})
-            if (selectedId) loadDetail(selectedId).catch(() => {})
+            loadShipments().catch(() => { })
+            loadBookmarks().catch(() => { })
+            loadFinance().catch(() => { })
+            loadRatings().catch(() => { })
+            if (selectedId) loadDetail(selectedId).catch(() => { })
           }
         })
         if (selectedId) {
           client.subscribe(`/topic/shipments/${selectedId}`, () => {
-            if (!isAdmin && isLoggedIn && selectedId) loadDetail(selectedId).catch(() => {})
+            if (!isAdmin && isLoggedIn && selectedId) loadDetail(selectedId).catch(() => { })
           })
         }
       },
@@ -547,7 +561,7 @@ export function useLogisticsController() {
 
   return {
     API_BASE_URL,
-    auth, setAuth, message, setMessage, authMode, setAuthMode, loginForm, setLoginForm, signupForm, setSignupForm,
+    auth, setAuth, page, setPage, totalPages, message, setMessage, authMode, setAuthMode, loginForm, setLoginForm, signupForm, setSignupForm,
     publicData, publicSelectedId, setPublicSelectedId, publicStatusFilter, setPublicStatusFilter, inquiryForm, setInquiryForm,
     shipments, bookmarks, selectedId, setSelectedId, selected, dashboardTab, setDashboardTab, profile, profileForm, setProfileForm,
     shipmentForm, setShipmentForm, offerForm, setOfferForm, shipmentFilter, setShipmentFilter, driverBoardTag, setDriverBoardTag,

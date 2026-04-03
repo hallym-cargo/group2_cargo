@@ -4,6 +4,11 @@ import com.logistics.app.dto.ShipmentDtos;
 import com.logistics.app.entity.*;
 import com.logistics.app.repository.*;
 import com.logistics.app.ws.ShipmentRealtimePublisher;
+
+import lombok.Builder;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +18,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Builder
 @Service
 @Transactional
 public class ShipmentService {
@@ -467,5 +473,10 @@ public class ShipmentService {
                 * Math.sin(dLng / 2) * Math.sin(dLng / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return Math.round(earthRadius * c * 10) / 10.0;
+    }
+    
+    public Page<ShipmentDtos.ShipmentResponse> getShipmentList(Pageable pageable, User user) {
+        return shipmentRepository.findAll(pageable)
+                .map(shipment -> toResponse(shipment, user));
     }
 }
