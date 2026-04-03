@@ -1,9 +1,10 @@
 spring:
     datasource:
-        url: ${DB_URL}
-        username: ${DB_USERNAME}
-        password: ${DB_PASSWORD}
+        url: jdbc:postgresql://ep-round-sea-am1z6zcf-pooler.c-5.us-east-1.aws.neon.tech:5432/neondb?sslmode=require
+        username: neondb_owner
+        password: npg_yjGf5BD9tYRC
         driver-class-name: org.postgresql.Driver
+
     jpa:
         hibernate:
             ddl-auto: update
@@ -18,7 +19,7 @@ spring:
             write-dates-as-timestamps: false
 
 server:
-    port: ${PORT:8080}
+    port: ${SERVER_PORT:8080}
 
 app:
     cors:
