@@ -578,6 +578,43 @@
   text-align: left;
 }
 
+.public-directory-card__profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.public-directory-card__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #dcdfe6;
+  background: #eef2f7;
+  flex-shrink: 0;
+  margin-top: 14px;
+}
+
+.public-directory-card__title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.public-directory-card__title span {
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.public-directory-card__title h3 {
+  margin: 2px 0 0;
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--text-strong);
+}
+
 .overlay-backdrop {
   position: fixed;
   inset: 0;

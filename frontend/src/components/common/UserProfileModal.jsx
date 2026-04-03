@@ -3,16 +3,24 @@ import { formatRatingSummary, roleText } from '../../utils/formatters'
 export default function UserProfileModal({ profile, isLoggedIn, onClose, onOpenChat }) {
   if (!profile) return null
 
+  const getProfileImage = () => {
+    return profile.profileImageUrl || '/images/default-profile.png'
+  }
+
   return (
     <div className="overlay-backdrop" onClick={onClose}>
       <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>×</button>
+
         <div className="profile-modal__head">
-          {profile.profileImageUrl ? (
-            <img src={profile.profileImageUrl} alt={profile.name} className="profile-modal__avatar" />
-          ) : (
-            <div className="profile-modal__avatar profile-modal__avatar--fallback">{(profile.name || '?').slice(0, 1)}</div>
-          )}
+          <img
+            src={getProfileImage()}
+            alt={profile.name}
+            className="profile-modal__avatar"
+            onError={(e) => {
+              e.currentTarget.src = '/images/default-profile.png'
+            }}
+          />
           <div>
             <div className="profile-modal__role">{roleText(profile.role)}</div>
             <h3>{profile.name}</h3>
@@ -46,7 +54,9 @@ export default function UserProfileModal({ profile, isLoggedIn, onClose, onOpenC
 
         <div className="profile-modal__actions">
           {isLoggedIn ? (
-            <button className="btn btn-primary" onClick={() => onOpenChat(profile)}>1대1 채팅</button>
+            <button className="btn btn-primary" onClick={() => onOpenChat(profile)}>
+              1대1 채팅
+            </button>
           ) : (
             <small>1대1 채팅은 로그인 후 사용할 수 있습니다.</small>
           )}
