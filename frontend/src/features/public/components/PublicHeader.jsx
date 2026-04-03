@@ -14,6 +14,8 @@ export default function PublicHeader({ isLoggedIn, authMode, setAuthMode, setDas
           <button onClick={() => document.getElementById('landing-solution')?.scrollIntoView({ behavior: 'smooth' })}>서비스 소개</button>
           <button onClick={() => document.getElementById('board')?.scrollIntoView({ behavior: 'smooth' })}>실시간 배차</button>
           <button onClick={() => document.getElementById('notice-faq')?.scrollIntoView({ behavior: 'smooth' })}>공지 · 문의</button>
+          <button onClick={() => controller.openPublicUserPage('SHIPPER')}>화주 찾기</button>
+          <button onClick={() => controller.openPublicUserPage('DRIVER')}>차주 찾기</button>
           <button onClick={() => controller.setRoutePage('status')}>운송 현황</button>
         </nav>
 

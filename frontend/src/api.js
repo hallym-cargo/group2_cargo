@@ -19,6 +19,7 @@ export const fetchPublicOverview = async () => (await api.get('/public/overview'
 export const fetchMyProfile = async () => (await api.get('/api/users/me/profile')).data
 export const updateMyProfile = async (payload) => (await api.put('/api/users/me/profile', payload)).data
 export const fetchPublicProfile = async (userId) => (await api.get(`/api/users/${userId}/public-profile`)).data
+export const fetchPublicUsers = async (role, keyword = '') => (await api.get('/api/users/public-search', { params: { role, keyword } })).data
 
 export const createInquiry = async (payload) => (await api.post('/public/inquiries', payload)).data
 export const fetchDrivingRoute = async ({ startLat, startLng, endLat, endLng }) => (await api.get('/public/routes/driving', { params: { startLat, startLng, endLat, endLng } })).data

@@ -28,6 +28,7 @@ import {
   fetchFinanceTransactions,
   fetchMyProfile,
   fetchPublicOverview,
+  fetchPublicUsers,
   fetchRatingsDashboard,
   fetchShipment,
   fetchShipments,
@@ -65,6 +66,8 @@ export function useLogisticsController() {
   const [publicSelectedId, setPublicSelectedId] = useState(null)
   const [publicStatusFilter, setPublicStatusFilter] = useState('ALL')
   const [inquiryForm, setInquiryForm] = useState(emptyInquiry)
+  const [publicUsers, setPublicUsers] = useState([])
+  const [publicUserKeyword, setPublicUserKeyword] = useState('')
 
   const [shipments, setShipments] = useState([])
   const [bookmarks, setBookmarks] = useState([])
@@ -151,6 +154,27 @@ export function useLogisticsController() {
       { title: '주행 가이드', desc: '자동 주행, ETA, 완료 전환 시점을 다시 확인합니다.', action: () => setDashboardTab('register'), cta: '가이드 열기' },
     ]
   }, [auth.role])
+
+  const searchPublicUsers = async (role, keyword = publicUserKeyword) => {
+    try {
+      const data = await fetchPublicUsers(role, keyword)
+      setPublicUsers(data)
+      setPublicUserKeyword(keyword)
+      setRoutePage(role === 'SHIPPER' ? 'shippers' : 'drivers')
+    } catch (err) {
+      console.error(err)
+      setMessage(err.response?.data?.message || '회원 검색 실패')
+    }
+  }
+
+  const resetPublicUserSearch = async (role) => {
+    await searchPublicUsers(role, '')
+  }
+
+  const openPublicUserPage = async (role) => {
+    setPublicUserKeyword('')
+    await searchPublicUsers(role, '')
+  }
 
   const syncAuth = (data) => {
     localStorage.setItem('token', data.token)
@@ -312,7 +336,6 @@ export function useLogisticsController() {
       const file = event.target.files?.[0]
       if (!file) {
         setCompletionProof({ dataUrl: '', name: '' })
-    setRoutePage('main')
         return
       }
       const converted = await fileToDataUrl(file)
@@ -478,7 +501,7 @@ export function useLogisticsController() {
       }
       await completeTrip(selectedId, { completionImageDataUrl: completionProof.dataUrl, completionImageName: completionProof.name })
       setCompletionProof({ dataUrl: '', name: '' })
-    setRoutePage('main')
+      setRoutePage('main')
       setMessage('운반이 완료되었습니다.')
       await Promise.all([loadShipments(), loadDetail(selectedId)])
     } catch (err) {
@@ -566,7 +589,7 @@ export function useLogisticsController() {
   return {
     API_BASE_URL,
     auth, setAuth, page, setPage, totalPages, routePage, setRoutePage, message, setMessage, authMode, setAuthMode, loginForm, setLoginForm, signupForm, setSignupForm,
-    publicData, publicSelectedId, setPublicSelectedId, publicStatusFilter, setPublicStatusFilter, inquiryForm, setInquiryForm,
+    publicData, publicSelectedId, setPublicSelectedId, publicStatusFilter, setPublicStatusFilter, inquiryForm, setInquiryForm, publicUsers, publicUserKeyword, setPublicUserKeyword,
     shipments, bookmarks, selectedId, setSelectedId, selected, dashboardTab, setDashboardTab, profile, profileForm, setProfileForm,
     shipmentForm, setShipmentForm, offerForm, setOfferForm, shipmentFilter, setShipmentFilter, driverBoardTag, setDriverBoardTag,
     shipmentKeyword, setShipmentKeyword, adminDashboard, adminMembers, adminShipments, adminNotices, adminFaqs, adminInquiries,
@@ -575,6 +598,7 @@ export function useLogisticsController() {
     editingFaqId, setEditingFaqId, inquiryAnswerDraft, setInquiryAnswerDraft, isLoggedIn, isAdmin, roleTheme, publicBoard,
     selectedPublic, filteredShipments, summary, userAlerts, adminAlerts, roleQuickActions, logout, handleLogin, handleSignup,
     handleInquiry, handleCreateShipment, handleCreateOffer, handleAcceptOffer, handleStart, handleComplete, handleToggleBookmark,
+    searchPublicUsers, resetPublicUserSearch, openPublicUserPage,
     handleUpdateMember, handleForceShipmentStatus, submitNotice, submitFaq, handleAnswerInquiry, handleResolveDispute,
     handleSaveProfile, handleShipmentImagesChange, handleCompletionProofChange, loadAdmin, loadPublic, deleteAdminFaq, deleteAdminNotice,
   }
