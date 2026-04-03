@@ -1,11 +1,4 @@
-export default function PublicHeader({ 
-  isLoggedIn, 
-  authMode, 
-  setAuthMode, 
-  setDashboardTab, 
-  logout,
-  controller   // ✅ 추가
-}) {
+export default function PublicHeader({ isLoggedIn, authMode, setAuthMode, setDashboardTab, logout, controller }) {
   return (
     <header className="landing-header">
       <div className="landing-header__inner">
@@ -21,8 +14,7 @@ export default function PublicHeader({
           <button onClick={() => document.getElementById('landing-solution')?.scrollIntoView({ behavior: 'smooth' })}>서비스 소개</button>
           <button onClick={() => document.getElementById('board')?.scrollIntoView({ behavior: 'smooth' })}>실시간 배차</button>
           <button onClick={() => document.getElementById('notice-faq')?.scrollIntoView({ behavior: 'smooth' })}>공지 · 문의</button>
-          <button onClick={() => navigate('/estimate')}>견적 목록 보기</button>
-          <button onClick={() => controller.setPage('status')}>운송 현황</button>
+          <button onClick={() => controller.setRoutePage('status')}>운송 현황</button>
         </nav>
 
         <div className="landing-header__actions">
