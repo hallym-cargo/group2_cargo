@@ -21,6 +21,9 @@ export const updateMyProfile = async (payload) => (await api.put('/api/users/me/
 export const fetchPublicProfile = async (userId) => (await api.get(`/api/users/${userId}/public-profile`)).data
 export const fetchPublicUsers = async (role, keyword = '') => (await api.get('/api/users/public-search', { params: { role, keyword } })).data
 
+export const fetchChatRoom = async (targetUserId) => (await api.get(`/api/chat/rooms/${targetUserId}`)).data
+export const sendChatMessage = async (targetUserId, content) => (await api.post(`/api/chat/rooms/${targetUserId}/messages`, { content })).data
+
 export const createInquiry = async (payload) => (await api.post('/public/inquiries', payload)).data
 export const fetchDrivingRoute = async ({ startLat, startLng, endLat, endLng }) => (await api.get('/public/routes/driving', { params: { startLat, startLng, endLat, endLng } })).data
 

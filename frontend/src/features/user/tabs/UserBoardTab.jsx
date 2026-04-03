@@ -24,6 +24,7 @@ export default function UserBoardTab({ controller }) {
     page,
     setPage,
     totalPages,
+    openUserProfile,
   } = controller
 
   return (
@@ -99,7 +100,7 @@ export default function UserBoardTab({ controller }) {
                   {item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}
                 </td>
 
-                <td>{item.assignedDriverName || '-'}</td>
+                <td>{item.assignedDriverId ? <button type="button" className="inline-link-button" onClick={(e) => { e.stopPropagation(); openUserProfile(item.assignedDriverId, { id: item.assignedDriverId, name: item.assignedDriverName, role: 'DRIVER' }) }}><strong>{item.assignedDriverName}</strong></button> : '-'}</td>
 
                 <td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td>
               </tr>
@@ -151,7 +152,7 @@ export default function UserBoardTab({ controller }) {
                 </div>
                 <div>
                   <span>배정 차주</span>
-                  <strong>{selected.assignedDriverName || '미확정'}</strong>
+                  {selected.assignedDriverId ? (<button type="button" className="inline-link-button" onClick={() => openUserProfile(selected.assignedDriverId, { id: selected.assignedDriverId, name: selected.assignedDriverName, role: 'DRIVER', profileImageUrl: selected.assignedDriverProfileImageUrl, bio: selected.assignedDriverBio, contactEmail: selected.assignedDriverContactEmail, contactPhone: selected.assignedDriverContactPhone, averageRating: selected.assignedDriverAverageRating, ratingCount: selected.assignedDriverRatingCount })}><strong>{selected.assignedDriverName || '미확정'}</strong></button>) : (<strong>{selected.assignedDriverName || '미확정'}</strong>)}
                 </div>
                 <div>
                   <span>현재 위치</span>
@@ -188,6 +189,7 @@ export default function UserBoardTab({ controller }) {
                 profile={
                   auth.role === 'DRIVER'
                     ? {
+                        id: selected.shipperId,
                         name: selected.shipperName,
                         role: 'SHIPPER',
                         companyName: selected.companyName,
@@ -201,6 +203,7 @@ export default function UserBoardTab({ controller }) {
                       }
                     : selected.assignedDriverName
                       ? {
+                          id: selected.assignedDriverId,
                           name: selected.assignedDriverName,
                           role: 'DRIVER',
                           bio: selected.assignedDriverBio,
@@ -213,6 +216,7 @@ export default function UserBoardTab({ controller }) {
                         }
                       : null
                 }
+                              onProfileClick={openUserProfile}
               />
 
               <KakaoMapView shipment={selected} />
@@ -295,7 +299,7 @@ export default function UserBoardTab({ controller }) {
                     selected.offers.map((offer) => (
                       <div key={offer.id} className="offer-card">
                         <div className="detail-head">
-                          <strong>{offer.driverName}</strong>
+                          <button type="button" className="inline-link-button" onClick={() => openUserProfile(offer.driverId, { id: offer.driverId, name: offer.driverName, role: 'DRIVER', profileImageUrl: offer.driverProfileImageUrl, bio: offer.driverBio, contactEmail: offer.driverContactEmail, contactPhone: offer.driverContactPhone, averageRating: offer.driverAverageRating, ratingCount: offer.driverRatingCount })}><strong>{offer.driverName}</strong></button>
                           <span className="badge badge-neutral">{offer.status}</span>
                         </div>
 

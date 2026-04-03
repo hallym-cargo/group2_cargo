@@ -53,23 +53,6 @@ public class UserService {
                 .map(this::toPublicUserListItem)
                 .toList();
     }
-    
-    private UserDtos.PublicUserListItem toPublicUserListItem(User user) {
-        return UserDtos.PublicUserListItem.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .role(user.getRole() != null ? user.getRole().name() : null)
-                .companyName(user.getCompanyName())
-                .vehicleType(user.getVehicleType())
-                .bio(user.getBio())
-                .profileImageUrl(user.getProfileImageUrl())
-                .contactEmail(user.getContactEmail())
-                .contactPhone(user.getContactPhone())
-                .averageRating(0.0)
-                .ratingCount(0L)
-                .completedCount(0L)
-                .build();
-    }
 
     @Transactional(readOnly = true)
     public UserDtos.PublicProfileResponse getPublicProfile(Long userId) {
@@ -101,6 +84,26 @@ public class UserService {
                 .averageRating(average)
                 .ratingCount((long) ratings.size())
                 .completedCount(completedCount)
+                .build();
+    }
+
+
+
+    private UserDtos.PublicUserListItem toPublicUserListItem(User user) {
+        UserDtos.PublicProfileResponse publicProfile = toPublicProfile(user);
+        return UserDtos.PublicUserListItem.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .role(user.getRole() != null ? user.getRole().name() : null)
+                .companyName(user.getCompanyName())
+                .vehicleType(user.getVehicleType())
+                .bio(user.getBio())
+                .profileImageUrl(user.getProfileImageUrl())
+                .contactEmail(user.getContactEmail())
+                .contactPhone(user.getContactPhone())
+                .averageRating(publicProfile.getAverageRating())
+                .ratingCount(publicProfile.getRatingCount())
+                .completedCount(publicProfile.getCompletedCount())
                 .build();
     }
 

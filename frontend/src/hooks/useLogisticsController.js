@@ -28,7 +28,10 @@ import {
   fetchFinanceTransactions,
   fetchMyProfile,
   fetchPublicOverview,
+  fetchPublicProfile,
   fetchPublicUsers,
+  fetchChatRoom,
+  sendChatMessage,
   fetchRatingsDashboard,
   fetchShipment,
   fetchShipments,
@@ -82,6 +85,12 @@ export function useLogisticsController() {
   const [driverBoardTag, setDriverBoardTag] = useState('ALL')
   const [shipmentKeyword, setShipmentKeyword] = useState('')
   const [routePage, setRoutePage] = useState('main')
+  const [activeProfile, setActiveProfile] = useState(null)
+  const [profileModalOpen, setProfileModalOpen] = useState(false)
+  const [chatRoom, setChatRoom] = useState(null)
+  const [chatDraft, setChatDraft] = useState('')
+  const [chatModalOpen, setChatModalOpen] = useState(false)
+  const [chatSending, setChatSending] = useState(false)
 
   const [adminDashboard, setAdminDashboard] = useState(null)
   const [adminMembers, setAdminMembers] = useState([])
@@ -171,6 +180,78 @@ export function useLogisticsController() {
     await searchPublicUsers(role, '')
   }
 
+  const openUserProfile = async (userId, fallbackProfile = null) => {
+    if (!userId) return
+    try {
+      if (fallbackProfile) {
+        setActiveProfile(fallbackProfile)
+        setProfileModalOpen(true)
+      }
+      const data = await fetchPublicProfile(userId)
+      setActiveProfile(data)
+      setProfileModalOpen(true)
+    } catch (err) {
+      console.error(err)
+      setMessage(err.response?.data?.message || '프로필 정보를 불러오지 못했습니다.')
+    }
+  }
+
+  const closeUserProfile = () => {
+    setProfileModalOpen(false)
+  }
+
+  const openChatWithUser = async (profile) => {
+    if (!isLoggedIn) {
+      setMessage('1대1 채팅은 로그인 후 사용할 수 있습니다.')
+      return
+    }
+    if (!profile?.id) {
+      setMessage('채팅 상대 정보를 찾을 수 없습니다.')
+      return
+    }
+    try {
+      const room = await fetchChatRoom(profile.id)
+      setChatRoom(room)
+      setChatModalOpen(true)
+      setProfileModalOpen(false)
+    } catch (err) {
+      console.error(err)
+      setMessage(err.response?.data?.message || '채팅방을 열지 못했습니다.')
+    }
+  }
+
+  const closeChatRoom = () => {
+    setChatModalOpen(false)
+    setChatDraft('')
+  }
+
+  const reloadChatRoom = async (targetUserId) => {
+    if (!targetUserId || !isLoggedIn) return
+    try {
+      const room = await fetchChatRoom(targetUserId)
+      setChatRoom(room)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleSendChatMessage = async () => {
+    if (!chatRoom?.targetProfile?.id) return
+    const content = chatDraft.trim()
+    if (!content) return
+    try {
+      setChatSending(true)
+      await sendChatMessage(chatRoom.targetProfile.id, content)
+      setChatDraft('')
+      await reloadChatRoom(chatRoom.targetProfile.id)
+    } catch (err) {
+      console.error(err)
+      setMessage(err.response?.data?.message || '메시지 전송 실패')
+    } finally {
+      setChatSending(false)
+    }
+  }
+
   const openPublicUserPage = async (role) => {
     setPublicUserKeyword('')
     await searchPublicUsers(role, '')
@@ -211,6 +292,11 @@ export function useLogisticsController() {
     setAdminRecentRatings([])
     setCompletionProof({ dataUrl: '', name: '' })
     setRoutePage('main')
+    setActiveProfile(null)
+    setProfileModalOpen(false)
+    setChatRoom(null)
+    setChatDraft('')
+    setChatModalOpen(false)
   }
 
   const loadPublic = async () => {
@@ -406,6 +492,14 @@ export function useLogisticsController() {
     return () => client.deactivate()
   }, [isLoggedIn, isAdmin, selectedId])
 
+  useEffect(() => {
+    if (!chatModalOpen || !chatRoom?.targetProfile?.id || !isLoggedIn) return
+    const timer = setInterval(() => {
+      reloadChatRoom(chatRoom.targetProfile.id)
+    }, 2000)
+    return () => clearInterval(timer)
+  }, [chatModalOpen, chatRoom?.targetProfile?.id, isLoggedIn])
+
   const handleLogin = async () => {
     try {
       const data = await login(loginForm)
@@ -590,6 +684,7 @@ export function useLogisticsController() {
     API_BASE_URL,
     auth, setAuth, page, setPage, totalPages, routePage, setRoutePage, message, setMessage, authMode, setAuthMode, loginForm, setLoginForm, signupForm, setSignupForm,
     publicData, publicSelectedId, setPublicSelectedId, publicStatusFilter, setPublicStatusFilter, inquiryForm, setInquiryForm, publicUsers, publicUserKeyword, setPublicUserKeyword,
+    activeProfile, profileModalOpen, chatRoom, chatDraft, setChatDraft, chatModalOpen, chatSending,
     shipments, bookmarks, selectedId, setSelectedId, selected, dashboardTab, setDashboardTab, profile, profileForm, setProfileForm,
     shipmentForm, setShipmentForm, offerForm, setOfferForm, shipmentFilter, setShipmentFilter, driverBoardTag, setDriverBoardTag,
     shipmentKeyword, setShipmentKeyword, adminDashboard, adminMembers, adminShipments, adminNotices, adminFaqs, adminInquiries,
@@ -598,7 +693,7 @@ export function useLogisticsController() {
     editingFaqId, setEditingFaqId, inquiryAnswerDraft, setInquiryAnswerDraft, isLoggedIn, isAdmin, roleTheme, publicBoard,
     selectedPublic, filteredShipments, summary, userAlerts, adminAlerts, roleQuickActions, logout, handleLogin, handleSignup,
     handleInquiry, handleCreateShipment, handleCreateOffer, handleAcceptOffer, handleStart, handleComplete, handleToggleBookmark,
-    searchPublicUsers, resetPublicUserSearch, openPublicUserPage,
+    searchPublicUsers, resetPublicUserSearch, openPublicUserPage, openUserProfile, closeUserProfile, openChatWithUser, closeChatRoom, handleSendChatMessage, reloadChatRoom,
     handleUpdateMember, handleForceShipmentStatus, submitNotice, submitFaq, handleAnswerInquiry, handleResolveDispute,
     handleSaveProfile, handleShipmentImagesChange, handleCompletionProofChange, loadAdmin, loadPublic, deleteAdminFaq, deleteAdminNotice,
   }

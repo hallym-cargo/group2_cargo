@@ -131,6 +131,8 @@ public class PublicService {
                 .bestOfferPrice(bestOffer)
                 .offerCount(offers.size())
                 .assignedDriverName(shipment.getAssignedDriver() != null ? shipment.getAssignedDriver().getName() : null)
+                .assignedDriverId(shipment.getAssignedDriver() != null ? shipment.getAssignedDriver().getId() : null)
+                .assignedDriverProfileImageUrl(shipment.getAssignedDriver() != null ? shipment.getAssignedDriver().getProfileImageUrl() : null)
                 .createdAt(shipment.getCreatedAt())
                 .updatedAt(shipment.getUpdatedAt() != null ? shipment.getUpdatedAt() : shipment.getCreatedAt())
                 .build();

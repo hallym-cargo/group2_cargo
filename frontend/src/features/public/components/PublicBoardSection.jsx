@@ -79,7 +79,7 @@ export default function PublicBoardSection({ controller }) {
 
                 <div className="landing-boardAside__list">
                   <div><span>예상 거리 / 시간</span><strong>{selectedPublic.estimatedDistanceKm}km · {selectedPublic.estimatedMinutes}분</strong></div>
-                  <div><span>배정 차주</span><strong>{selectedPublic.assignedDriverName || '미확정'}</strong></div>
+                  <div><span>배정 차주</span>{selectedPublic.assignedDriverId ? (<button type="button" className="inline-link-button" onClick={() => controller.openUserProfile(selectedPublic.assignedDriverId, { id: selectedPublic.assignedDriverId, name: selectedPublic.assignedDriverName, role: 'DRIVER', profileImageUrl: selectedPublic.assignedDriverProfileImageUrl })}><strong>{selectedPublic.assignedDriverName || '미확정'}</strong></button>) : (<strong>{selectedPublic.assignedDriverName || '미확정'}</strong>)}</div>
                   <div><span>최근 갱신</span><strong>{formatDate(selectedPublic.updatedAt)}</strong></div>
                 </div>
               </>

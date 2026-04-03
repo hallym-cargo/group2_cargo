@@ -1,3 +1,5 @@
+import ChatWindowModal from './components/common/ChatWindowModal'
+import UserProfileModal from './components/common/UserProfileModal'
 import AdminConsolePage from './features/admin/AdminConsolePage'
 import PublicHomePage from './features/public/PublicHomePage'
 import PublicUserSearchPage from './features/public/users/PublicUserSearchPage'
@@ -8,25 +10,43 @@ import TransportStatus from './pages/TransportStatus'
 export default function App() {
   const controller = useLogisticsController()
 
+  let page = null
+
   if (controller.routePage === 'status') {
-    return <TransportStatus onBack={() => controller.setRoutePage('main')} />
+    page = <TransportStatus onBack={() => controller.setRoutePage('main')} />
+  } else if (controller.routePage === 'shippers') {
+    page = <PublicUserSearchPage controller={controller} role="SHIPPER" />
+  } else if (controller.routePage === 'drivers') {
+    page = <PublicUserSearchPage controller={controller} role="DRIVER" />
+  } else if (!controller.isLoggedIn || controller.dashboardTab === 'home') {
+    page = <PublicHomePage controller={controller} />
+  } else if (controller.isAdmin) {
+    page = <AdminConsolePage controller={controller} />
+  } else {
+    page = <UserConsolePage controller={controller} />
   }
 
-  if (controller.routePage === 'shippers') {
-    return <PublicUserSearchPage controller={controller} role="SHIPPER" />
-  }
-
-  if (controller.routePage === 'drivers') {
-    return <PublicUserSearchPage controller={controller} role="DRIVER" />
-  }
-
-  if (!controller.isLoggedIn || controller.dashboardTab === 'home') {
-    return <PublicHomePage controller={controller} />
-  }
-
-  if (controller.isAdmin) {
-    return <AdminConsolePage controller={controller} />
-  }
-
-  return <UserConsolePage controller={controller} />
+  return (
+    <>
+      {page}
+      {controller.profileModalOpen && (
+        <UserProfileModal
+          profile={controller.activeProfile}
+          isLoggedIn={controller.isLoggedIn}
+          onClose={controller.closeUserProfile}
+          onOpenChat={controller.openChatWithUser}
+        />
+      )}
+      {controller.chatModalOpen && (
+        <ChatWindowModal
+          room={controller.chatRoom}
+          draft={controller.chatDraft}
+          setDraft={controller.setChatDraft}
+          onSend={controller.handleSendChatMessage}
+          onClose={controller.closeChatRoom}
+          isSending={controller.chatSending}
+        />
+      )}
+    </>
+  )
 }
