@@ -357,13 +357,12 @@ export function useLogisticsController() {
   const loadShipments = async () => {
     if (!isLoggedIn || isAdmin) return;
 
-    const res = await fetchShipments(page, 10);
+    const data = await fetchShipments();
 
-    setShipments(res.content);
-    setTotalPages(res.totalPages);
+    setShipments(data);
 
-    if (!selectedId && res.content.length) {
-      setSelectedId(res.content[0].id);
+    if (!selectedId && data.length) {
+      setSelectedId(data[0].id);
     }
   };
 

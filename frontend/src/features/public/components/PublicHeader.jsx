@@ -30,15 +30,7 @@ export default function PublicHeader({
           >
             서비스 소개
           </button>
-          <button
-            onClick={() =>
-              document
-                .getElementById('board')
-                ?.scrollIntoView({ behavior: 'smooth' })
-            }
-          >
-            실시간 배차
-          </button>
+
           <button
             onClick={() =>
               document
