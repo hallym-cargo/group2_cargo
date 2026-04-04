@@ -1,0 +1,159 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f5f6f8;
+}
+
+.login-box {
+  width: 350px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.6); /* 메인 페이지 카드 색상과 동일 */
+  backdrop-filter: blur(20px);           /* 메인 페이지 카드와 동일 */
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.login-title {
+  margin-bottom: 25px;
+}
+
+.login-input {
+  width: 100%;
+  max-width: 320px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  margin: 10px auto;
+  font-size: 13px;
+}
+
+.login-options label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.find-password {
+  cursor: pointer;
+  color: #666;
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background: #2c7be5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.divider {
+  margin: 10px 0;
+  font-size: 12px;
+  color: #999;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 30%;
+  height: 1px;
+  background: #ddd;
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+.kakao-button {
+  width: 100%;
+  padding: 12px;
+  background: #fee500;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+.signup {
+  font-size: 13px;
+}
+
+.signup-link {
+  color: #2c7be5;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* 라벨 */
+.login-label {
+  display: block;
+  text-align: left;
+  width: 100%;
+  max-width: 320px;
+  margin: 10px auto 5px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 샘플 계정 안내 */
+.login-hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+
+/* 체크박스 정렬 */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+/* 메인 페이지 이동 (링크 스타일) */
+.back-to-main {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  text-align: center;
+}
+
+.back-to-main:hover {
+  text-decoration: underline;
+}
+
+.sample-account {
+  width: 100%;
+  max-width: 320px;
+  margin: 5px auto 10px;
+  font-size: 12px;
+  color: #aaa;
+  text-align: left;
+}
