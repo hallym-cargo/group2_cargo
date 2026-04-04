@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client/dist/sockjs";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client/dist/sockjs';
 
 import {
   API_BASE_URL,
@@ -11,7 +11,6 @@ import {
   createAdminNotice,
   createInquiry,
   createOffer,
-  createRating,
   createShipment,
   deleteAdminFaq,
   deleteAdminNotice,
@@ -45,7 +44,8 @@ import {
   updateMemberRole,
   updateMemberStatus,
   updateMyProfile,
-} from "../api";
+  createRating,
+} from '../api';
 
 import {
   emptyFaq,
@@ -53,25 +53,26 @@ import {
   emptyNotice,
   emptyShipment,
   emptySignup,
-} from "../constants/forms";
+} from '../constants/forms';
 
-import { roleThemeMeta } from "../constants/theme";
-import { buildAdminAlerts, buildUserAlerts } from "../utils/dashboard";
-import { fileToDataUrl } from "../utils/formatters";
+import { roleThemeMeta } from '../constants/theme';
+import { buildAdminAlerts, buildUserAlerts } from '../utils/dashboard';
+import { fileToDataUrl } from '../utils/formatters';
 
 export function useLogisticsController() {
   const [auth, setAuth] = useState(() => ({
-    token: localStorage.getItem("token") || "",
-    email: localStorage.getItem("email") || "",
-    name: localStorage.getItem("name") || "",
-    role: localStorage.getItem("role") || "",
-    profileCompleted: localStorage.getItem("profileCompleted") === "true",
+    token: localStorage.getItem('token') || '',
+    email: localStorage.getItem('email') || '',
+    name: localStorage.getItem('name') || '',
+    role: localStorage.getItem('role') || '',
+    profileCompleted: localStorage.getItem('profileCompleted') === 'true',
   }));
-  const [message, setMessage] = useState("");
-  const [authMode, setAuthMode] = useState("none");
+  const [message, setMessage] = useState('');
+  const [authMode, setAuthMode] = useState('login');
+
   const [loginForm, setLoginForm] = useState({
-    email: "shipper@test.com",
-    password: "1111",
+    email: 'shipper@test.com',
+    password: '1111',
   });
   const [signupForm, setSignupForm] = useState(emptySignup);
   const [publicData, setPublicData] = useState({
@@ -80,37 +81,39 @@ export function useLogisticsController() {
     faqs: [],
   });
   const [publicSelectedId, setPublicSelectedId] = useState(null);
-  const [publicStatusFilter, setPublicStatusFilter] = useState("ALL");
+  const [publicStatusFilter, setPublicStatusFilter] = useState('ALL');
   const [inquiryForm, setInquiryForm] = useState(emptyInquiry);
+
   const [publicUsers, setPublicUsers] = useState([]);
-  const [publicUserKeyword, setPublicUserKeyword] = useState("");
+  const [publicUserKeyword, setPublicUserKeyword] = useState('');
 
   const [shipments, setShipments] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [selected, setSelected] = useState(null);
-  const [dashboardTab, setDashboardTab] = useState("home");
+  const [dashboardTab, setDashboardTab] = useState('home');
   const [profile, setProfile] = useState(null);
   const [profileForm, setProfileForm] = useState({
-    bio: "",
-    profileImageUrl: "",
-    paymentMethod: "",
-    contactEmail: "",
-    contactPhone: "",
+    bio: '',
+    profileImageUrl: '',
+    paymentMethod: '',
+    contactEmail: '',
+    contactPhone: '',
   });
   const [shipmentForm, setShipmentForm] = useState(emptyShipment);
-  const [offerForm, setOfferForm] = useState({ price: "", message: "" });
-  const [shipmentFilter, setShipmentFilter] = useState("ALL");
-  const [driverBoardTag, setDriverBoardTag] = useState("ALL");
-  const [shipmentKeyword, setShipmentKeyword] = useState("");
-  const [routePage, setRoutePage] = useState("main");
+  const [offerForm, setOfferForm] = useState({ price: '', message: '' });
+  const [shipmentFilter, setShipmentFilter] = useState('ALL');
+  const [driverBoardTag, setDriverBoardTag] = useState('ALL');
+  const [shipmentKeyword, setShipmentKeyword] = useState('');
+
+  const [routePage, setRoutePage] = useState('main');
 
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
   const stompClientRef = useRef(null);
   const isLoggedIn = !!auth.token;
-  const isAdmin = auth.role === "ADMIN";
+  const isAdmin = auth.role === 'ADMIN';
   const roleTheme = useMemo(
     () => roleThemeMeta[auth.role] || null,
     [auth.role],
@@ -137,8 +140,8 @@ export function useLogisticsController() {
   const [faqForm, setFaqForm] = useState(emptyFaq);
 
   const [completionProof, setCompletionProof] = useState({
-    dataUrl: "",
-    name: "",
+    dataUrl: '',
+    name: '',
   });
 
   const [editingNoticeId, setEditingNoticeId] = useState(null);
@@ -147,7 +150,7 @@ export function useLogisticsController() {
 
   const publicBoard = useMemo(() => {
     return (publicData.liveBoard || []).filter((item) => {
-      return publicStatusFilter === "ALL" || item.status === publicStatusFilter;
+      return publicStatusFilter === 'ALL' || item.status === publicStatusFilter;
     });
   }, [publicData.liveBoard, publicStatusFilter]);
 
@@ -163,23 +166,16 @@ export function useLogisticsController() {
     return shipments.filter((item) => {
       const keyword = shipmentKeyword.trim().toLowerCase();
       const byStatus =
-        shipmentFilter === "ALL" || item.status === shipmentFilter;
-
+        shipmentFilter === 'ALL' || item.status === shipmentFilter;
       let byTag = true;
 
-      if (auth.role === "DRIVER") {
-        if (driverBoardTag === "BIDDING") {
-          byTag = item.status === "BIDDING";
-        }
-        if (driverBoardTag === "MY_BIDS") {
-          byTag = !!item.hasMyOffer;
-        }
-        if (driverBoardTag === "MY_ASSIGNED") {
-          byTag = !!item.assignedToMe && item.status === "CONFIRMED";
-        }
-        if (driverBoardTag === "MY_TRANSIT") {
-          byTag = !!item.assignedToMe && item.status === "IN_TRANSIT";
-        }
+      if (auth.role === 'DRIVER') {
+        if (driverBoardTag === 'BIDDING') byTag = item.status === 'BIDDING';
+        if (driverBoardTag === 'MY_BIDS') byTag = !!item.hasMyOffer;
+        if (driverBoardTag === 'MY_ASSIGNED')
+          byTag = !!item.assignedToMe && item.status === 'CONFIRMED';
+        if (driverBoardTag === 'MY_TRANSIT')
+          byTag = !!item.assignedToMe && item.status === 'IN_TRANSIT';
       }
 
       const byKeyword =
@@ -194,91 +190,92 @@ export function useLogisticsController() {
         ]
           .filter(Boolean)
           .some((v) => String(v).toLowerCase().includes(keyword));
-
       return byStatus && byKeyword && byTag;
     });
   }, [shipments, shipmentFilter, shipmentKeyword, auth.role, driverBoardTag]);
 
-  const summary = useMemo(() => {
-    return {
+  const summary = useMemo(
+    () => ({
       total: shipments.length,
-      bidding: shipments.filter((item) => item.status === "BIDDING").length,
+      bidding: shipments.filter((item) => item.status === 'BIDDING').length,
       live: shipments.filter(
-        (item) => item.status === "CONFIRMED" || item.status === "IN_TRANSIT",
+        (item) => item.status === 'CONFIRMED' || item.status === 'IN_TRANSIT',
       ).length,
-      completed: shipments.filter((item) => item.status === "COMPLETED").length,
-    };
-  }, [shipments]);
-
-  const userAlerts = useMemo(() => {
-    return buildUserAlerts(auth.role, shipments, selected);
-  }, [auth.role, shipments, selected]);
-
-  const adminAlerts = useMemo(() => {
-    return buildAdminAlerts(
-      adminDashboard,
-      adminReports,
-      adminDisputes,
-      adminInquiries,
-    );
-  }, [adminDashboard, adminReports, adminDisputes, adminInquiries]);
+      completed: shipments.filter((item) => item.status === 'COMPLETED').length,
+    }),
+    [shipments],
+  );
+  const userAlerts = useMemo(
+    () => buildUserAlerts(auth.role, shipments, selected),
+    [auth.role, shipments, selected],
+  );
+  const adminAlerts = useMemo(
+    () =>
+      buildAdminAlerts(
+        adminDashboard,
+        adminReports,
+        adminDisputes,
+        adminInquiries,
+      ),
+    [adminDashboard, adminReports, adminDisputes, adminInquiries],
+  );
 
   const roleQuickActions = useMemo(() => {
-    if (auth.role === "SHIPPER") {
+    if (auth.role === 'SHIPPER') {
       return [
         {
-          title: "새 화물 등록",
-          desc: "등록 즉시 공개 보드와 입찰 흐름에 반영됩니다.",
-          action: () => setDashboardTab("register"),
-          cta: "등록 이동",
+          title: '새 화물 등록',
+          desc: '등록 즉시 공개 보드와 입찰 흐름에 반영됩니다.',
+          action: () => setDashboardTab('register'),
+          cta: '등록 이동',
         },
         {
-          title: "입찰 비교",
-          desc: "입찰중 배차를 모아서 가격과 메시지를 검토합니다.",
+          title: '입찰 비교',
+          desc: '입찰중 배차를 모아서 가격과 메시지를 검토합니다.',
           action: () => {
-            setShipmentFilter("BIDDING");
-            setDashboardTab("board");
+            setShipmentFilter('BIDDING');
+            setDashboardTab('board');
           },
-          cta: "보드 보기",
+          cta: '보드 보기',
         },
         {
-          title: "운행 확인",
-          desc: "확정 또는 운행중 상태만 필터링해 ETA 중심으로 봅니다.",
+          title: '운행 확인',
+          desc: '확정 또는 운행중 상태만 필터링해 ETA 중심으로 봅니다.',
           action: () => {
-            setShipmentFilter("IN_TRANSIT");
-            setDashboardTab("board");
+            setShipmentFilter('IN_TRANSIT');
+            setDashboardTab('board');
           },
-          cta: "운행 보기",
+          cta: '운행 보기',
         },
       ];
     }
 
     return [
       {
-        title: "입찰 가능한 배차",
-        desc: "입찰중 상태의 배차를 바로 찾을 수 있습니다.",
+        title: '입찰 가능한 배차',
+        desc: '입찰중 상태의 배차를 바로 찾을 수 있습니다.',
         action: () => {
-          setShipmentFilter("BIDDING");
-          setDriverBoardTag("BIDDING");
-          setDashboardTab("board");
+          setShipmentFilter('BIDDING');
+          setDriverBoardTag('BIDDING');
+          setDashboardTab('board');
         },
-        cta: "입찰 보드",
+        cta: '입찰 보드',
       },
       {
-        title: "확정된 운행",
-        desc: "화주가 확정한 건만 운반 시작 버튼이 열립니다.",
+        title: '확정된 운행',
+        desc: '화주가 확정한 건만 운반 시작 버튼이 열립니다.',
         action: () => {
-          setShipmentFilter("ALL");
-          setDriverBoardTag("MY_ASSIGNED");
-          setDashboardTab("board");
+          setShipmentFilter('ALL');
+          setDriverBoardTag('MY_ASSIGNED');
+          setDashboardTab('board');
         },
-        cta: "확정 보기",
+        cta: '확정 보기',
       },
       {
-        title: "주행 가이드",
-        desc: "자동 주행, ETA, 완료 전환 시점을 다시 확인합니다.",
-        action: () => setDashboardTab("register"),
-        cta: "가이드 열기",
+        title: '주행 가이드',
+        desc: '자동 주행, ETA, 완료 전환 시점을 다시 확인합니다.',
+        action: () => setDashboardTab('register'),
+        cta: '가이드 열기',
       },
     ];
   }, [auth.role]);
@@ -288,28 +285,28 @@ export function useLogisticsController() {
       const data = await fetchPublicUsers(role, keyword);
       setPublicUsers(data);
       setPublicUserKeyword(keyword);
-      setRoutePage(role === "SHIPPER" ? "shippers" : "drivers");
+      setRoutePage(role === 'SHIPPER' ? 'shippers' : 'drivers');
     } catch (err) {
       console.error(err);
-      setMessage(err.response?.data?.message || "회원 검색 실패");
+      setMessage(err.response?.data?.message || '회원 검색 실패');
     }
   };
 
   const resetPublicUserSearch = async (role) => {
-    await searchPublicUsers(role, "");
+    await searchPublicUsers(role, '');
   };
 
   const openPublicUserPage = async (role) => {
-    setPublicUserKeyword("");
-    await searchPublicUsers(role, "");
+    setPublicUserKeyword('');
+    await searchPublicUsers(role, '');
   };
 
   const syncAuth = (data) => {
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("email", data.email);
-    localStorage.setItem("name", data.name);
-    localStorage.setItem("role", data.role);
-    localStorage.setItem("profileCompleted", String(!!data.profileCompleted));
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('email', data.email);
+    localStorage.setItem('name', data.name);
+    localStorage.setItem('role', data.role);
+    localStorage.setItem('profileCompleted', String(!!data.profileCompleted));
     setAuth(data);
   };
 
@@ -318,16 +315,16 @@ export function useLogisticsController() {
     stompClientRef.current?.deactivate();
     stompClientRef.current = null;
     setAuth({
-      token: "",
-      email: "",
-      name: "",
-      role: "",
+      token: '',
+      email: '',
+      name: '',
+      role: '',
       profileCompleted: false,
     });
-    setDashboardTab("overview");
+    setDashboardTab('overview');
     setSelectedId(null);
     setSelected(null);
-    setDriverBoardTag("ALL");
+    setDriverBoardTag('ALL');
     setShipments([]);
     setBookmarks([]);
     setAdminDashboard(null);
@@ -343,8 +340,9 @@ export function useLogisticsController() {
     setFinanceTransactions([]);
     setRatingsDashboard(null);
     setAdminRecentRatings([]);
-    setCompletionProof({ dataUrl: "", name: "" });
-    setRoutePage("main");
+    setCompletionProof({ dataUrl: '', name: '' });
+
+    setRoutePage('main');
   };
 
   const loadPublic = async () => {
@@ -359,13 +357,12 @@ export function useLogisticsController() {
   const loadShipments = async () => {
     if (!isLoggedIn || isAdmin) return;
 
-    const res = await fetchShipments(page, 10);
+    const data = await fetchShipments();
 
-    setShipments(res.content);
-    setTotalPages(res.totalPages);
+    setShipments(data);
 
-    if (!selectedId && res.content.length) {
-      setSelectedId(res.content[0].id);
+    if (!selectedId && data.length) {
+      setSelectedId(data[0].id);
     }
   };
 
@@ -446,39 +443,39 @@ export function useLogisticsController() {
     const data = await fetchMyProfile();
     setProfile(data);
     setProfileForm({
-      bio: data.bio || "",
-      profileImageUrl: data.profileImageUrl || "",
-      paymentMethod: data.paymentMethod || "",
-      contactEmail: data.contactEmail || "",
-      contactPhone: data.contactPhone || "",
+      bio: data.bio || '',
+      profileImageUrl: data.profileImageUrl || '',
+      paymentMethod: data.paymentMethod || '',
+      contactEmail: data.contactEmail || '',
+      contactPhone: data.contactPhone || '',
     });
   };
 
   const handleCreateRating = async (shipmentId, counterpartName) => {
     try {
-      const draft = ratingDrafts[shipmentId] || { score: 5, comment: "" };
+      const draft = ratingDrafts[shipmentId] || { score: 5, comment: '' };
       const score = Number(draft.score || 0);
 
       if (score < 1 || score > 5) {
-        setMessage("평점은 1점부터 5점까지 선택해 주세요.");
+        setMessage('평점은 1점부터 5점까지 선택해 주세요.');
         return;
       }
 
       await createRating(shipmentId, {
         score,
-        comment: (draft.comment || "").trim(),
+        comment: (draft.comment || '').trim(),
       });
 
-      setMessage(`${counterpartName || "상대방"}에게 평점이 등록되었습니다.`);
+      setMessage(`${counterpartName || '상대방'}에게 평점이 등록되었습니다.`);
       setRatingDrafts((prev) => ({
         ...prev,
-        [shipmentId]: { score: 5, comment: "" },
+        [shipmentId]: { score: 5, comment: '' },
       }));
 
       await loadRatings();
     } catch (err) {
       console.error(err);
-      setMessage(err.response?.data?.message || "평가 등록 실패");
+      setMessage(err.response?.data?.message || '평가 등록 실패');
     }
   };
 
@@ -493,14 +490,14 @@ export function useLogisticsController() {
       };
 
       localStorage.setItem(
-        "profileCompleted",
+        'profileCompleted',
         String(!!saved.profileCompleted),
       );
       setAuth(updatedAuth);
-      setMessage("회원정보가 저장되었습니다.");
+      setMessage('회원정보가 저장되었습니다.');
     } catch (err) {
       console.error(err);
-      setMessage(err.response?.data?.message || "회원정보 저장 실패");
+      setMessage(err.response?.data?.message || '회원정보 저장 실패');
     }
   };
 
@@ -516,7 +513,7 @@ export function useLogisticsController() {
       }));
     } catch (err) {
       console.error(err);
-      setMessage("화물 사진을 읽지 못했습니다.");
+      setMessage('화물 사진을 읽지 못했습니다.');
     }
   };
 
@@ -525,7 +522,7 @@ export function useLogisticsController() {
       const file = event.target.files?.[0];
 
       if (!file) {
-        setCompletionProof({ dataUrl: "", name: "" });
+        setCompletionProof({ dataUrl: '', name: '' });
         return;
       }
 
@@ -533,42 +530,25 @@ export function useLogisticsController() {
       setCompletionProof(converted);
     } catch (err) {
       console.error(err);
-      setMessage("완료 사진을 읽지 못했습니다.");
+      setMessage('완료 사진을 읽지 못했습니다.');
     }
   };
 
   useEffect(() => {
     loadPublic().catch(() => {});
   }, []);
-  useEffect(() => {
-    const classes = [
-      "theme-public",
-      "theme-shipper",
-      "theme-driver",
-      "theme-admin",
-    ];
-    document.body.classList.remove(...classes);
-    document.body.classList.add(
-      isLoggedIn ? `theme-${auth.role.toLowerCase()}` : "theme-public",
-    );
-    return () => document.body.classList.remove(...classes);
-  }, [isLoggedIn, auth.role]);
-
-  useEffect(() => {
-    loadPublic().catch(() => {});
-  }, []);
 
   useEffect(() => {
     const classes = [
-      "theme-public",
-      "theme-shipper",
-      "theme-driver",
-      "theme-admin",
+      'theme-public',
+      'theme-shipper',
+      'theme-driver',
+      'theme-admin',
     ];
 
     document.body.classList.remove(...classes);
     document.body.classList.add(
-      isLoggedIn ? `theme-${auth.role.toLowerCase()}` : "theme-public",
+      isLoggedIn ? `theme-${auth.role.toLowerCase()}` : 'theme-public',
     );
 
     return () => document.body.classList.remove(...classes);
@@ -579,27 +559,26 @@ export function useLogisticsController() {
 
     if (isAdmin) {
       loadAdmin().catch((err) =>
-        setMessage(err.response?.data?.message || "관리자 데이터 로드 실패"),
+        setMessage(err.response?.data?.message || '관리자 데이터 로드 실패'),
       );
-      // loadFinance().catch(() => {})
-      // loadRatings().catch(() => {})
+      loadFinance().catch(() => {});
+      loadRatings().catch(() => {});
     } else {
       loadShipments().catch((err) =>
-        setMessage(err.response?.data?.message || "목록 로드 실패"),
+        setMessage(err.response?.data?.message || '목록 로드 실패'),
       );
-      // loadBookmarks().catch(() => {})
-      // loadFinance().catch(() => {})
-      // loadRatings().catch(() => {})
+      loadBookmarks().catch(() => {});
+      loadFinance().catch(() => {});
+      loadRatings().catch(() => {});
       loadProfile().catch(() => {});
     }
   }, [isLoggedIn, isAdmin]);
 
   useEffect(() => {
-    if (selectedId && isLoggedIn && !isAdmin) {
+    if (selectedId && isLoggedIn && !isAdmin)
       loadDetail(selectedId).catch((err) =>
-        setMessage(err.response?.data?.message || "상세 로드 실패"),
+        setMessage(err.response?.data?.message || '상세 로드 실패'),
       );
-    }
   }, [selectedId, isLoggedIn, isAdmin]);
 
   useEffect(() => {
@@ -607,7 +586,7 @@ export function useLogisticsController() {
       webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws`),
       reconnectDelay: 4000,
       onConnect: () => {
-        client.subscribe("/topic/shipments", () => {
+        client.subscribe('/topic/shipments', () => {
           loadPublic().catch(() => {});
 
           if (isAdmin) {
@@ -615,26 +594,21 @@ export function useLogisticsController() {
             loadFinance().catch(() => {});
             loadRatings().catch(() => {});
           } else if (isLoggedIn) {
-            // loadShipments().catch(() => {})
-            // loadBookmarks().catch(() => {})
-            // loadFinance().catch(() => {})
-            // loadRatings().catch(() => {})
-            if (selectedId) {
-              loadDetail(selectedId).catch(() => {});
-            }
+            loadShipments().catch(() => {});
+            loadBookmarks().catch(() => {});
+            loadFinance().catch(() => {});
+            loadRatings().catch(() => {});
+            if (selectedId) loadDetail(selectedId).catch(() => {});
           }
         });
-
         if (selectedId) {
           client.subscribe(`/topic/shipments/${selectedId}`, () => {
-            if (!isAdmin && isLoggedIn && selectedId) {
+            if (!isAdmin && isLoggedIn && selectedId)
               loadDetail(selectedId).catch(() => {});
-            }
           });
         }
       },
     });
-
     client.activate();
     stompClientRef.current = client;
 
@@ -644,16 +618,15 @@ export function useLogisticsController() {
   const handleLogin = async () => {
     try {
       const data = await login(loginForm);
-      setDashboardTab("home");
       syncAuth(data);
-
+      setDashboardTab(data.profileCompleted ? 'home' : 'overview');
       setMessage(
         data.profileCompleted
-          ? "로그인되었습니다. 공개 메인 페이지에서도 역할별 기능으로 이동할 수 있습니다."
-          : "첫 로그인입니다. 선택 정보만 입력해도 되니 회원정보를 한 번 확인해 주세요.",
+          ? '로그인되었습니다. 공개 메인 페이지에서도 역할별 기능으로 이동할 수 있습니다.'
+          : '첫 로그인입니다. 선택 정보만 입력해도 되니 회원정보를 한 번 확인해 주세요.',
       );
     } catch (err) {
-      setMessage(err.response?.data?.message || "로그인 실패");
+      setMessage(err.response?.data?.message || '로그인 실패');
     }
   };
 
@@ -662,12 +635,12 @@ export function useLogisticsController() {
       const data = await signup(signupForm);
       syncAuth(data);
       setSignupForm(emptySignup);
-      setDashboardTab("overview");
+      setDashboardTab('overview');
       setMessage(
-        "회원가입이 완료되었습니다. 첫 로그인이라 회원정보 수정 페이지로 안내합니다.",
+        '회원가입이 완료되었습니다. 첫 로그인이라 회원정보 수정 페이지로 안내합니다.',
       );
     } catch (err) {
-      setMessage(err.response?.data?.message || "회원가입 실패");
+      setMessage(err.response?.data?.message || '회원가입 실패');
     }
   };
 
@@ -675,10 +648,10 @@ export function useLogisticsController() {
     try {
       await createInquiry(inquiryForm);
       setInquiryForm(emptyInquiry);
-      setMessage("문의가 접수되었습니다.");
+      setMessage('문의가 접수되었습니다.');
       await loadPublic();
     } catch (err) {
-      setMessage(err.response?.data?.message || "문의 접수 실패");
+      setMessage(err.response?.data?.message || '문의 접수 실패');
     }
   };
 
@@ -696,13 +669,13 @@ export function useLogisticsController() {
       });
 
       setShipmentForm(emptyShipment);
-      setDashboardTab("board");
+      setDashboardTab('board');
       setSelectedId(created.id);
-      setMessage("화물이 등록되었습니다.");
+      setMessage('화물이 등록되었습니다.');
 
       await loadShipments();
     } catch (err) {
-      setMessage(err.response?.data?.message || "화물 등록 실패");
+      setMessage(err.response?.data?.message || '화물 등록 실패');
     }
   };
 
@@ -712,54 +685,54 @@ export function useLogisticsController() {
         price: Number(offerForm.price),
         message: offerForm.message,
       });
-
-      setOfferForm({ price: "", message: "" });
-      setMessage("입찰 제안이 등록되었습니다.");
+      setOfferForm({ price: '', message: '' });
+      setMessage('입찰 제안이 등록되었습니다.');
 
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "입찰 제안 실패");
+      setMessage(err.response?.data?.message || '입찰 제안 실패');
     }
   };
 
   const handleAcceptOffer = async (offerId) => {
     try {
       await acceptOffer(offerId);
-      setMessage("차주가 확정되었습니다.");
+      setMessage('차주가 확정되었습니다.');
 
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "차주 확정 실패");
+      setMessage(err.response?.data?.message || '차주 확정 실패');
     }
   };
 
   const handleStart = async () => {
     try {
       await startTrip(selectedId);
-      setMessage("운반이 시작되었습니다.");
+      setMessage('운반이 시작되었습니다.');
 
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "운반 시작 실패");
+      setMessage(err.response?.data?.message || '운반 시작 실패');
     }
   };
 
   const handleComplete = async () => {
     try {
       if (!completionProof.dataUrl) {
-        setMessage("배송 완료 사진을 먼저 등록해 주세요.");
+        setMessage('배송 완료 사진을 먼저 등록해 주세요.');
         return;
       }
       await completeTrip(selectedId, {
         completionImageDataUrl: completionProof.dataUrl,
         completionImageName: completionProof.name,
       });
-      setCompletionProof({ dataUrl: "", name: "" });
-      setRoutePage("main");
-      setMessage("운반이 완료되었습니다.");
+      setCompletionProof({ dataUrl: '', name: '' });
+
+      setRoutePage('main');
+      setMessage('운반이 완료되었습니다.');
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "완료 처리 실패");
+      setMessage(err.response?.data?.message || '완료 처리 실패');
     }
   };
 
@@ -772,32 +745,32 @@ export function useLogisticsController() {
         await loadDetail(selectedId);
       }
     } catch (err) {
-      setMessage(err.response?.data?.message || "즐겨찾기 처리 실패");
+      setMessage(err.response?.data?.message || '즐겨찾기 처리 실패');
     }
   };
 
   const handleUpdateMember = async (memberId, type, value) => {
     try {
-      if (type === "role") {
+      if (type === 'role') {
         await updateMemberRole(memberId, value);
       } else {
         await updateMemberStatus(memberId, value);
       }
 
-      setMessage("회원 정보가 변경되었습니다.");
+      setMessage('회원 정보가 변경되었습니다.');
       await loadAdmin();
     } catch (err) {
-      setMessage(err.response?.data?.message || "회원 변경 실패");
+      setMessage(err.response?.data?.message || '회원 변경 실패');
     }
   };
 
   const handleForceShipmentStatus = async (shipmentId, status) => {
     try {
-      await forceShipmentStatus(shipmentId, status, "관리자 운영 조정");
-      setMessage("화물 상태가 변경되었습니다.");
+      await forceShipmentStatus(shipmentId, status, '관리자 운영 조정');
+      setMessage('화물 상태가 변경되었습니다.');
       await loadAdmin();
     } catch (err) {
-      setMessage(err.response?.data?.message || "화물 상태 변경 실패");
+      setMessage(err.response?.data?.message || '화물 상태 변경 실패');
     }
   };
 
@@ -811,11 +784,11 @@ export function useLogisticsController() {
 
       setEditingNoticeId(null);
       setNoticeForm(emptyNotice);
-      setMessage("공지사항이 저장되었습니다.");
+      setMessage('공지사항이 저장되었습니다.');
 
       await Promise.all([loadAdmin(), loadPublic()]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "공지 저장 실패");
+      setMessage(err.response?.data?.message || '공지 저장 실패');
     }
   };
 
@@ -834,31 +807,31 @@ export function useLogisticsController() {
 
       setEditingFaqId(null);
       setFaqForm(emptyFaq);
-      setMessage("FAQ가 저장되었습니다.");
+      setMessage('FAQ가 저장되었습니다.');
 
       await Promise.all([loadAdmin(), loadPublic()]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "FAQ 저장 실패");
+      setMessage(err.response?.data?.message || 'FAQ 저장 실패');
     }
   };
 
   const handleAnswerInquiry = async (id) => {
     try {
-      await answerAdminInquiry(id, inquiryAnswerDraft[id] || "");
-      setMessage("문의 답변이 저장되었습니다.");
+      await answerAdminInquiry(id, inquiryAnswerDraft[id] || '');
+      setMessage('문의 답변이 저장되었습니다.');
       await loadAdmin();
     } catch (err) {
-      setMessage(err.response?.data?.message || "문의 답변 실패");
+      setMessage(err.response?.data?.message || '문의 답변 실패');
     }
   };
 
   const handleResolveDispute = async (id, status) => {
     try {
       await resolveAdminDispute(id, status);
-      setMessage("분쟁 상태가 변경되었습니다.");
+      setMessage('분쟁 상태가 변경되었습니다.');
       await loadAdmin();
     } catch (err) {
-      setMessage(err.response?.data?.message || "분쟁 처리 실패");
+      setMessage(err.response?.data?.message || '분쟁 처리 실패');
     }
   };
 
@@ -866,6 +839,7 @@ export function useLogisticsController() {
     API_BASE_URL,
     auth,
     setAuth,
+
     page,
     setPage,
     totalPages,
@@ -886,6 +860,7 @@ export function useLogisticsController() {
     setPublicStatusFilter,
     inquiryForm,
     setInquiryForm,
+
     publicUsers,
     publicUserKeyword,
     setPublicUserKeyword,
@@ -955,6 +930,7 @@ export function useLogisticsController() {
     handleStart,
     handleComplete,
     handleToggleBookmark,
+
     searchPublicUsers,
     resetPublicUserSearch,
     openPublicUserPage,
@@ -972,6 +948,4 @@ export function useLogisticsController() {
     deleteAdminFaq,
     deleteAdminNotice,
   };
-
-  origin / feat / login;
 }
