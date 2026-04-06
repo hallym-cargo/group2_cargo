@@ -4,6 +4,8 @@ import com.logistics.app.dto.UserDtos;
 import com.logistics.app.entity.Rating;
 import com.logistics.app.entity.ShipmentStatus;
 import com.logistics.app.entity.User;
+import com.logistics.app.entity.UserRole;
+import com.logistics.app.entity.UserStatus;
 import com.logistics.app.repository.RatingRepository;
 import com.logistics.app.repository.ShipmentRepository;
 import com.logistics.app.repository.UserRepository;
@@ -38,6 +40,35 @@ public class UserService {
         user.setContactPhone(request.getContactPhone());
         user.setProfileCompleted(true);
         return toProfile(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserDtos.PublicUserListItem> searchPublicUsers(String role, String keyword) {
+        UserRole userRole = UserRole.valueOf(role.toUpperCase());
+        String normalizedKeyword = keyword == null ? "" : keyword.trim().toLowerCase();
+
+        return userRepository.findByRoleAndStatusOrderByCreatedAtDesc(userRole, UserStatus.ACTIVE).stream()
+                .filter(user -> normalizedKeyword.isBlank()
+                        || (user.getName() != null && user.getName().toLowerCase().contains(normalizedKeyword)))
+                .map(this::toPublicUserListItem)
+                .toList();
+    }
+    
+    private UserDtos.PublicUserListItem toPublicUserListItem(User user) {
+        return UserDtos.PublicUserListItem.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .role(user.getRole() != null ? user.getRole().name() : null)
+                .companyName(user.getCompanyName())
+                .vehicleType(user.getVehicleType())
+                .bio(user.getBio())
+                .profileImageUrl(user.getProfileImageUrl())
+                .contactEmail(user.getContactEmail())
+                .contactPhone(user.getContactPhone())
+                .averageRating(0.0)
+                .ratingCount(0L)
+                .completedCount(0L)
+                .build();
     }
 
     @Transactional(readOnly = true)
