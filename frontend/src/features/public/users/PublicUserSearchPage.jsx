@@ -5,8 +5,6 @@ export default function PublicUserSearchPage({ controller, role }) {
   const users = controller.publicUsers
   const keyword = controller.publicUserKeyword
 
-  const getProfileImage = (user) => user.profileImageUrl || '/images/default-profile.png'
-
   return (
     <div className="public-shell landing-shell public-directory-shell">
       <header className="landing-header">
@@ -58,51 +56,35 @@ export default function PublicUserSearchPage({ controller, role }) {
           </div>
 
           <div className="public-directory-grid">
-            {users.length ? (
-              users.map((user) => (
-                <article key={user.id} className="public-directory-card surface">
-                  <div className="public-directory-card__head">
-                    <button
-                      type="button"
-                      className="public-directory-card__profile public-directory-card__profile--button"
-                      onClick={() => controller.openUserProfile(user.id, user)}
-                    >
-                      <img
-                        src={getProfileImage(user)}
-                        alt={user.name}
-                        className="public-directory-card__avatar"
-                        onError={(e) => {
-                          e.currentTarget.src = '/images/default-profile.png'
-                        }}
-                      />
-                      <div className="public-directory-card__title">
-                        <span>{roleText(user.role)}</span>
-                        <h3>{user.name}</h3>
-                      </div>
-                    </button>
-                    <strong>{formatRatingSummary(user.averageRating, user.ratingCount)}</strong>
+            {users.length ? users.map((user) => (
+              <article key={user.id} className="public-directory-card surface">
+                <div className="public-directory-card__head">
+                  <div>
+                    <span>{roleText(user.role)}</span>
+                    <h3>{user.name}</h3>
                   </div>
+                  <strong>{formatRatingSummary(user.averageRating, user.ratingCount)}</strong>
+                </div>
 
-                  <div className="public-directory-card__stats">
-                    <div>
-                      <span>{isDriver ? '차량 정보' : '회사명'}</span>
-                      <strong>{isDriver ? (user.vehicleType || '-') : (user.companyName || '-')}</strong>
-                    </div>
-                    <div>
-                      <span>완료 건수</span>
-                      <strong>{user.completedCount || 0}건</strong>
-                    </div>
+                <div className="public-directory-card__stats">
+                  <div>
+                    <span>{isDriver ? '차량 정보' : '회사명'}</span>
+                    <strong>{isDriver ? (user.vehicleType || '-') : (user.companyName || '-')}</strong>
                   </div>
+                  <div>
+                    <span>완료 건수</span>
+                    <strong>{user.completedCount || 0}건</strong>
+                  </div>
+                </div>
 
-                  <dl className="public-directory-card__info">
-                    <div><dt>연락 이메일</dt><dd>{user.contactEmail || '-'}</dd></div>
-                    <div><dt>연락처</dt><dd>{user.contactPhone || '-'}</dd></div>
-                  </dl>
+                <dl className="public-directory-card__info">
+                  <div><dt>연락 이메일</dt><dd>{user.contactEmail || '-'}</dd></div>
+                  <div><dt>연락처</dt><dd>{user.contactPhone || '-'}</dd></div>
+                </dl>
 
-                  <p>{user.bio || (isDriver ? '등록된 차주 소개가 없습니다.' : '등록된 화주 소개가 없습니다.')}</p>
-                </article>
-              ))
-            ) : (
+                <p>{user.bio || (isDriver ? '등록된 차주 소개가 없습니다.' : '등록된 화주 소개가 없습니다.')}</p>
+              </article>
+            )) : (
               <div className="public-directory-empty surface">검색 결과가 없습니다.</div>
             )}
           </div>

@@ -25,9 +25,11 @@ export const fetchChatRoom = async (targetUserId) => (await api.get(`/api/chat/r
 export const sendChatMessage = async (targetUserId, content) => (await api.post(`/api/chat/rooms/${targetUserId}/messages`, { content })).data
 
 export const createInquiry = async (payload) => (await api.post('/public/inquiries', payload)).data
-export const fetchDrivingRoute = async ({ startLat, startLng, endLat, endLng }) => (await api.get('/public/routes/driving', { params: { startLat, startLng, endLat, endLng } })).data
+export const fetchDrivingRoute = async ({ startLat, startLng, endLat, endLng }) => (
+  await api.get('/public/routes/driving', { params: { startLat, startLng, endLat, endLng } })
+).data
 
-export const fetchShipments = async (page = 0, size = 10) => (await api.get('/api/shipments/page', { params: { page, size }})).data
+export const fetchShipments = async (page = 0, size = 10) => (await api.get('/api/shipments/page', { params: { page, size } })).data
 export const fetchShipment = async (id) => (await api.get(`/api/shipments/${id}`)).data
 export const fetchBookmarks = async () => (await api.get('/api/shipments/bookmarks')).data
 export const createShipment = async (payload) => (await api.post('/api/shipments', payload)).data
@@ -37,7 +39,6 @@ export const startTrip = async (shipmentId) => (await api.post(`/api/shipments/$
 export const updateLocation = async (shipmentId, payload) => (await api.post(`/api/shipments/${shipmentId}/locations`, payload)).data
 export const completeTrip = async (shipmentId, payload) => (await api.post(`/api/shipments/${shipmentId}/complete`, payload)).data
 export const toggleBookmark = async (shipmentId) => (await api.post(`/api/shipments/${shipmentId}/bookmark`)).data
-
 
 export const fetchFinanceSummary = async () => (await api.get('/api/finance/summary')).data
 export const fetchFinanceTransactions = async () => (await api.get('/api/finance/transactions')).data

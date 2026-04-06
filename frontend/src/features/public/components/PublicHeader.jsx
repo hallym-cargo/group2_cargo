@@ -1,8 +1,18 @@
-export default function PublicHeader({ isLoggedIn, authMode, setAuthMode, setDashboardTab, logout, controller }) {
+export default function PublicHeader({
+  isLoggedIn,
+  authMode,
+  setAuthMode,
+  setDashboardTab,
+  logout,
+  controller,
+}) {
   return (
     <header className="landing-header">
       <div className="landing-header__inner">
-        <button className="landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <button
+          className="landing-brand"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
           <span className="landing-brand__mark">HC</span>
           <span className="landing-brand__text">
             <strong>hallym-cargo</strong>
@@ -11,24 +21,69 @@ export default function PublicHeader({ isLoggedIn, authMode, setAuthMode, setDas
         </button>
 
         <nav className="landing-nav">
-          <button onClick={() => document.getElementById('landing-solution')?.scrollIntoView({ behavior: 'smooth' })}>서비스 소개</button>
-          <button onClick={() => document.getElementById('board')?.scrollIntoView({ behavior: 'smooth' })}>실시간 배차</button>
-          <button onClick={() => document.getElementById('notice-faq')?.scrollIntoView({ behavior: 'smooth' })}>공지 · 문의</button>
-          <button onClick={() => controller.openPublicUserPage('SHIPPER')}>화주 찾기</button>
-          <button onClick={() => controller.openPublicUserPage('DRIVER')}>차주 찾기</button>
-          <button onClick={() => controller.setRoutePage('status')}>운송 현황</button>
+          <button
+            onClick={() =>
+              document
+                .getElementById('landing-solution')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }
+          >
+            서비스 소개
+          </button>
+
+          <button
+            onClick={() =>
+              document
+                .getElementById('notice-faq')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }
+          >
+            공지 · 문의
+          </button>
+          <button onClick={() => setDashboardTab('quotes')}>
+            견적 목록 보기
+          </button>
+          <button onClick={() => controller.setRoutePage('status')}>
+            운송 현황
+          </button>
+          <button onClick={() => controller.openPublicUserPage('SHIPPER')}>
+            화주 찾기
+          </button>
+          <button onClick={() => controller.openPublicUserPage('DRIVER')}>
+            차주 찾기
+          </button>
         </nav>
 
         <div className="landing-header__actions">
           {isLoggedIn ? (
             <>
-              <button className="landing-btn landing-btn--light" onClick={() => setDashboardTab('overview')}>대시보드</button>
-              <button className="landing-btn landing-btn--primary" onClick={logout}>로그아웃</button>
+              <button
+                className="landing-btn landing-btn--light"
+                onClick={() => setDashboardTab('overview')}
+              >
+                대시보드
+              </button>
+              <button
+                className="landing-btn landing-btn--primary"
+                onClick={logout}
+              >
+                로그아웃
+              </button>
             </>
           ) : (
             <>
-              <button className="landing-text-btn" onClick={() => setAuthMode('login')}>로그인</button>
-              <button className="landing-btn landing-btn--primary" onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}>
+              <button
+                className="landing-text-btn"
+                onClick={() => setAuthMode('login')}
+              >
+                로그인
+              </button>
+              <button
+                className="landing-btn landing-btn--primary"
+                onClick={() =>
+                  setAuthMode(authMode === 'login' ? 'signup' : 'login')
+                }
+              >
                 {authMode === 'login' ? '회원가입' : '로그인'}
               </button>
             </>
@@ -36,5 +91,5 @@ export default function PublicHeader({ isLoggedIn, authMode, setAuthMode, setDas
         </div>
       </div>
     </header>
-  )
+  );
 }
