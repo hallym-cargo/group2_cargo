@@ -7,6 +7,7 @@ import {
   acceptOffer,
   answerAdminInquiry,
   completeTrip,
+  cancelShipment,
   createAdminFaq,
   createAdminNotice,
   createInquiry,
@@ -144,6 +145,12 @@ export function useLogisticsController() {
   const [completionProof, setCompletionProof] = useState({
     dataUrl: '',
     name: '',
+  });
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
+  const [cancelForm, setCancelForm] = useState({
+    reason: '',
+    detail: '',
   });
 
   const [editingNoticeId, setEditingNoticeId] = useState(null);
@@ -412,6 +419,7 @@ export function useLogisticsController() {
     localStorage.setItem('email', data.email);
     localStorage.setItem('name', data.name);
     localStorage.setItem('role', data.role);
+    if (data.id) localStorage.setItem('userId', String(data.id));
     localStorage.setItem('profileCompleted', String(!!data.profileCompleted));
     setAuth(data);
   };
@@ -808,6 +816,7 @@ export function useLogisticsController() {
         originLng: Number(shipmentForm.originLng),
         destinationLat: Number(shipmentForm.destinationLat),
         destinationLng: Number(shipmentForm.destinationLng),
+        scheduledStartAt: shipmentForm.scheduledStartAt,
         cargoImageDataUrls: shipmentForm.cargoImageDataUrls || [],
         cargoImageNames: shipmentForm.cargoImageNames || [],
       });
@@ -878,6 +887,45 @@ export function useLogisticsController() {
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
       setMessage(err.response?.data?.message || '완료 처리 실패');
+    }
+  };
+
+
+  const openCancelModal = () => {
+    setCancelForm({ reason: '', detail: '' });
+    setCancelModalOpen(true);
+  };
+
+  const closeCancelModal = () => {
+    setCancelModalOpen(false);
+    setCancelForm({ reason: '', detail: '' });
+  };
+
+  const handleCancelShipment = async () => {
+    try {
+      if (!selectedId) return;
+      if (!cancelForm.reason) {
+        setMessage('취소 사유를 선택해 주세요.');
+        return;
+      }
+      if (!cancelForm.detail.trim()) {
+        setMessage('상세 설명을 입력해 주세요.');
+        return;
+      }
+
+      setCancelSubmitting(true);
+      await cancelShipment(selectedId, {
+        reason: cancelForm.reason,
+        detail: cancelForm.detail.trim(),
+      });
+
+      closeCancelModal();
+      setMessage('거래가 취소되었습니다.');
+      await Promise.all([loadShipments(), loadDetail(selectedId), loadProfile(), loadBookmarks()]);
+    } catch (err) {
+      setMessage(err.response?.data?.message || '거래 취소 실패');
+    } finally {
+      setCancelSubmitting(false);
     }
   };
 
@@ -1054,6 +1102,10 @@ export function useLogisticsController() {
     faqForm,
     setFaqForm,
     completionProof,
+    cancelModalOpen,
+    cancelSubmitting,
+    cancelForm,
+    setCancelForm,
     editingNoticeId,
     setEditingNoticeId,
     editingFaqId,
@@ -1079,6 +1131,9 @@ export function useLogisticsController() {
     handleAcceptOffer,
     handleStart,
     handleComplete,
+    openCancelModal,
+    closeCancelModal,
+    handleCancelShipment,
     handleToggleBookmark,
     searchPublicUsers,
     resetPublicUserSearch,

@@ -24,6 +24,17 @@ public class ChatDtos {
         private String content;
         private LocalDateTime createdAt;
         private boolean mine;
+        private boolean read;
+    }
+
+    @Data
+    @Builder
+    public static class ChatRoomSummaryRow {
+        private String roomKey;
+        private UserDtos.PublicProfileResponse targetProfile;
+        private String lastMessage;
+        private LocalDateTime lastMessageAt;
+        private long unreadCount;
     }
 
     @Data

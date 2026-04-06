@@ -1,5 +1,6 @@
 package com.logistics.app.dto;
 
+import com.logistics.app.entity.CancelReason;
 import com.logistics.app.entity.OfferStatus;
 import com.logistics.app.entity.ShipmentStatus;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ public class ShipmentDtos {
         @NotBlank private String destinationAddress;
         @NotNull private Double destinationLat;
         @NotNull private Double destinationLng;
+        @NotNull private LocalDateTime scheduledStartAt;
         private List<String> cargoImageDataUrls;
         private List<String> cargoImageNames;
     }
@@ -38,6 +40,13 @@ public class ShipmentDtos {
     public static class CreateOfferRequest {
         @NotNull private Integer price;
         private String message;
+    }
+
+
+    @Data
+    public static class CancelShipmentRequest {
+        @NotNull private CancelReason reason;
+        @NotBlank private String detail;
     }
 
     @Data
@@ -89,6 +98,7 @@ public class ShipmentDtos {
         private Integer offerCount;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private LocalDateTime scheduledStartAt;
         private LocalDateTime startedAt;
         private LocalDateTime estimatedArrivalAt;
         private LocalDateTime completedAt;
@@ -97,6 +107,10 @@ public class ShipmentDtos {
         private List<StatusHistoryResponse> histories;
         private List<String> cargoImageUrls;
         private String completionImageUrl;
+        private Integer cancelPenaltyScore;
+        private Boolean counterpartyHighCancelBadge;
+        private LocalDateTime viewerMatchingBlockedUntil;
+        private LocalDateTime viewerTradingBlockedUntil;
     }
 
     @Data

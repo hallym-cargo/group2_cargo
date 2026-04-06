@@ -31,8 +31,21 @@ public class UserController {
     }
 
     @GetMapping("/public-search")
-    public List<UserDtos.PublicUserListItem> publicUsers(@RequestParam String role, @RequestParam(required = false, defaultValue = "") String keyword) {
-        return userService.searchPublicUsers(role, keyword);
+    public List<UserDtos.PublicUserListItem> publicUsers(
+            @RequestParam String role,
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            Authentication authentication
+    ) {
+        Long excludeUserId = null;
+
+        if (authentication != null && authentication.getName() != null) {
+            User loginUser = authService.getCurrentUser(authentication.getName());
+            if (loginUser != null) {
+                excludeUserId = loginUser.getId();
+            }
+        }
+
+        return userService.searchPublicUsers(role, keyword, excludeUserId);
     }
 
     @GetMapping("/{userId}/public-profile")

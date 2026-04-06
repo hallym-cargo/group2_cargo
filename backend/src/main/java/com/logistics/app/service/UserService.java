@@ -43,11 +43,12 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDtos.PublicUserListItem> searchPublicUsers(String role, String keyword) {
+    public List<UserDtos.PublicUserListItem> searchPublicUsers(String role, String keyword, Long excludeUserId) {
         UserRole userRole = UserRole.valueOf(role.toUpperCase());
         String normalizedKeyword = keyword == null ? "" : keyword.trim().toLowerCase();
 
         return userRepository.findByRoleAndStatusOrderByCreatedAtDesc(userRole, UserStatus.ACTIVE).stream()
+                .filter(user -> user.getTradingBlockedUntil() == null || user.getTradingBlockedUntil().isBefore(java.time.LocalDateTime.now()))
                 .filter(user -> normalizedKeyword.isBlank()
                         || (user.getName() != null && user.getName().toLowerCase().contains(normalizedKeyword)))
                 .map(this::toPublicUserListItem)
@@ -68,6 +69,11 @@ public class UserService {
                 .averageRating(0.0)
                 .ratingCount(0L)
                 .completedCount(0L)
+                .penaltyScore30d(user.getPenaltyScore30d())
+                .cancelRate(user.getCancelRate())
+                .matchingBlockedUntil(user.getMatchingBlockedUntil())
+                .tradingBlockedUntil(user.getTradingBlockedUntil())
+                .highCancelBadge(Boolean.TRUE.equals(user.getHighCancelBadge()))
                 .build();
     }
 
@@ -79,7 +85,9 @@ public class UserService {
 
     public UserDtos.PublicProfileResponse toPublicProfile(User user) {
         List<Rating> ratings = ratingRepository.findByToUserOrderByCreatedAtDesc(user);
-        double average = ratings.isEmpty() ? 0d : ratings.stream().mapToInt(Rating::getScore).average().orElse(0d);
+        double baseAverage = ratings.isEmpty() ? 0d : ratings.stream().mapToInt(Rating::getScore).average().orElse(0d);
+        double penaltyDelta = user.getPenaltyRatingDelta() == null ? 0d : user.getPenaltyRatingDelta();
+        double average = Math.max(0d, Math.round((baseAverage - penaltyDelta) * 10.0) / 10.0);
         long completedCount = 0L;
         if (user.getRole() != null) {
             switch (user.getRole()) {
@@ -101,6 +109,11 @@ public class UserService {
                 .averageRating(average)
                 .ratingCount((long) ratings.size())
                 .completedCount(completedCount)
+                .penaltyScore30d(user.getPenaltyScore30d())
+                .cancelRate(user.getCancelRate())
+                .matchingBlockedUntil(user.getMatchingBlockedUntil())
+                .tradingBlockedUntil(user.getTradingBlockedUntil())
+                .highCancelBadge(Boolean.TRUE.equals(user.getHighCancelBadge()))
                 .build();
     }
 
@@ -123,6 +136,11 @@ public class UserService {
                 .averageRating(publicProfile.getAverageRating())
                 .ratingCount(publicProfile.getRatingCount())
                 .completedCount(publicProfile.getCompletedCount())
+                .penaltyScore30d(user.getPenaltyScore30d())
+                .cancelRate(user.getCancelRate())
+                .matchingBlockedUntil(user.getMatchingBlockedUntil())
+                .tradingBlockedUntil(user.getTradingBlockedUntil())
+                .highCancelBadge(Boolean.TRUE.equals(user.getHighCancelBadge()))
                 .build();
     }
 }

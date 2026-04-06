@@ -47,6 +47,17 @@ public class User {
     private String contactPhone;
     private Boolean profileCompleted;
 
+    @Builder.Default
+    private Integer penaltyScore30d = 0;
+
+    private Integer cancelCount;
+    private Integer completedTransactionCount;
+    private Double cancelRate;
+    private LocalDateTime matchingBlockedUntil;
+    private LocalDateTime tradingBlockedUntil;
+    private Boolean highCancelBadge;
+    private Double penaltyRatingDelta;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -59,6 +70,24 @@ public class User {
         }
         if (profileCompleted == null) {
             profileCompleted = false;
+        }
+        if (penaltyScore30d == null) {
+            penaltyScore30d = 0;
+        }
+        if (cancelCount == null) {
+            cancelCount = 0;
+        }
+        if (completedTransactionCount == null) {
+            completedTransactionCount = 0;
+        }
+        if (cancelRate == null) {
+            cancelRate = 0d;
+        }
+        if (highCancelBadge == null) {
+            highCancelBadge = false;
+        }
+        if (penaltyRatingDelta == null) {
+            penaltyRatingDelta = 0d;
         }
     }
 

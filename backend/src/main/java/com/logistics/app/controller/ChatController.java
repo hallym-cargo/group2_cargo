@@ -8,6 +8,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/chat")
 public class ChatController {
@@ -20,10 +23,23 @@ public class ChatController {
         this.authService = authService;
     }
 
+    @GetMapping("/rooms")
+    @PreAuthorize("hasAnyRole('SHIPPER','DRIVER')")
+    public List<ChatDtos.ChatRoomSummaryRow> rooms(Authentication authentication) {
+        return chatService.getRooms(currentUser(authentication));
+    }
+
     @GetMapping("/rooms/{targetUserId}")
     @PreAuthorize("hasAnyRole('SHIPPER','DRIVER')")
     public ChatDtos.ChatRoomResponse room(@PathVariable Long targetUserId, Authentication authentication) {
         return chatService.getRoom(currentUser(authentication), targetUserId);
+    }
+
+    @PostMapping("/rooms/{targetUserId}/read")
+    @PreAuthorize("hasAnyRole('SHIPPER','DRIVER')")
+    public Map<String, Object> markRead(@PathVariable Long targetUserId, Authentication authentication) {
+        chatService.markRoomAsRead(currentUser(authentication), targetUserId);
+        return Map.of("success", true);
     }
 
     @PostMapping("/rooms/{targetUserId}/messages")
