@@ -81,6 +81,13 @@ public class ShipmentController {
         return shipmentService.completeTrip(shipmentId, currentUser(authentication), request);
     }
 
+    @PostMapping("/{shipmentId}/cancel")
+    public ShipmentDtos.ShipmentResponse cancelShipment(@PathVariable Long shipmentId,
+                                                        @Valid @RequestBody ShipmentDtos.CancelShipmentRequest request,
+                                                        Authentication authentication) {
+        return shipmentService.cancelShipment(shipmentId, currentUser(authentication), request);
+    }
+
     @PostMapping("/{shipmentId}/bookmark")
     public ShipmentDtos.ToggleBookmarkResponse toggleBookmark(@PathVariable Long shipmentId, Authentication authentication) {
         return shipmentService.toggleBookmark(shipmentId, currentUser(authentication));

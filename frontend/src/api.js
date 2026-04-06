@@ -82,6 +82,9 @@ export const updateLocation = async (shipmentId, payload) =>
 export const completeTrip = async (shipmentId, payload) =>
   (await api.post(`/api/shipments/${shipmentId}/complete`, payload)).data;
 
+export const cancelShipment = async (shipmentId, payload) =>
+  (await api.post(`/api/shipments/${shipmentId}/cancel`, payload)).data;
+
 export const toggleBookmark = async (shipmentId) =>
   (await api.post(`/api/shipments/${shipmentId}/bookmark`)).data;
 

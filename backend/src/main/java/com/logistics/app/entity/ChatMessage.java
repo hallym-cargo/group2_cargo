@@ -35,6 +35,9 @@ public class ChatMessage {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column
+    private LocalDateTime readAt;
+
     @PrePersist
     public void onCreate() {
         if (createdAt == null) {
