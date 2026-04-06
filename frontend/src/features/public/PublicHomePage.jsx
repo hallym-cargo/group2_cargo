@@ -29,7 +29,6 @@ export default function PublicHomePage({ controller }) {
         controller={controller}
       />
 
-      {/* Hero (배경 역할) 항상 깔기 */}
       <div style={{ position: "relative" }}>
         <PublicHeroSection controller={controller} />
       </div>

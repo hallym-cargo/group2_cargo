@@ -73,7 +73,13 @@ const LoginPage = ({ controller }) => {
 
                 {/* 회원가입 */}
                 <div className="signup">
-                    계정이 없으신가요? <span className="signup-link">회원가입</span>
+                    계정이 없으신가요?{" "}
+                    <span
+                        className="signup-link"
+                        onClick={() => controller.setRoutePage("signup")}
+                    >
+                        회원가입
+                    </span>
                 </div>
 
                 {/* 메인 페이지 이동 (링크 스타일) */}

@@ -9,6 +9,9 @@ import UserConsolePage from './features/user/UserConsolePage';
 import { useLogisticsController } from './hooks/useLogisticsController';
 import TransportStatus from './pages/TransportStatus';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ShipperSignupPage from './pages/ShipperSignupPage';
+import DriverSignupPage from './pages/DriverSignupPage';
 
 export default function App() {
   const controller = useLogisticsController();
@@ -25,13 +28,22 @@ export default function App() {
     page = <PublicUserSearchPage controller={controller} role="SHIPPER" />;
   } else if (controller.routePage === 'drivers') {
     page = <PublicUserSearchPage controller={controller} role="DRIVER" />;
-  } 
+  }
   else if (controller.routePage === 'main') {
     page = <PublicHomePage controller={controller} />;
-  } 
+  }
   else if (controller.routePage === 'login') {
-  page = <LoginPage controller={controller} />;
-}
+    page = <LoginPage controller={controller} />;
+  }
+  else if (controller.routePage === 'signup') {
+    page = <SignupPage controller={controller} />;
+  }
+  else if (controller.routePage === 'signup-shipper') {
+    page = <ShipperSignupPage controller={controller} />;
+  }
+  else if (controller.routePage === 'signup-driver') {
+    page = <DriverSignupPage controller={controller} />;
+  }
   else if (controller.dashboardTab === 'home') {
     page = <PublicHomePage controller={controller} />;
   } else if (controller.isAdmin) {
