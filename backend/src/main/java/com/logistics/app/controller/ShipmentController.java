@@ -5,6 +5,8 @@ import com.logistics.app.entity.User;
 import com.logistics.app.service.AuthService;
 import com.logistics.app.service.ShipmentService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,12 @@ public class ShipmentController {
     @GetMapping
     public List<ShipmentDtos.ShipmentResponse> list(Authentication authentication) {
         return shipmentService.listForUser(currentUser(authentication));
+    }
+
+
+    @GetMapping("/page")
+    public Page<ShipmentDtos.ShipmentResponse> listPage(Pageable pageable, Authentication authentication) {
+        return shipmentService.listPageForUser(currentUser(authentication), pageable);
     }
 
     @GetMapping("/bookmarks")

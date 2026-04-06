@@ -4,6 +4,9 @@ import com.logistics.app.dto.ShipmentDtos;
 import com.logistics.app.entity.*;
 import com.logistics.app.repository.*;
 import com.logistics.app.ws.ShipmentRealtimePublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,6 +103,20 @@ public class ShipmentService {
                 .sorted(Comparator.comparing(Shipment::getUpdatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .map(shipment -> toResponse(shipment, user))
                 .collect(Collectors.toList());
+    }
+
+
+
+    public Page<ShipmentDtos.ShipmentResponse> listPageForUser(User user, Pageable pageable) {
+        List<ShipmentDtos.ShipmentResponse> responses = listForUser(user);
+
+        int start = (int) pageable.getOffset();
+        if (start >= responses.size()) {
+            return new PageImpl<>(List.of(), pageable, responses.size());
+        }
+
+        int end = Math.min(start + pageable.getPageSize(), responses.size());
+        return new PageImpl<>(responses.subList(start, end), pageable, responses.size());
     }
 
     public List<ShipmentDtos.ShipmentResponse> listBookmarks(User user) {
