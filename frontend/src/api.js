@@ -37,6 +37,12 @@ export const fetchPublicUsers = async (role, keyword = '') =>
 export const fetchChatRoom = async (targetUserId) =>
   (await api.get(`/api/chat/rooms/${targetUserId}`)).data;
 
+export const fetchChatRooms = async () =>
+  (await api.get('/api/chat/rooms')).data;
+
+export const markChatRoomRead = async (targetUserId) =>
+  (await api.post(`/api/chat/rooms/${targetUserId}/read`)).data;
+
 export const sendChatMessage = async (targetUserId, content) =>
   (await api.post(`/api/chat/rooms/${targetUserId}/messages`, { content })).data;
 
