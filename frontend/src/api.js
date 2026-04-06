@@ -56,7 +56,7 @@ export const fetchDrivingRoute = async ({
   ).data;
 
 export const fetchShipments = async (page = 0, size = 10) =>
-  (await api.get('/api/shipments/page', { params: { page, size } })).data;
+  (await api.get('/api/shipments', { params: { page, size } })).data;
 
 export const fetchShipment = async (id) =>
   (await api.get(`/api/shipments/${id}`)).data;

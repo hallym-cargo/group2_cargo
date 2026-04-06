@@ -120,7 +120,6 @@ export function useLogisticsController() {
   const [chatSending, setChatSending] = useState(false);
 
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
 
   const [adminDashboard, setAdminDashboard] = useState(null);
   const [adminMembers, setAdminMembers] = useState([]);
@@ -173,7 +172,7 @@ export function useLogisticsController() {
     );
   }, [publicData.liveBoard, publicSelectedId, publicBoard]);
 
-  const filteredShipments = useMemo(() => {
+  const filteredShipmentItems = useMemo(() => {
     return shipments.filter((item) => {
       const keyword = shipmentKeyword.trim().toLowerCase();
       const byStatus =
@@ -183,10 +182,12 @@ export function useLogisticsController() {
       if (auth.role === 'DRIVER') {
         if (driverBoardTag === 'BIDDING') byTag = item.status === 'BIDDING';
         if (driverBoardTag === 'MY_BIDS') byTag = !!item.hasMyOffer;
-        if (driverBoardTag === 'MY_ASSIGNED')
+        if (driverBoardTag === 'MY_ASSIGNED') {
           byTag = !!item.assignedToMe && item.status === 'CONFIRMED';
-        if (driverBoardTag === 'MY_TRANSIT')
+        }
+        if (driverBoardTag === 'MY_TRANSIT') {
           byTag = !!item.assignedToMe && item.status === 'IN_TRANSIT';
+        }
       }
 
       const byKeyword =
@@ -205,6 +206,18 @@ export function useLogisticsController() {
       return byStatus && byKeyword && byTag;
     });
   }, [shipments, shipmentFilter, shipmentKeyword, auth.role, driverBoardTag]);
+
+  const totalPages = useMemo(() => {
+    return filteredShipmentItems.length === 0
+      ? 0
+      : Math.ceil(filteredShipmentItems.length / 10);
+  }, [filteredShipmentItems]);
+
+  const filteredShipments = useMemo(() => {
+    const start = page * 10;
+    const end = start + 10;
+    return filteredShipmentItems.slice(start, end);
+  }, [filteredShipmentItems, page]);
 
   const summary = useMemo(
     () => ({
@@ -444,7 +457,6 @@ export function useLogisticsController() {
     setChatModalOpen(false);
     setChatSending(false);
     setPage(0);
-    setTotalPages(0);
   };
 
   const loadPublic = async () => {
@@ -460,14 +472,12 @@ export function useLogisticsController() {
     if (!isLoggedIn || isAdmin) return;
 
     const data = await fetchShipments(page, 10);
-    const content = Array.isArray(data) ? data : (data.content || []);
-    const pages = Array.isArray(data) ? 0 : (data.totalPages || 0);
+    const items = Array.isArray(data) ? data : (data.content || []);
 
-    setShipments(content);
-    setTotalPages(pages);
+    setShipments(items);
 
-    if (!selectedId && content.length) {
-      setSelectedId(content[0].id);
+    if (!selectedId && items.length) {
+      setSelectedId(items[0].id);
     }
   };
 
@@ -677,7 +687,7 @@ export function useLogisticsController() {
       loadRatings().catch(() => {});
       loadProfile().catch(() => {});
     }
-  }, [isLoggedIn, isAdmin, page]);
+  }, [isLoggedIn, isAdmin]);
 
   useEffect(() => {
     if (selectedId && isLoggedIn && !isAdmin) {
@@ -686,6 +696,21 @@ export function useLogisticsController() {
       );
     }
   }, [selectedId, isLoggedIn, isAdmin]);
+
+  useEffect(() => {
+    if (totalPages === 0) {
+      if (page !== 0) setPage(0);
+      return;
+    }
+
+    if (page > totalPages - 1) {
+      setPage(totalPages - 1);
+    }
+  }, [page, totalPages]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [shipmentFilter, shipmentKeyword, driverBoardTag]);
 
   useEffect(() => {
     const client = new Client({
@@ -722,7 +747,7 @@ export function useLogisticsController() {
     stompClientRef.current = client;
 
     return () => client.deactivate();
-  }, [isLoggedIn, isAdmin, selectedId, page]);
+  }, [isLoggedIn, isAdmin, selectedId]);
 
   useEffect(() => {
     if (!chatModalOpen || !chatRoom?.targetProfile?.id || !isLoggedIn) return;
