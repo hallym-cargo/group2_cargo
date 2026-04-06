@@ -10,8 +10,6 @@ import { useEffect } from 'react'
 export default function PublicHomePage({ controller }) {
   useRevealOnScroll()
 
-  const { authMode, setAuthMode } = controller;
-
   useEffect(() => {
     controller.loadPublic()
   }, [])
@@ -34,20 +32,13 @@ export default function PublicHomePage({ controller }) {
       {/* Hero (배경 역할) 항상 깔기 */}
       <div style={{ position: "relative" }}>
         <PublicHeroSection controller={controller} />
-
-        {/* 로그인이면 위에 덮기 */}
-        {authMode === "login" && (
-          <LoginPage controller={controller} setAuthMode={setAuthMode} />
-        )}
       </div>
 
       {/* 로그인 아닐 때만 아래 섹션 */}
-      {authMode !== "login" && (
-        <>
-          <PublicBoardSection controller={controller} />
-          <PublicInfoSection controller={controller} />
-        </>
-      )}
+      <>
+        <PublicBoardSection controller={controller} />
+        <PublicInfoSection controller={controller} />
+      </>
 
     </div>
   )

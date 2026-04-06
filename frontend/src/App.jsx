@@ -25,17 +25,14 @@ export default function App() {
     page = <PublicUserSearchPage controller={controller} role="SHIPPER" />;
   } else if (controller.routePage === 'drivers') {
     page = <PublicUserSearchPage controller={controller} role="DRIVER" />;
-  } else if (!controller.isLoggedIn) {
-    page =
-      controller.authMode === 'login' ? (
-        <LoginPage
-          controller={controller}
-          setAuthMode={controller.setAuthMode}
-        />
-      ) : (
-        <PublicHomePage controller={controller} />
-      );
-  } else if (controller.dashboardTab === 'home') {
+  } 
+  else if (controller.routePage === 'main') {
+    page = <PublicHomePage controller={controller} />;
+  } 
+  else if (controller.routePage === 'login') {
+  page = <LoginPage controller={controller} />;
+}
+  else if (controller.dashboardTab === 'home') {
     page = <PublicHomePage controller={controller} />;
   } else if (controller.isAdmin) {
     page = <AdminConsolePage controller={controller} />;

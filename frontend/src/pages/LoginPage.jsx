@@ -1,14 +1,14 @@
 import React from "react";
 import "./LoginPage.css";
 
-const LoginPage = ({ setAuthMode, controller }) => {
+const LoginPage = ({ controller }) => {
 
     const { loginForm, setLoginForm, handleLogin } = controller;
 
     const handleClickLogin = async () => {
         await controller.handleLogin();
         controller.setDashboardTab("home");
-        setAuthMode("none");
+        controller.setRoutePage("main");
     };
 
     return (
@@ -80,8 +80,7 @@ const LoginPage = ({ setAuthMode, controller }) => {
                 <div
                     className="back-to-main"
                     onClick={() => {
-                        setAuthMode("none");
-                        controller.loadPublic();
+                        controller.setRoutePage("main");
                     }}
                 >
                     메인 페이지로 이동

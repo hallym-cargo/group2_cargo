@@ -73,18 +73,10 @@ export default function PublicHeader({
           ) : (
             <>
               <button
-                className="landing-text-btn"
-                onClick={() => setAuthMode('login')}
+                className="landing-btn landing-btn--primary"
+                onClick={() => controller.setRoutePage('login')}
               >
                 로그인
-              </button>
-              <button
-                className="landing-btn landing-btn--primary"
-                onClick={() =>
-                  setAuthMode(authMode === 'login' ? 'signup' : 'login')
-                }
-              >
-                {authMode === 'login' ? '회원가입' : '로그인'}
               </button>
             </>
           )}
