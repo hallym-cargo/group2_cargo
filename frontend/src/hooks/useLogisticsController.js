@@ -72,7 +72,8 @@ export function useLogisticsController() {
   }));
 
   const [message, setMessage] = useState('');
-  const [authMode, setAuthMode] = useState('login');
+  // const [authMode, setAuthMode] = useState('login');
+  const [authMode, setAuthMode] = useState('');
 
   const [loginForm, setLoginForm] = useState({
     email: 'shipper@test.com',
