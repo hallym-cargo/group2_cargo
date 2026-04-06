@@ -2,6 +2,7 @@ import KakaoMapView from '../../../components/KakaoMapView'
 import Pagination from '../../../components/common/Pagination'
 import ProfilePreviewCard from '../../../components/common/ProfilePreviewCard'
 import SectionTitle from '../../../components/common/SectionTitle'
+import ShipmentCancelModal from '../../../components/common/ShipmentCancelModal'
 import { formatCurrency, formatDate, formatRatingSummary, roleText, statusText } from '../../../utils/formatters'
 
 export default function UserBoardTab({ controller }) {
@@ -24,7 +25,22 @@ export default function UserBoardTab({ controller }) {
     page,
     setPage,
     totalPages,
+    cancelModalOpen,
+    openCancelModal,
+    closeCancelModal,
+    cancelForm,
+    setCancelForm,
+    handleCancelShipment,
+    cancelSubmitting,
   } = controller
+
+  const showCancelButton =
+    selected &&
+    (selected.status === 'BIDDING' || selected.status === 'CONFIRMED' || selected.status === 'IN_TRANSIT') &&
+    (
+      (auth.role === 'SHIPPER' && selected.shipperId === Number(localStorage.getItem('userId') || selected.shipperId)) ||
+      (auth.role === 'DRIVER' && selected.assignedToMe)
+    )
 
   return (
     <div className="page-stack">
@@ -85,9 +101,13 @@ export default function UserBoardTab({ controller }) {
                       {!item.assignedToMe && !item.hasMyOffer && item.status === 'BIDDING' && (
                         <span className="tag">공개</span>
                       )}
+                      {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
                     </div>
                   ) : (
-                    <span className="tag">{roleText(auth.role)}</span>
+                    <div className="chip-group">
+                      <span className="tag">{roleText(auth.role)}</span>
+                      {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
+                    </div>
                   )}
                 </td>
 
@@ -154,12 +174,20 @@ export default function UserBoardTab({ controller }) {
                   <strong>{selected.assignedDriverName || '미확정'}</strong>
                 </div>
                 <div>
+                  <span>운송 시작 예정</span>
+                  <strong>{formatDate(selected.scheduledStartAt)}</strong>
+                </div>
+                <div>
                   <span>현재 위치</span>
                   <strong>{selected.tracking?.roughLocation || '미등록'}</strong>
                 </div>
                 <div>
                   <span>남은 시간</span>
                   <strong>{selected.tracking?.remainingMinutes ?? selected.estimatedMinutes}분</strong>
+                </div>
+                <div>
+                  <span>내 누적 취소 점수</span>
+                  <strong>{selected.cancelPenaltyScore ?? 0}점</strong>
                 </div>
               </div>
 
@@ -188,6 +216,7 @@ export default function UserBoardTab({ controller }) {
                 profile={
                   auth.role === 'DRIVER'
                     ? {
+                        id: selected.shipperId,
                         name: selected.shipperName,
                         role: 'SHIPPER',
                         companyName: selected.companyName,
@@ -198,9 +227,11 @@ export default function UserBoardTab({ controller }) {
                         averageRating: selected.shipperAverageRating,
                         ratingCount: selected.shipperRatingCount,
                         completedCount: undefined,
+                        highCancelBadge: selected.counterpartyHighCancelBadge,
                       }
                     : selected.assignedDriverName
                       ? {
+                          id: selected.assignedDriverId,
                           name: selected.assignedDriverName,
                           role: 'DRIVER',
                           bio: selected.assignedDriverBio,
@@ -210,6 +241,7 @@ export default function UserBoardTab({ controller }) {
                           averageRating: selected.assignedDriverAverageRating,
                           ratingCount: selected.assignedDriverRatingCount,
                           completedCount: undefined,
+                          highCancelBadge: selected.counterpartyHighCancelBadge,
                         }
                       : null
                 }
@@ -249,6 +281,12 @@ export default function UserBoardTab({ controller }) {
                     ? '화주는 입찰 비교와 차주 확정, 운행 확인이 핵심입니다.'
                     : '차주는 입찰 등록, 운반 시작, ETA 기준 완료 전환이 핵심입니다.'}
                 </p>
+                {selected.viewerMatchingBlockedUntil && (
+                  <small>매칭 제한 해제 시각: {formatDate(selected.viewerMatchingBlockedUntil)}</small>
+                )}
+                {selected.viewerTradingBlockedUntil && (
+                  <small>거래 금지 해제 시각: {formatDate(selected.viewerTradingBlockedUntil)}</small>
+                )}
               </div>
 
               {auth.role === 'DRIVER' && selected.status === 'BIDDING' && !selected.hasMyOffer && (
@@ -376,12 +414,34 @@ export default function UserBoardTab({ controller }) {
                   )}
                 </div>
               )}
+
+              {showCancelButton && (
+                <div className="surface-sub">
+                  <strong>거래 취소</strong>
+                  <p className="section-desc">
+                    취소 시점에 따라 패널티 점수가 누적되며, 반복 취소 시 매칭 제한 또는 거래 금지가 적용됩니다.
+                  </p>
+                  <button className="btn" onClick={openCancelModal}>
+                    거래 취소 요청
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <div className="empty-box">상세를 선택하면 액션이 표시됩니다.</div>
           )}
         </div>
       </div>
+
+      <ShipmentCancelModal
+        open={cancelModalOpen}
+        form={cancelForm}
+        setForm={setCancelForm}
+        onClose={closeCancelModal}
+        onSubmit={handleCancelShipment}
+        selected={selected}
+        isSubmitting={cancelSubmitting}
+      />
     </div>
   )
 }

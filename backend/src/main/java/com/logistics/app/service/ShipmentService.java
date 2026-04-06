@@ -23,6 +23,8 @@ public class ShipmentService {
     private final StatusHistoryRepository statusHistoryRepository;
     private final ShipmentBookmarkRepository shipmentBookmarkRepository;
     private final ShipmentImageRepository shipmentImageRepository;
+    private final ShipmentCancelHistoryRepository shipmentCancelHistoryRepository;
+    private final DisputeRepository disputeRepository;
     private final ShipmentRealtimePublisher realtimePublisher;
     private final FinanceService financeService;
     private final UserRepository userRepository;
@@ -34,6 +36,8 @@ public class ShipmentService {
                            StatusHistoryRepository statusHistoryRepository,
                            ShipmentBookmarkRepository shipmentBookmarkRepository,
                            ShipmentImageRepository shipmentImageRepository,
+                           ShipmentCancelHistoryRepository shipmentCancelHistoryRepository,
+                           DisputeRepository disputeRepository,
                            ShipmentRealtimePublisher realtimePublisher,
                            FinanceService financeService,
                            UserRepository userRepository,
@@ -44,6 +48,8 @@ public class ShipmentService {
         this.statusHistoryRepository = statusHistoryRepository;
         this.shipmentBookmarkRepository = shipmentBookmarkRepository;
         this.shipmentImageRepository = shipmentImageRepository;
+        this.shipmentCancelHistoryRepository = shipmentCancelHistoryRepository;
+        this.disputeRepository = disputeRepository;
         this.realtimePublisher = realtimePublisher;
         this.financeService = financeService;
         this.userRepository = userRepository;
@@ -51,6 +57,13 @@ public class ShipmentService {
     }
 
     public ShipmentDtos.ShipmentResponse createShipment(User shipper, ShipmentDtos.CreateShipmentRequest request) {
+        if (request.getScheduledStartAt() == null) {
+            throw new RuntimeException("운송 시작 예정 시각을 입력해 주세요.");
+        }
+        if (request.getScheduledStartAt().isBefore(LocalDateTime.now().plusMinutes(10))) {
+            throw new RuntimeException("운송 시작 예정 시각은 현재보다 최소 10분 이후여야 합니다.");
+        }
+
         int estimatedMinutes = estimateMinutes(request.getOriginLat(), request.getOriginLng(), request.getDestinationLat(), request.getDestinationLng());
         double estimatedDistanceKm = estimateDistanceKm(request.getOriginLat(), request.getOriginLng(), request.getDestinationLat(), request.getDestinationLng());
 
@@ -66,6 +79,7 @@ public class ShipmentService {
                 .destinationAddress(request.getDestinationAddress())
                 .destinationLat(request.getDestinationLat())
                 .destinationLng(request.getDestinationLng())
+                .scheduledStartAt(request.getScheduledStartAt())
                 .estimatedMinutes(estimatedMinutes)
                 .estimatedDistanceKm(estimatedDistanceKm)
                 .status(ShipmentStatus.BIDDING)
@@ -116,6 +130,7 @@ public class ShipmentService {
     }
 
     public ShipmentDtos.OfferResponse createOffer(Long shipmentId, User driver, ShipmentDtos.CreateOfferRequest request) {
+        validateTradeAvailability(driver);
         Shipment shipment = getById(shipmentId);
         if (shipment.getStatus() != ShipmentStatus.BIDDING) {
             throw new RuntimeException("입찰 가능한 상태가 아닙니다.");
@@ -136,19 +151,27 @@ public class ShipmentService {
     }
 
     public ShipmentDtos.ShipmentResponse acceptOffer(Long offerId, User shipper) {
-        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new RuntimeException("제안을 찾을 수 없습니다."));
+        validateTradeAvailability(shipper);
+        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new RuntimeException("입찰 제안을 찾을 수 없습니다."));
         Shipment shipment = offer.getShipment();
         if (!shipment.getShipper().getId().equals(shipper.getId())) {
-            throw new RuntimeException("본인 화물만 확정할 수 있습니다.");
+            throw new RuntimeException("본인 화물만 차주를 확정할 수 있습니다.");
         }
+        if (shipment.getStatus() != ShipmentStatus.BIDDING) {
+            throw new RuntimeException("입찰중인 화물만 확정할 수 있습니다.");
+        }
+
+        offerRepository.findByShipment(shipment).forEach(item -> {
+            item.setStatus(item.getId().equals(offerId) ? OfferStatus.ACCEPTED : OfferStatus.REJECTED);
+            offerRepository.save(item);
+        });
+
         ShipmentStatus before = shipment.getStatus();
         shipment.setAssignedDriver(offer.getDriver());
-        shipment.setAcceptedOfferId(offer.getId());
+        shipment.setAcceptedOfferId(offerId);
         shipment.setStatus(ShipmentStatus.CONFIRMED);
         shipmentRepository.save(shipment);
 
-        List<Offer> offers = offerRepository.findByShipment(shipment);
-        offers.forEach(o -> o.setStatus(o.getId().equals(offerId) ? OfferStatus.ACCEPTED : OfferStatus.REJECTED));
         logStatus(shipment, before, ShipmentStatus.CONFIRMED, shipper.getEmail(), "차주 확정");
         ShipmentDtos.ShipmentResponse response = toResponse(shipment, shipper);
         realtimePublisher.publishShipmentUpdated(response);
@@ -231,6 +254,12 @@ public class ShipmentService {
         shipment.setStatus(ShipmentStatus.COMPLETED);
         shipment.setCompletedAt(LocalDateTime.now());
         shipmentRepository.save(shipment);
+
+        incrementCompletedCount(shipment.getShipper());
+        if (shipment.getAssignedDriver() != null) {
+            incrementCompletedCount(shipment.getAssignedDriver());
+        }
+
         shipmentImageRepository.save(ShipmentImage.builder()
                 .shipment(shipment)
                 .type(ShipmentImageType.COMPLETION)
@@ -242,6 +271,66 @@ public class ShipmentService {
         financeService.settleCompletedShipment(shipment, acceptedOffer, adminUser);
         logStatus(shipment, before, ShipmentStatus.COMPLETED, driver.getEmail(), "운반 완료");
         ShipmentDtos.ShipmentResponse response = toResponse(shipment, driver);
+        realtimePublisher.publishShipmentUpdated(response);
+        return response;
+    }
+
+    public ShipmentDtos.ShipmentResponse cancelShipment(Long shipmentId, User actor, ShipmentDtos.CancelShipmentRequest request) {
+        Shipment shipment = getById(shipmentId);
+
+        if (request == null || request.getReason() == null) {
+            throw new RuntimeException("취소 사유를 선택해 주세요.");
+        }
+        if (request.getDetail() == null || request.getDetail().trim().isBlank()) {
+            throw new RuntimeException("상세 설명을 입력해 주세요.");
+        }
+        if (!canCancel(shipment, actor)) {
+            throw new RuntimeException("이 거래를 취소할 권한이 없습니다.");
+        }
+        if (shipment.getStatus() == ShipmentStatus.COMPLETED || shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            throw new RuntimeException("이미 종료된 거래입니다.");
+        }
+
+        ShipmentStatus before = shipment.getStatus();
+        shipment.setStatus(ShipmentStatus.CANCELLED);
+        shipmentRepository.save(shipment);
+
+        int timingPenalty = calculateTimingPenalty(shipment);
+        boolean disputed = isDisputedReason(request.getReason());
+        int finalPenalty = disputed ? 0 : timingPenalty;
+
+        User disputeTarget = resolveDisputeTarget(shipment, actor, request.getReason());
+        String penaltyActionSummary = disputed ? "분쟁성 취소 접수" : applyPenalty(actor, finalPenalty);
+
+        shipmentCancelHistoryRepository.save(ShipmentCancelHistory.builder()
+                .shipment(shipment)
+                .canceledBy(actor)
+                .cancelReason(request.getReason())
+                .detail(request.getDetail().trim())
+                .canceledAt(LocalDateTime.now())
+                .scheduledStartAt(resolveScheduledStartAt(shipment))
+                .timingPenaltyScore(timingPenalty)
+                .finalPenaltyScore(finalPenalty)
+                .disputed(disputed)
+                .disputeTargetUser(disputeTarget)
+                .penaltyActionSummary(penaltyActionSummary)
+                .build());
+
+        if (disputed && shipment.getAssignedDriver() != null) {
+            disputeRepository.save(Dispute.builder()
+                    .shipment(shipment)
+                    .shipper(shipment.getShipper())
+                    .driver(shipment.getAssignedDriver())
+                    .reason(request.getReason().name())
+                    .detail(request.getDetail().trim())
+                    .status("OPEN")
+                    .build());
+        }
+
+        logStatus(shipment, before, ShipmentStatus.CANCELLED, actor.getEmail(),
+                "거래 취소 - " + reasonLabel(request.getReason()) + " / " + request.getDetail().trim());
+
+        ShipmentDtos.ShipmentResponse response = toResponse(shipment, actor);
         realtimePublisher.publishShipmentUpdated(response);
         return response;
     }
@@ -260,7 +349,6 @@ public class ShipmentService {
         }
         return ShipmentDtos.ToggleBookmarkResponse.builder().bookmarked(bookmarked).build();
     }
-
 
     private void saveCargoImages(Shipment shipment, List<String> dataUrls, List<String> names) {
         if (dataUrls == null || dataUrls.isEmpty()) return;
@@ -312,6 +400,15 @@ public class ShipmentService {
         var shipperProfile = userService.toPublicProfile(shipment.getShipper());
         var assignedDriverProfile = shipment.getAssignedDriver() != null ? userService.toPublicProfile(shipment.getAssignedDriver()) : null;
 
+        boolean counterpartyHighCancelBadge = false;
+        if (viewer != null) {
+            if (viewer.getRole() == UserRole.SHIPPER && assignedDriverProfile != null) {
+                counterpartyHighCancelBadge = Boolean.TRUE.equals(assignedDriverProfile.getHighCancelBadge());
+            } else if (viewer.getRole() == UserRole.DRIVER) {
+                counterpartyHighCancelBadge = Boolean.TRUE.equals(shipperProfile.getHighCancelBadge());
+            }
+        }
+
         return ShipmentDtos.ShipmentResponse.builder()
                 .id(shipment.getId())
                 .title(shipment.getTitle())
@@ -352,6 +449,7 @@ public class ShipmentService {
                 .offerCount(offers.size())
                 .createdAt(shipment.getCreatedAt())
                 .updatedAt(shipment.getUpdatedAt())
+                .scheduledStartAt(shipment.getScheduledStartAt())
                 .startedAt(shipment.getStartedAt())
                 .estimatedArrivalAt(shipment.getEstimatedArrivalAt())
                 .completedAt(shipment.getCompletedAt())
@@ -369,9 +467,12 @@ public class ShipmentService {
                         .stream().map(ShipmentImage::getDataUrl).toList())
                 .completionImageUrl(shipmentImageRepository.findTopByShipmentAndTypeOrderByCreatedAtDesc(shipment, ShipmentImageType.COMPLETION)
                         .map(ShipmentImage::getDataUrl).orElse(null))
+                .cancelPenaltyScore(viewer != null ? viewer.getPenaltyScore30d() : null)
+                .counterpartyHighCancelBadge(counterpartyHighCancelBadge)
+                .viewerMatchingBlockedUntil(viewer != null ? viewer.getMatchingBlockedUntil() : null)
+                .viewerTradingBlockedUntil(viewer != null ? viewer.getTradingBlockedUntil() : null)
                 .build();
     }
-
 
     private ShipmentDtos.TrackingResponse resolveTracking(Shipment shipment, LocationLog latestLocation) {
         if (shipment.getStatus() == ShipmentStatus.COMPLETED) {
@@ -426,16 +527,17 @@ public class ShipmentService {
     }
 
     private ShipmentDtos.OfferResponse toOfferResponse(Offer offer) {
+        var profile = userService.toPublicProfile(offer.getDriver());
         return ShipmentDtos.OfferResponse.builder()
                 .id(offer.getId())
                 .driverName(offer.getDriver().getName())
                 .driverId(offer.getDriver().getId())
-                .driverAverageRating(userService.toPublicProfile(offer.getDriver()).getAverageRating())
-                .driverRatingCount(userService.toPublicProfile(offer.getDriver()).getRatingCount())
-                .driverBio(userService.toPublicProfile(offer.getDriver()).getBio())
-                .driverProfileImageUrl(userService.toPublicProfile(offer.getDriver()).getProfileImageUrl())
-                .driverContactEmail(userService.toPublicProfile(offer.getDriver()).getContactEmail())
-                .driverContactPhone(userService.toPublicProfile(offer.getDriver()).getContactPhone())
+                .driverAverageRating(profile.getAverageRating())
+                .driverRatingCount(profile.getRatingCount())
+                .driverBio(profile.getBio())
+                .driverProfileImageUrl(profile.getProfileImageUrl())
+                .driverContactEmail(profile.getContactEmail())
+                .driverContactPhone(profile.getContactPhone())
                 .price(offer.getPrice())
                 .message(offer.getMessage())
                 .status(offer.getStatus())
@@ -451,6 +553,172 @@ public class ShipmentService {
                 .actorEmail(actor)
                 .note(note)
                 .build());
+    }
+
+    private void validateTradeAvailability(User user) {
+        LocalDateTime now = LocalDateTime.now();
+        if (user.getTradingBlockedUntil() != null && user.getTradingBlockedUntil().isAfter(now)) {
+            throw new RuntimeException("현재 거래 금지 상태입니다. 해제 시각: " + user.getTradingBlockedUntil());
+        }
+        if (user.getMatchingBlockedUntil() != null && user.getMatchingBlockedUntil().isAfter(now)) {
+            throw new RuntimeException("현재 매칭 제한 상태입니다. 해제 시각: " + user.getMatchingBlockedUntil());
+        }
+    }
+
+    private boolean canCancel(Shipment shipment, User actor) {
+        if (actor.getRole() == UserRole.ADMIN) return true;
+        if (shipment.getShipper() != null && shipment.getShipper().getId().equals(actor.getId())) return true;
+        return shipment.getAssignedDriver() != null && shipment.getAssignedDriver().getId().equals(actor.getId());
+    }
+
+    private LocalDateTime resolveScheduledStartAt(Shipment shipment) {
+        if (shipment.getScheduledStartAt() != null) {
+            return shipment.getScheduledStartAt();
+        }
+        if (shipment.getStartedAt() != null) {
+            return shipment.getStartedAt();
+        }
+        return shipment.getCreatedAt() != null ? shipment.getCreatedAt().plusHours(48) : LocalDateTime.now().plusHours(48);
+    }
+
+    private int calculateTimingPenalty(Shipment shipment) {
+        LocalDateTime now = LocalDateTime.now();
+        if (shipment.getStartedAt() != null || shipment.getStatus() == ShipmentStatus.IN_TRANSIT) {
+            return 6;
+        }
+        LocalDateTime scheduledStartAt = resolveScheduledStartAt(shipment);
+        if (!now.isBefore(scheduledStartAt)) {
+            return 6;
+        }
+        long minutes = Duration.between(now, scheduledStartAt).toMinutes();
+
+        if (minutes <= 60) {
+            return 4;
+        }
+        if (minutes <= 180) {
+            return 3;
+        }
+        if (minutes <= 1440) {
+            return 2;
+        }
+        if (minutes <= 2880) {
+            return 1;
+        }
+        return 1;
+    }
+
+    private boolean isDisputedReason(CancelReason reason) {
+        return reason == CancelReason.OTHER_PARTY_NO_SHOW
+                || reason == CancelReason.OTHER_PARTY_CHANGED_CONDITIONS;
+    }
+
+    private User resolveDisputeTarget(Shipment shipment, User actor, CancelReason reason) {
+        if (!isDisputedReason(reason)) return null;
+        if (shipment.getShipper() != null && shipment.getShipper().getId().equals(actor.getId())) {
+            return shipment.getAssignedDriver();
+        }
+        return shipment.getShipper();
+    }
+
+    private String applyPenalty(User user, int penalty) {
+        LocalDateTime now = LocalDateTime.now();
+        refreshPenaltyWindow(user, now);
+
+        int newScore = (user.getPenaltyScore30d() == null ? 0 : user.getPenaltyScore30d()) + penalty;
+        user.setPenaltyScore30d(newScore);
+        user.setCancelCount((user.getCancelCount() == null ? 0 : user.getCancelCount()) + 1);
+
+        long denominator = (long) (user.getCancelCount() == null ? 0 : user.getCancelCount())
+                + (long) (user.getCompletedTransactionCount() == null ? 0 : user.getCompletedTransactionCount());
+        if (denominator > 0) {
+            double rate = ((double) user.getCancelCount() / denominator) * 100.0;
+            user.setCancelRate(Math.round(rate * 10.0) / 10.0);
+        } else {
+            user.setCancelRate(0d);
+        }
+
+        String action;
+        if (newScore >= 20) {
+            user.setTradingBlockedUntil(now.plusDays(14));
+            user.setPenaltyRatingDelta(minPenaltyDelta(user.getPenaltyRatingDelta(), 0.6));
+            action = "14일 거래 금지";
+        } else if (newScore >= 15) {
+            user.setTradingBlockedUntil(now.plusDays(7));
+            user.setPenaltyRatingDelta(minPenaltyDelta(user.getPenaltyRatingDelta(), 0.3));
+            action = "7일 거래 금지 + 평점 강등";
+        } else if (newScore >= 10) {
+            user.setTradingBlockedUntil(now.plusDays(3));
+            action = "3일 거래 금지";
+        } else if (newScore >= 8) {
+            user.setMatchingBlockedUntil(now.plusHours(72));
+            user.setHighCancelBadge(true);
+            user.setPenaltyRatingDelta(minPenaltyDelta(user.getPenaltyRatingDelta(), 0.1));
+            action = "72시간 매칭 제한 + 취소율 높음 뱃지";
+        } else if (newScore >= 5) {
+            user.setMatchingBlockedUntil(now.plusHours(24));
+            action = "24시간 매칭 제한";
+        } else if (newScore >= 3) {
+            user.setMatchingBlockedUntil(now.plusHours(2));
+            action = "2시간 매칭 제한";
+        } else {
+            action = "점수 누적만 반영";
+        }
+
+        if ((user.getCancelRate() != null && user.getCancelRate() >= 20d && denominator >= 20) || newScore >= 8) {
+            user.setHighCancelBadge(true);
+        }
+
+        userRepository.save(user);
+        return action;
+    }
+
+    private void refreshPenaltyWindow(User user, LocalDateTime now) {
+        LocalDateTime start = now.minusDays(30);
+        List<ShipmentCancelHistory> recentCancels = shipmentCancelHistoryRepository.findByCanceledByAndCanceledAtAfterOrderByCanceledAtDesc(user, start);
+        int recalculated = recentCancels.stream()
+                .map(ShipmentCancelHistory::getFinalPenaltyScore)
+                .filter(score -> score != null)
+                .mapToInt(Integer::intValue)
+                .sum();
+        user.setPenaltyScore30d(recalculated);
+
+        if (user.getMatchingBlockedUntil() != null && user.getMatchingBlockedUntil().isBefore(now)) {
+            user.setMatchingBlockedUntil(null);
+        }
+        if (user.getTradingBlockedUntil() != null && user.getTradingBlockedUntil().isBefore(now)) {
+            user.setTradingBlockedUntil(null);
+        }
+        if ((user.getCancelRate() == null || user.getCancelRate() < 20d) && recalculated < 8) {
+            user.setHighCancelBadge(false);
+        }
+    }
+
+    private double minPenaltyDelta(Double current, double target) {
+        double safeCurrent = current == null ? 0d : current;
+        return Math.max(safeCurrent, target);
+    }
+
+    private void incrementCompletedCount(User user) {
+        if (user == null) return;
+        user.setCompletedTransactionCount((user.getCompletedTransactionCount() == null ? 0 : user.getCompletedTransactionCount()) + 1);
+        long denominator = (long) (user.getCancelCount() == null ? 0 : user.getCancelCount())
+                + (long) user.getCompletedTransactionCount();
+        if (denominator > 0) {
+            double rate = ((double) (user.getCancelCount() == null ? 0 : user.getCancelCount()) / denominator) * 100.0;
+            user.setCancelRate(Math.round(rate * 10.0) / 10.0);
+        }
+        userRepository.save(user);
+    }
+
+    private String reasonLabel(CancelReason reason) {
+        return switch (reason) {
+            case SIMPLE_CHANGE_OF_MIND -> "단순 변심";
+            case SCHEDULE_CHANGE -> "일정 변경";
+            case OTHER_PARTY_NO_SHOW -> "상대방 연락 두절";
+            case OTHER_PARTY_CHANGED_CONDITIONS -> "상대방 조건 변경";
+            case VEHICLE_OR_CARGO_ISSUE -> "차량/화물 문제 발생";
+            case OTHER -> "기타";
+        };
     }
 
     private int estimateMinutes(Double lat1, Double lng1, Double lat2, Double lng2) {

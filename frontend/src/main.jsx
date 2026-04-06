@@ -10,10 +10,11 @@ import './styles/layout.css'
 import './styles/public.css'
 import './styles/landing.css'
 import './styles/console.css'
+import './styles/chat.css'
 import './styles/responsive.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
 )
