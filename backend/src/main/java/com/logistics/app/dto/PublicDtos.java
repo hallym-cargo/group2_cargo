@@ -41,8 +41,6 @@ public class PublicDtos {
         private Integer bestOfferPrice;
         private Integer offerCount;
         private String assignedDriverName;
-        private Long assignedDriverId;
-        private String assignedDriverProfileImageUrl;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }
