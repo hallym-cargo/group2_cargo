@@ -124,6 +124,13 @@ export default function UserOverviewTab({ controller }) {
             <strong>{cancelRate.toFixed(1)}%</strong>
           </div>
           <div className="kpi-card">
+            <span>취소율 높음 뱃지</span>
+            <strong>{profile?.highCancelBadge ? '표시 중' : '없음'}</strong>
+          </div>
+        </div>
+
+        <div className="admin-grid-2" style={{ marginTop: 16 }}>
+          <div className="surface-sub">
             <span>상세 확인</span>
             <button className="btn btn-secondary" onClick={() => setDashboardTab('penalty')}>
               패널티 탭 보기

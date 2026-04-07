@@ -75,7 +75,8 @@ export function useLogisticsController() {
   }));
 
   const [message, setMessage] = useState('');
-  const [authMode, setAuthMode] = useState('login');
+  // const [authMode, setAuthMode] = useState('login');
+  const [authMode, setAuthMode] = useState('');
 
   const [loginForm, setLoginForm] = useState({
     email: 'shipper@test.com',
@@ -93,6 +94,7 @@ export function useLogisticsController() {
 
   const [publicUsers, setPublicUsers] = useState([]);
   const [publicUserKeyword, setPublicUserKeyword] = useState('');
+  const [publicUserLoading, setPublicUserLoading] = useState(false);
 
   const [shipments, setShipments] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
@@ -114,6 +116,7 @@ export function useLogisticsController() {
   const [shipmentKeyword, setShipmentKeyword] = useState('');
 
   const [routePage, setRoutePage] = useState('main');
+  const [pendingScrollTarget, setPendingScrollTarget] = useState('');
 
   const [activeProfile, setActiveProfile] = useState(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -323,6 +326,8 @@ export function useLogisticsController() {
   }, [auth.role]);
 
   const searchPublicUsers = async (role, keyword = publicUserKeyword) => {
+    setPublicUserLoading(true);
+
     try {
       const data = await fetchPublicUsers(role, keyword);
       setPublicUsers(data);
@@ -331,6 +336,10 @@ export function useLogisticsController() {
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.message || '회원 검색 실패');
+    } finally {
+      window.setTimeout(() => {
+        setPublicUserLoading(false);
+      }, 280);
     }
   };
 
@@ -470,7 +479,24 @@ export function useLogisticsController() {
 
   const openPublicUserPage = async (role) => {
     setPublicUserKeyword('');
+    setRoutePage(role === 'SHIPPER' ? 'shippers' : 'drivers');
+    setPublicUserLoading(true);
     await searchPublicUsers(role, '');
+  };
+
+  const goToMainSection = (sectionId) => {
+    setPendingScrollTarget(sectionId || '');
+    setRoutePage('main');
+    setDashboardTab('home');
+    if (!isLoggedIn) {
+      setAuthMode('signup');
+    }
+  };
+
+  const openDashboard = (tab = 'overview') => {
+    setRoutePage('dashboard');
+    setDashboardTab(tab);
+    setPendingScrollTarget('');
   };
 
   const syncAuth = (data) => {
@@ -517,6 +543,7 @@ export function useLogisticsController() {
     setAdminRecentRatings([]);
     setCompletionProof({ dataUrl: '', name: '' });
     setRoutePage('main');
+    setPendingScrollTarget('');
     setActiveProfile(null);
     setProfileModalOpen(false);
     setChatRoom(null);
@@ -731,12 +758,18 @@ export function useLogisticsController() {
     ];
 
     document.body.classList.remove(...classes);
+    const publicTheme = routePage === 'shippers'
+      ? 'theme-shipper'
+      : routePage === 'drivers'
+        ? 'theme-driver'
+        : 'theme-public';
+
     document.body.classList.add(
-      isLoggedIn ? `theme-${auth.role.toLowerCase()}` : 'theme-public',
+      isLoggedIn ? `theme-${auth.role.toLowerCase()}` : publicTheme,
     );
 
     return () => document.body.classList.remove(...classes);
-  }, [isLoggedIn, auth.role]);
+  }, [isLoggedIn, auth.role, routePage]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -1098,6 +1131,8 @@ export function useLogisticsController() {
     setPage,
     totalPages,
     routePage,
+    pendingScrollTarget,
+    setPendingScrollTarget,
     setRoutePage,
     message,
     setMessage,
@@ -1116,6 +1151,7 @@ export function useLogisticsController() {
     setInquiryForm,
     publicUsers,
     publicUserKeyword,
+    publicUserLoading,
     setPublicUserKeyword,
     activeProfile,
     profileModalOpen,
@@ -1203,6 +1239,8 @@ export function useLogisticsController() {
     searchPublicUsers,
     resetPublicUserSearch,
     openPublicUserPage,
+    goToMainSection,
+    openDashboard,
     openUserProfile,
     closeUserProfile,
     openChatWithUser,

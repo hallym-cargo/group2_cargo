@@ -1,3 +1,4 @@
+import AppLogo from '../../../components/common/AppLogo'
 import { roleText } from "../../../utils/formatters";
 
 export default function UserSidebar({
@@ -19,13 +20,7 @@ export default function UserSidebar({
 
   return (
     <aside className="console-sidebar">
-      <div className="console-logo">
-        <div className="identity-mark">HC</div>
-        <div>
-          <strong>hallym-cargo</strong>
-          <small>Operations Dashboard</small>
-        </div>
-      </div>
+      <div className="console-logo"><AppLogo title="want" subtitle="운송 운영 플랫폼" compact hideText /></div>
       <div className="sidebar-profile">
         <strong>{auth.name}</strong>
         <span>{roleText(auth.role)}</span>

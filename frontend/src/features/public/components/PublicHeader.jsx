@@ -1,3 +1,19 @@
+import AppLogo from '../../../components/common/AppLogo';
+
+function moveToMain(controller, targetId = null) {
+  if (targetId) {
+    controller.goToMainSection(targetId);
+    return;
+  }
+
+  controller.setRoutePage('main');
+  controller.setDashboardTab('home');
+  if (!controller.isLoggedIn) {
+    controller.setAuthMode('signup');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 export default function PublicHeader({
   isLoggedIn,
   authMode,
@@ -6,50 +22,64 @@ export default function PublicHeader({
   logout,
   controller,
 }) {
+  const currentRoute = controller.routePage;
+  const currentDashboard = controller.dashboardTab;
+
+  const navButtonClass = (isActive) =>
+    isActive ? 'is-active' : '';
+
   return (
     <header className="landing-header">
       <div className="landing-header__inner">
         <button
+          type="button"
           className="landing-brand"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => moveToMain(controller)}
+          aria-label="메인 페이지로 이동"
         >
-          <span className="landing-brand__mark">HC</span>
-          <span className="landing-brand__text">
-            <strong>hallym-cargo</strong>
-            <small>운송 운영 플랫폼</small>
-          </span>
+          <AppLogo subtitle="운송 운영 플랫폼" hideTitle />
         </button>
 
         <nav className="landing-nav">
           <button
-            onClick={() =>
-              document
-                .getElementById('landing-solution')
-                ?.scrollIntoView({ behavior: 'smooth' })
-            }
+            type="button"
+            onClick={() => moveToMain(controller, 'landing-solution')}
           >
             서비스 소개
           </button>
 
           <button
-            onClick={() =>
-              document
-                .getElementById('notice-faq')
-                ?.scrollIntoView({ behavior: 'smooth' })
-            }
+            type="button"
+            onClick={() => moveToMain(controller, 'notice-faq')}
           >
             공지 · 문의
           </button>
-          <button onClick={() => setDashboardTab('quotes')}>
+          <button
+            type="button"
+            className={navButtonClass(currentDashboard === 'quotes')}
+            onClick={() => setDashboardTab('quotes')}
+          >
             견적 목록 보기
           </button>
-          <button onClick={() => controller.setRoutePage('status')}>
+          <button
+            type="button"
+            className={navButtonClass(currentRoute === 'status')}
+            onClick={() => controller.setRoutePage('status')}
+          >
             운송 현황
           </button>
-          <button onClick={() => controller.openPublicUserPage('SHIPPER')}>
+          <button
+            type="button"
+            className={navButtonClass(currentRoute === 'shippers')}
+            onClick={() => controller.openPublicUserPage('SHIPPER')}
+          >
             화주 찾기
           </button>
-          <button onClick={() => controller.openPublicUserPage('DRIVER')}>
+          <button
+            type="button"
+            className={navButtonClass(currentRoute === 'drivers')}
+            onClick={() => controller.openPublicUserPage('DRIVER')}
+          >
             차주 찾기
           </button>
         </nav>
@@ -59,7 +89,7 @@ export default function PublicHeader({
             <>
               <button
                 className="landing-btn landing-btn--light"
-                onClick={() => setDashboardTab('overview')}
+                onClick={() => controller.openDashboard('overview')}
               >
                 대시보드
               </button>
@@ -73,18 +103,10 @@ export default function PublicHeader({
           ) : (
             <>
               <button
-                className="landing-text-btn"
-                onClick={() => setAuthMode('login')}
+                className="landing-btn landing-btn--primary"
+                onClick={() => controller.setRoutePage('login')}
               >
                 로그인
-              </button>
-              <button
-                className="landing-btn landing-btn--primary"
-                onClick={() =>
-                  setAuthMode(authMode === 'login' ? 'signup' : 'login')
-                }
-              >
-                {authMode === 'login' ? '회원가입' : '로그인'}
               </button>
             </>
           )}
