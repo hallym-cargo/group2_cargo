@@ -16,7 +16,7 @@ function LoggedInPanel({ auth, message, openDashboard, logout }) {
         <strong>{auth.email}</strong>
       </div>
       <div className="landing-authCard__actions">
-        <button className="landing-btn landing-btn--primary" onClick={() => openDashboard('overview')}>대시보드 이동</button>
+        <button className="landing-btn landing-btn--primary" onClick={() => setDashboardTab('overview')}>마이페이지 이동</button>
         <button className="landing-btn landing-btn--light" onClick={logout}>로그아웃</button>
       </div>
       {!!message && <div className="landing-inlineMessage">{message}</div>}
@@ -33,7 +33,7 @@ function AccessPanel({ authMode, setAuthMode, loginForm, setLoginForm, signupFor
       </div>
       <div className="landing-authCard__eyebrow">ACCESS</div>
       <h3>{authMode === 'login' ? '운송 운영 계정 로그인' : '서비스 회원가입'}</h3>
-      <p>실제 운영 흐름을 확인할 수 있도록 공개 페이지와 역할별 대시보드가 자연스럽게 이어집니다.</p>
+      <p>실제 운영 흐름을 확인할 수 있도록 공개 페이지와 역할별 마이페이지가 자연스럽게 이어집니다.</p>
 
       {authMode === 'login' ? (
         <div className="landing-formStack">
@@ -132,7 +132,7 @@ export default function PublicHeroSection({ controller }) {
                 <strong>실시간 배차 현황과 ETA</strong>
               </div>
               <div className="landing-visualCard__panel landing-visualCard__panel--wide">
-                <span>운영 대시보드</span>
+                <span>운영 마이페이지</span>
                 <strong>입찰 비교, 상태 추적, 공지 · 문의 관리</strong>
               </div>
               <div className="landing-visualCard__orb landing-visualCard__orb--center">AI</div>
