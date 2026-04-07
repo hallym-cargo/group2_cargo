@@ -399,14 +399,17 @@ export function useLogisticsController() {
     setChatInboxOpen(false);
   };
 
-  const openChatRoomFromSummary = async (room) => {
+  const openChatRoomFromSummary = async (room, options = {}) => {
     const targetUserId = room?.targetProfile?.id;
     if (!targetUserId) return;
+
+    const { embedded = false } = options;
 
     try {
       const fullRoom = await fetchChatRoom(targetUserId);
       setChatRoom(fullRoom);
-      setChatModalOpen(true);
+      setChatDraft('');
+      setChatModalOpen(!embedded);
       setChatInboxOpen(false);
       await markChatRoomRead(targetUserId);
       await loadChatRooms();
@@ -1248,6 +1251,7 @@ export function useLogisticsController() {
     closeChatInbox,
     openChatRoomFromSummary,
     closeChatRoom,
+    setChatModalOpen,
     handleSendChatMessage,
     reloadChatRoom,
     handleCreateRating,

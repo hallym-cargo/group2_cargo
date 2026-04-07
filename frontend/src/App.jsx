@@ -68,7 +68,7 @@ export default function App() {
         />
       )}
 
-      {controller.chatModalOpen && (
+      {controller.chatModalOpen && controller.routePage !== "messages" && (
         <ChatWindowModal
           room={controller.chatRoom}
           draft={controller.chatDraft}
@@ -93,6 +93,7 @@ export default function App() {
             onOpenRoom={controller.openChatRoomFromSummary}
             onOpenMessagesPage={() => {
               controller.closeChatInbox();
+              controller.setChatModalOpen(false);
               controller.setRoutePage("messages");
             }}
           />
