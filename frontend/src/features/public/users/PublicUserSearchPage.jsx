@@ -8,6 +8,29 @@ export default function PublicUserSearchPage({ controller, role }) {
   const keyword = controller.publicUserKeyword
   const isLoading = controller.publicUserLoading
 
+  const handleOpenProfile = (user) => {
+    controller.openUserProfile(user.id, user)
+  }
+
+  const getProfileImage = (user) => {
+    const imageUrl = user?.profileImageUrl?.trim()
+    return imageUrl || '/images/default-profile.png'
+  }
+
+  const renderAvatar = (user) => {
+    return (
+      <img
+        src={getProfileImage(user)}
+        alt={user.name}
+        className="public-directory-card__avatar"
+        onError={(e) => {
+          e.currentTarget.onerror = null
+          e.currentTarget.src = '/images/default-profile.png'
+        }}
+      />
+    )
+  }
+
   return (
     <div className="public-shell landing-shell public-directory-shell">
       <PublicHeader
@@ -71,10 +94,18 @@ export default function PublicUserSearchPage({ controller, role }) {
               {!isLoading && users.length ? users.map((user) => (
                 <article key={user.id} className="public-directory-card surface">
                   <div className="public-directory-card__head">
-                    <div>
-                      <span>{roleText(user.role)}</span>
-                      <h3>{user.name}</h3>
-                    </div>
+                    <button
+                      type="button"
+                      className="public-directory-card__profileTrigger"
+                      onClick={() => handleOpenProfile(user)}
+                    >
+                      {renderAvatar(user)}
+                      <div className="public-directory-card__profileText">
+                        <span>{roleText(user.role)}</span>
+                        <h3>{user.name}</h3>
+                        <small>프로필 보기</small>
+                      </div>
+                    </button>
                     <strong>{formatRatingSummary(user.averageRating, user.ratingCount)}</strong>
                   </div>
 
