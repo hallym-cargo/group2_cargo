@@ -53,7 +53,12 @@ const LoginPage = ({ controller }) => {
                         <input type="checkbox" />
                         로그인 유지
                     </label>
-                    <span className="find-password">비밀번호 찾기</span>
+                    <div
+                        className="find-password"
+                        onClick={() => controller.setRoutePage("forgot-password")}
+                    >
+                        비밀번호 찾기
+                    </div>
                 </div>
 
                 <button
