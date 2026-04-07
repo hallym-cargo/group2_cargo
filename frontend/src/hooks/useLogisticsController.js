@@ -33,6 +33,8 @@ import {
   fetchPublicProfile,
   fetchPublicUsers,
   fetchChatRoom,
+  fetchChatRooms,
+  markChatRoomRead,
   sendChatMessage,
   fetchRatingsDashboard,
   fetchShipment,
@@ -116,6 +118,8 @@ export function useLogisticsController() {
   const [activeProfile, setActiveProfile] = useState(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [chatRoom, setChatRoom] = useState(null);
+  const [chatRooms, setChatRooms] = useState([]);
+  const [chatInboxOpen, setChatInboxOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState('');
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatSending, setChatSending] = useState(false);
@@ -254,6 +258,10 @@ export function useLogisticsController() {
     [adminDashboard, adminReports, adminDisputes, adminInquiries],
   );
 
+  const unreadChatCount = useMemo(() => {
+    return (chatRooms || []).reduce((sum, room) => sum + (room.unreadCount || 0), 0);
+  }, [chatRooms]);
+
   const roleQuickActions = useMemo(() => {
     if (auth.role === 'SHIPPER') {
       return [
@@ -352,6 +360,53 @@ export function useLogisticsController() {
     setProfileModalOpen(false);
   };
 
+  const loadChatRooms = async () => {
+    if (!isLoggedIn || isAdmin) return;
+
+    try {
+      const data = await fetchChatRooms();
+      setChatRooms(data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const openChatInbox = async () => {
+    if (!isLoggedIn) {
+      setMessage('로그인 후 채팅을 사용할 수 있습니다.');
+      return;
+    }
+
+    try {
+      await loadChatRooms();
+      setChatInboxOpen(true);
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.message || '채팅 목록을 불러오지 못했습니다.');
+    }
+  };
+
+  const closeChatInbox = () => {
+    setChatInboxOpen(false);
+  };
+
+  const openChatRoomFromSummary = async (room) => {
+    const targetUserId = room?.targetProfile?.id;
+    if (!targetUserId) return;
+
+    try {
+      const fullRoom = await fetchChatRoom(targetUserId);
+      setChatRoom(fullRoom);
+      setChatModalOpen(true);
+      setChatInboxOpen(false);
+      await markChatRoomRead(targetUserId);
+      await loadChatRooms();
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.message || '채팅방을 열지 못했습니다.');
+    }
+  };
+
   const openChatWithUser = async (profile) => {
     if (!isLoggedIn) {
       setMessage('1대1 채팅은 로그인 후 사용할 수 있습니다.');
@@ -368,6 +423,9 @@ export function useLogisticsController() {
       setChatRoom(room);
       setChatModalOpen(true);
       setProfileModalOpen(false);
+      setChatInboxOpen(false);
+      await markChatRoomRead(profile.id);
+      await loadChatRooms();
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.message || '채팅방을 열지 못했습니다.');
@@ -401,6 +459,7 @@ export function useLogisticsController() {
       await sendChatMessage(chatRoom.targetProfile.id, content);
       setChatDraft('');
       await reloadChatRoom(chatRoom.targetProfile.id);
+      await loadChatRooms();
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.message || '메시지 전송 실패');
@@ -461,6 +520,8 @@ export function useLogisticsController() {
     setActiveProfile(null);
     setProfileModalOpen(false);
     setChatRoom(null);
+    setChatRooms([]);
+    setChatInboxOpen(false);
     setChatDraft('');
     setChatModalOpen(false);
     setChatSending(false);
@@ -694,6 +755,7 @@ export function useLogisticsController() {
       loadFinance().catch(() => {});
       loadRatings().catch(() => {});
       loadProfile().catch(() => {});
+      loadChatRooms().catch(() => {});
     }
   }, [isLoggedIn, isAdmin]);
 
@@ -737,6 +799,7 @@ export function useLogisticsController() {
             loadBookmarks().catch(() => {});
             loadFinance().catch(() => {});
             loadRatings().catch(() => {});
+            loadChatRooms().catch(() => {});
             if (selectedId) loadDetail(selectedId).catch(() => {});
           }
         });
@@ -889,7 +952,6 @@ export function useLogisticsController() {
       setMessage(err.response?.data?.message || '완료 처리 실패');
     }
   };
-
 
   const openCancelModal = () => {
     setCancelForm({ reason: '', detail: '' });
@@ -1058,10 +1120,13 @@ export function useLogisticsController() {
     activeProfile,
     profileModalOpen,
     chatRoom,
+    chatRooms,
+    chatInboxOpen,
     chatDraft,
     setChatDraft,
     chatModalOpen,
     chatSending,
+    unreadChatCount,
     shipments,
     bookmarks,
     selectedId,
@@ -1141,6 +1206,9 @@ export function useLogisticsController() {
     openUserProfile,
     closeUserProfile,
     openChatWithUser,
+    openChatInbox,
+    closeChatInbox,
+    openChatRoomFromSummary,
     closeChatRoom,
     handleSendChatMessage,
     reloadChatRoom,

@@ -43,7 +43,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserDtos.PublicUserListItem> searchPublicUsers(String role, String keyword) {
+    public List<UserDtos.PublicUserListItem> searchPublicUsers(String role, String keyword, Long excludeUserId) {
         UserRole userRole = UserRole.valueOf(role.toUpperCase());
         String normalizedKeyword = keyword == null ? "" : keyword.trim().toLowerCase();
 
