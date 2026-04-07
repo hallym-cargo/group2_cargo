@@ -9,8 +9,8 @@
 .login-box {
   width: 350px;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.6); /* 메인 페이지 카드 색상과 동일 */
-  backdrop-filter: blur(20px);           /* 메인 페이지 카드와 동일 */
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -156,4 +156,45 @@
   font-size: 12px;
   color: #aaa;
   text-align: left;
+}
+
+/* 회원가입 스타일 */
+.signup-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  flex: 1;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.signup-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.signup-card-desc {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.signup-card-container {
+  display: flex;
+  gap: 20px;
+}
+
+.signup-back {
+  margin-top: 25px;
 }

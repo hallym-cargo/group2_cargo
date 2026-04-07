@@ -1,14 +1,14 @@
 import React from "react";
 import "./LoginPage.css";
 
-const LoginPage = ({ setAuthMode, controller }) => {
+const LoginPage = ({ controller }) => {
 
     const { loginForm, setLoginForm, handleLogin } = controller;
 
     const handleClickLogin = async () => {
         await controller.handleLogin();
         controller.setDashboardTab("home");
-        setAuthMode("none");
+        controller.setRoutePage("main");
     };
 
     return (
@@ -73,15 +73,20 @@ const LoginPage = ({ setAuthMode, controller }) => {
 
                 {/* 회원가입 */}
                 <div className="signup">
-                    계정이 없으신가요? <span className="signup-link">회원가입</span>
+                    계정이 없으신가요?{" "}
+                    <span
+                        className="signup-link"
+                        onClick={() => controller.setRoutePage("signup")}
+                    >
+                        회원가입
+                    </span>
                 </div>
 
                 {/* 메인 페이지 이동 (링크 스타일) */}
                 <div
                     className="back-to-main"
                     onClick={() => {
-                        setAuthMode("none");
-                        controller.loadPublic();
+                        controller.setRoutePage("main");
                     }}
                 >
                     메인 페이지로 이동
