@@ -31,8 +31,8 @@ export const validateCargoStep = (formData) => {
     errors.vehicleType = "차량을 입력해주세요.";
   }
 
-  if (!formData.cargoType.trim()) {
-    errors.cargoType = "화물 종류를 입력해주세요.";
+  if (!(formData.cargoType || "").trim()) {
+    errors.cargoType = "화물 종류를 선택해주세요.";
   }
 
   if (!formData.cargoName.trim()) {

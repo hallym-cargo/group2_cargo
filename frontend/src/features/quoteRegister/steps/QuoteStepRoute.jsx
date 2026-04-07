@@ -17,10 +17,14 @@ export default function QuoteStepRoute({
       : "운송일자와 시간을 선택해주세요";
 
   return (
-    <div className="quote-route-layout">
-      <div className="quote-route-form-panel">
+    // Step 1, 2가 같은 비율을 쓰도록 공통 레이아웃 클래스 사용
+    <section className="quote-step-layout">
+      {/* 왼쪽 입력 영역 */}
+      <div className="quote-step-layout__main">
         <div className="form-group">
-          <label>어떤 제목으로 올려볼까요?</label>
+          <label>
+            어떤 제목으로 올려볼까요? <span className="required-mark">*</span>
+          </label>
           <input
             type="text"
             value={formData.estimateName}
@@ -33,7 +37,10 @@ export default function QuoteStepRoute({
         </div>
 
         <div className="form-group">
-          <label>출발지와 도착지를 입력해 주세요.</label>
+          <label>
+            출발지와 도착지를 입력해 주세요.{" "}
+            <span className="required-mark">*</span>
+          </label>
 
           <div className="route-select-box">
             <button
@@ -85,7 +92,9 @@ export default function QuoteStepRoute({
         </div>
 
         <div className="form-group transport-date-group">
-          <label>언제 운송하실 예정인가요?</label>
+          <label>
+            언제 운송하실 예정인가요? <span className="required-mark">*</span>
+          </label>
           <button
             type="button"
             className={`panel-trigger-input ${
@@ -101,7 +110,8 @@ export default function QuoteStepRoute({
         </div>
       </div>
 
-      <aside className="quote-route-side-panel">
+      {/* 오른쪽 보조 패널 영역 - Step 2와 같은 공통 폭/비율 사용 */}
+      <aside className="quote-step-side-panel">
         {activePanel === "origin" && (
           <AddressPanel
             title="출발지 입력"
@@ -142,6 +152,6 @@ export default function QuoteStepRoute({
           </div>
         )}
       </aside>
-    </div>
+    </section>
   );
 }
