@@ -6,6 +6,7 @@ import UserBoardTab from './tabs/UserBoardTab';
 import UserBookmarksTab from './tabs/UserBookmarksTab';
 import UserFinanceTab from './tabs/UserFinanceTab';
 import UserOverviewTab from './tabs/UserOverviewTab';
+import UserPenaltyTab from './tabs/UserPenaltyTab';
 import UserRatingsTab from './tabs/UserRatingsTab';
 import UserRegisterDriverTab from './tabs/UserRegisterDriverTab';
 import UserRegisterShipperTab from './tabs/UserRegisterShipperTab';
@@ -31,6 +32,7 @@ function resolveTabComponent(authRole, dashboardTab) {
     overview: UserOverviewTab,
     board: UserBoardTab,
     finance: UserFinanceTab,
+    penalty: UserPenaltyTab,
     ratings: UserRatingsTab,
     bookmarks: UserBookmarksTab,
   };

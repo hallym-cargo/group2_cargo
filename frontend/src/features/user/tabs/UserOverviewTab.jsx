@@ -1,6 +1,6 @@
 import ProfilePreviewCard from '../../../components/common/ProfilePreviewCard'
 import SectionTitle from '../../../components/common/SectionTitle'
-import { formatCurrency, formatDate, statusText } from '../../../utils/formatters'
+import { formatCurrency, statusText } from '../../../utils/formatters'
 
 function renderPenaltyStatus(profile) {
   if (!profile) return '정보 불러오는 중'
@@ -106,8 +106,8 @@ export default function UserOverviewTab({ controller }) {
 
       <div className="surface">
         <SectionTitle
-          title="패널티 상태"
-          desc="취소 패널티는 마이페이지에서 항상 확인할 수 있고, 취소 직전 모달에서도 다시 안내됩니다."
+          title="패널티 요약"
+          desc="패널티 상세 정보는 별도 탭에서 보고, 마이페이지에는 현재 상태만 간단히 표시합니다."
         />
 
         <div className="kpi-grid">
@@ -124,62 +124,10 @@ export default function UserOverviewTab({ controller }) {
             <strong>{cancelRate.toFixed(1)}%</strong>
           </div>
           <div className="kpi-card">
-            <span>취소율 높음 뱃지</span>
-            <strong>{profile?.highCancelBadge ? '표시 중' : '없음'}</strong>
-          </div>
-        </div>
-
-        <div className="admin-grid-2" style={{ marginTop: 16 }}>
-          <div className="surface-sub">
-            <strong>현재 제재 적용 내역</strong>
-            <div className="form-stack" style={{ marginTop: 12 }}>
-              <div>
-                <span>매칭 제한 종료 시각</span>
-                <div><strong>{formatDate(profile?.matchingBlockedUntil)}</strong></div>
-              </div>
-              <div>
-                <span>거래 금지 종료 시각</span>
-                <div><strong>{formatDate(profile?.tradingBlockedUntil)}</strong></div>
-              </div>
-              <div>
-                <span>안내</span>
-                <div>
-                  <strong>
-                    취소 직전에는 취소 모달에서 이번 취소로 몇 점이 추가되는지도 바로 확인할 수 있습니다.
-                  </strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-sub">
-            <strong>패널티 기준 요약</strong>
-            <div className="list-stack" style={{ marginTop: 12 }}>
-              <div className="bookmark-item" as="div">
-                <strong>3점 이상</strong>
-                <small>2시간 매칭 제한</small>
-              </div>
-              <div className="bookmark-item" as="div">
-                <strong>5점 이상</strong>
-                <small>24시간 매칭 제한</small>
-              </div>
-              <div className="bookmark-item" as="div">
-                <strong>8점 이상</strong>
-                <small>72시간 매칭 제한 + 취소율 높음 뱃지 가능</small>
-              </div>
-              <div className="bookmark-item" as="div">
-                <strong>10점 이상</strong>
-                <small>3일 거래 금지</small>
-              </div>
-              <div className="bookmark-item" as="div">
-                <strong>15점 이상</strong>
-                <small>7일 거래 금지 + 평점 강등</small>
-              </div>
-              <div className="bookmark-item" as="div">
-                <strong>20점 이상</strong>
-                <small>14일 거래 금지 + 관리자 검토</small>
-              </div>
-            </div>
+            <span>상세 확인</span>
+            <button className="btn btn-secondary" onClick={() => setDashboardTab('penalty')}>
+              패널티 탭 보기
+            </button>
           </div>
         </div>
       </div>
