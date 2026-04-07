@@ -1,3 +1,4 @@
+import AppLogo from '../../../components/common/AppLogo'
 import { roleText } from '../../../utils/formatters'
 
 function LoggedInPanel({ auth, message, setDashboardTab, logout }) {
@@ -139,7 +140,7 @@ export default function PublicHeroSection({ controller }) {
               <div className="landing-visualCard__orb landing-visualCard__orb--two">운행</div>
               <div className="landing-visualCard__orb landing-visualCard__orb--three">정산</div>
               <div className="landing-visualCard__shield">
-                <div className="landing-visualCard__shieldCore">HC</div>
+                <div className="landing-visualCard__shieldCore landing-visualCard__shieldCore--logo"><AppLogo title="want" subtitle="" hideText /></div>
               </div>
             </div>
           </div>

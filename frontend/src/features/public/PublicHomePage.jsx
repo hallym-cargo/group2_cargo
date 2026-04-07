@@ -14,6 +14,20 @@ export default function PublicHomePage({ controller }) {
     controller.loadPublic()
   }, [])
 
+  useEffect(() => {
+    if (!controller.pendingScrollTarget || controller.routePage !== 'main') return
+
+    const scrollId = controller.pendingScrollTarget
+    const timer = window.setTimeout(() => {
+      document
+        .getElementById(scrollId)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      controller.setPendingScrollTarget('')
+    }, 80)
+
+    return () => window.clearTimeout(timer)
+  }, [controller.pendingScrollTarget, controller.routePage])
+
   if (!controller) return null;
 
   return (
