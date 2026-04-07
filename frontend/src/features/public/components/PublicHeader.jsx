@@ -89,9 +89,12 @@ export default function PublicHeader({
             <>
               <button
                 className="landing-btn landing-btn--light"
-                onClick={() => setDashboardTab('overview')}
+                onClick={() => {
+                  controller.setRoutePage('dashboard');
+                  setDashboardTab('overview');
+                }}
               >
-                대시보드
+                마이페이지
               </button>
               <button
                 className="landing-btn landing-btn--primary"
