@@ -399,14 +399,17 @@ export function useLogisticsController() {
     setChatInboxOpen(false);
   };
 
-  const openChatRoomFromSummary = async (room) => {
+  const openChatRoomFromSummary = async (room, options = {}) => {
     const targetUserId = room?.targetProfile?.id;
     if (!targetUserId) return;
+
+    const { embedded = false } = options;
 
     try {
       const fullRoom = await fetchChatRoom(targetUserId);
       setChatRoom(fullRoom);
-      setChatModalOpen(true);
+      setChatDraft('');
+      setChatModalOpen(!embedded);
       setChatInboxOpen(false);
       await markChatRoomRead(targetUserId);
       await loadChatRooms();
@@ -867,20 +870,12 @@ export function useLogisticsController() {
     try {
       const data = await login(loginForm);
       syncAuth(data);
-
-      if (data.profileCompleted) {
-        setRoutePage('main');
-        setDashboardTab('home');
-        setMessage(
-          '로그인되었습니다. 공개 메인 페이지에서도 역할별 기능으로 이동할 수 있습니다.',
-        );
-      } else {
-        setRoutePage('dashboard');
-        setDashboardTab('overview');
-        setMessage(
-          '첫 로그인입니다. 선택 정보만 입력해도 되니 회원정보를 한 번 확인해 주세요.',
-        );
-      }
+      setDashboardTab(data.profileCompleted ? 'home' : 'overview');
+      setMessage(
+        data.profileCompleted
+          ? '로그인되었습니다. 공개 메인 페이지에서도 역할별 기능으로 이동할 수 있습니다.'
+          : '첫 로그인입니다. 선택 정보만 입력해도 되니 회원정보를 한 번 확인해 주세요.',
+      );
     } catch (err) {
       setMessage(err.response?.data?.message || '로그인 실패');
     }
@@ -1256,6 +1251,7 @@ export function useLogisticsController() {
     closeChatInbox,
     openChatRoomFromSummary,
     closeChatRoom,
+    setChatModalOpen,
     handleSendChatMessage,
     reloadChatRoom,
     handleCreateRating,
