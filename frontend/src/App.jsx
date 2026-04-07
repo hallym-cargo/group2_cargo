@@ -43,6 +43,10 @@ export default function App() {
     page = <ShipperSignupPage controller={controller} />;
   } else if (controller.routePage === "signup-driver") {
     page = <DriverSignupPage controller={controller} />;
+  } else if (controller.routePage === "dashboard") {
+    page = controller.isAdmin
+      ? <AdminConsolePage controller={controller} />
+      : <UserConsolePage controller={controller} />;
   } else if (controller.dashboardTab === "home") {
     page = <PublicHomePage controller={controller} />;
   } else if (controller.isAdmin) {

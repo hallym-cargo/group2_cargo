@@ -493,6 +493,12 @@ export function useLogisticsController() {
     }
   };
 
+  const openDashboard = (tab = 'overview') => {
+    setRoutePage('dashboard');
+    setDashboardTab(tab);
+    setPendingScrollTarget('');
+  };
+
   const syncAuth = (data) => {
     localStorage.setItem('token', data.token);
     localStorage.setItem('email', data.email);
@@ -1242,6 +1248,7 @@ export function useLogisticsController() {
     resetPublicUserSearch,
     openPublicUserPage,
     goToMainSection,
+    openDashboard,
     openUserProfile,
     closeUserProfile,
     openChatWithUser,

@@ -1,7 +1,7 @@
 import AppLogo from '../../../components/common/AppLogo'
 import { roleText } from '../../../utils/formatters'
 
-function LoggedInPanel({ auth, message, setDashboardTab, logout }) {
+function LoggedInPanel({ auth, message, openDashboard, logout }) {
   return (
     <div className="landing-authCard">
       <div className="landing-authCard__eyebrow">ACCOUNT</div>
@@ -188,7 +188,7 @@ export default function PublicHeroSection({ controller }) {
             <p>메인 페이지에서 서비스 구조를 확인한 뒤, 로그인 또는 회원가입을 통해 역할별 화면으로 자연스럽게 이동할 수 있습니다.</p>
           </div>
           {isLoggedIn ? (
-            <LoggedInPanel auth={auth} message={message} setDashboardTab={setDashboardTab} logout={logout} />
+            <LoggedInPanel auth={auth} message={message} openDashboard={controller.openDashboard} logout={logout} />
           ) : (
             <AccessPanel
               authMode={authMode}
