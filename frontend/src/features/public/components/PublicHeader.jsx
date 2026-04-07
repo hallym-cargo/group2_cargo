@@ -89,7 +89,7 @@ export default function PublicHeader({
             <>
               <button
                 className="landing-btn landing-btn--light"
-                onClick={() => setDashboardTab('overview')}
+                onClick={() => controller.openDashboard('overview')}
               >
                 대시보드
               </button>

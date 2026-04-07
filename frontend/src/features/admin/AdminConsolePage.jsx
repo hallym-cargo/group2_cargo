@@ -30,7 +30,7 @@ export default function AdminConsolePage({ controller }) {
 
   return (
     <ConsoleLayout
-      sidebar={<AdminSidebar auth={controller.auth} dashboardTab={controller.dashboardTab} setDashboardTab={controller.setDashboardTab} logout={controller.logout} />}
+      sidebar={<AdminSidebar auth={controller.auth} dashboardTab={controller.dashboardTab} setDashboardTab={controller.setDashboardTab} logout={controller.logout} goToMain={() => controller.goToMainSection()} />}
       topbar={<AdminTopbar title={title} />}
       message={controller.message}
     >
