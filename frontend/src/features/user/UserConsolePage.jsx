@@ -61,6 +61,7 @@ export default function UserConsolePage({ controller }) {
           setDashboardTab={controller.setDashboardTab}
           summary={controller.summary}
           logout={controller.logout}
+          goToMain={() => controller.goToMainSection()}
         />
       }
       topbar={

@@ -7,6 +7,7 @@ export default function UserSidebar({
   setDashboardTab,
   summary,
   logout,
+  goToMain,
 }) {
   const navItems = [
     ["overview", "마이페이지"],
@@ -29,7 +30,7 @@ export default function UserSidebar({
       <nav className="sidebar-nav">
         <button
           className="btn btn-ghost block"
-          onClick={() => setDashboardTab("home")}
+          onClick={() => goToMain?.() ?? setDashboardTab("home")}
         >
           메인 페이지로 이동
         </button>
