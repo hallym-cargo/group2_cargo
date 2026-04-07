@@ -1,50 +1,49 @@
-import ChatWindowModal from './components/common/ChatWindowModal';
-import UserProfileModal from './components/common/UserProfileModal';
-import AdminConsolePage from './features/admin/AdminConsolePage';
-import QuoteListPage from './features/public/QuoteListPage';
-import QuoteRegisterPage from './features/public/QuoteRegisterPage';
-import PublicHomePage from './features/public/PublicHomePage';
-import PublicUserSearchPage from './features/public/users/PublicUserSearchPage';
-import UserConsolePage from './features/user/UserConsolePage';
-import { useLogisticsController } from './hooks/useLogisticsController';
-import TransportStatus from './pages/TransportStatus';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import ShipperSignupPage from './pages/ShipperSignupPage';
-import DriverSignupPage from './pages/DriverSignupPage';
+import ChatFloatingButton from "./components/common/ChatFloatingButton";
+import ChatInboxPanel from "./components/common/ChatInboxPanel";
+import ChatWindowModal from "./components/common/ChatWindowModal";
+import UserProfileModal from "./components/common/UserProfileModal";
+import AdminConsolePage from "./features/admin/AdminConsolePage";
+import MessagesPage from "./features/chat/MessagesPage";
+import QuoteListPage from "./features/public/QuoteListPage";
+import QuoteRegisterPage from "./features/public/QuoteRegisterPage";
+import PublicHomePage from "./features/public/PublicHomePage";
+import PublicUserSearchPage from "./features/public/users/PublicUserSearchPage";
+import UserConsolePage from "./features/user/UserConsolePage";
+import { useLogisticsController } from "./hooks/useLogisticsController";
+import TransportStatus from "./pages/TransportStatus";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import ShipperSignupPage from "./pages/ShipperSignupPage";
+import DriverSignupPage from "./pages/DriverSignupPage";
 
 export default function App() {
   const controller = useLogisticsController();
 
   let page = null;
 
-  if (controller.dashboardTab === 'quotes') {
+  if (controller.dashboardTab === "quotes") {
     page = <QuoteListPage controller={controller} />;
-  } else if (controller.dashboardTab === 'quoteRegister') {
+  } else if (controller.dashboardTab === "quoteRegister") {
     page = <QuoteRegisterPage controller={controller} />;
-  } else if (controller.routePage === 'status') {
-    page = <TransportStatus onBack={() => controller.setRoutePage('main')} />;
-  } else if (controller.routePage === 'shippers') {
+  } else if (controller.routePage === "status") {
+    page = <TransportStatus onBack={() => controller.setRoutePage("main")} />;
+  } else if (controller.routePage === "messages") {
+    page = <MessagesPage controller={controller} />;
+  } else if (controller.routePage === "shippers") {
     page = <PublicUserSearchPage controller={controller} role="SHIPPER" />;
-  } else if (controller.routePage === 'drivers') {
+  } else if (controller.routePage === "drivers") {
     page = <PublicUserSearchPage controller={controller} role="DRIVER" />;
-  }
-  else if (controller.routePage === 'main') {
+  } else if (controller.routePage === "main") {
     page = <PublicHomePage controller={controller} />;
-  }
-  else if (controller.routePage === 'login') {
+  } else if (controller.routePage === "login") {
     page = <LoginPage controller={controller} />;
-  }
-  else if (controller.routePage === 'signup') {
+  } else if (controller.routePage === "signup") {
     page = <SignupPage controller={controller} />;
-  }
-  else if (controller.routePage === 'signup-shipper') {
+  } else if (controller.routePage === "signup-shipper") {
     page = <ShipperSignupPage controller={controller} />;
-  }
-  else if (controller.routePage === 'signup-driver') {
+  } else if (controller.routePage === "signup-driver") {
     page = <DriverSignupPage controller={controller} />;
-  }
-  else if (controller.dashboardTab === 'home') {
+  } else if (controller.dashboardTab === "home") {
     page = <PublicHomePage controller={controller} />;
   } else if (controller.isAdmin) {
     page = <AdminConsolePage controller={controller} />;
@@ -74,6 +73,26 @@ export default function App() {
           onClose={controller.closeChatRoom}
           isSending={controller.chatSending}
         />
+      )}
+
+      {controller.isLoggedIn && !controller.isAdmin && (
+        <>
+          <ChatFloatingButton
+            unreadCount={controller.unreadChatCount}
+            onChatClick={controller.openChatInbox}
+          />
+
+          <ChatInboxPanel
+            open={controller.chatInboxOpen}
+            rooms={controller.chatRooms}
+            onClose={controller.closeChatInbox}
+            onOpenRoom={controller.openChatRoomFromSummary}
+            onOpenMessagesPage={() => {
+              controller.closeChatInbox();
+              controller.setRoutePage("messages");
+            }}
+          />
+        </>
       )}
     </>
   );

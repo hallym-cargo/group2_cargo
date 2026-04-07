@@ -8,7 +8,10 @@ import com.logistics.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -25,6 +28,29 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
+    public List<ChatDtos.ChatRoomSummaryRow> getRooms(User currentUser) {
+        List<ChatMessage> sorted = chatMessageRepository.findBySenderOrReceiverOrderByCreatedAtDescIdDesc(currentUser, currentUser);
+        Map<String, ChatDtos.ChatRoomSummaryRow> summaries = new LinkedHashMap<>();
+
+        for (ChatMessage message : sorted) {
+            if (summaries.containsKey(message.getRoomKey())) {
+                continue;
+            }
+
+            User target = resolveTarget(message, currentUser);
+            summaries.put(message.getRoomKey(), ChatDtos.ChatRoomSummaryRow.builder()
+                    .roomKey(message.getRoomKey())
+                    .targetProfile(userService.toPublicProfile(target))
+                    .lastMessage(message.getContent())
+                    .lastMessageAt(message.getCreatedAt())
+                    .unreadCount(chatMessageRepository.countByRoomKeyAndReceiverAndReadAtIsNull(message.getRoomKey(), currentUser))
+                    .build());
+        }
+
+        return summaries.values().stream().toList();
+    }
+
+    @Transactional(readOnly = true)
     public ChatDtos.ChatRoomResponse getRoom(User currentUser, Long targetUserId) {
         User target = getTargetUser(currentUser, targetUserId);
         String roomKey = roomKey(currentUser.getId(), target.getId());
@@ -36,6 +62,12 @@ public class ChatService {
                         .map(message -> toMessageRow(message, currentUser))
                         .toList())
                 .build();
+    }
+
+    public void markRoomAsRead(User currentUser, Long targetUserId) {
+        User target = getTargetUser(currentUser, targetUserId);
+        String roomKey = roomKey(currentUser.getId(), target.getId());
+        chatMessageRepository.markRoomAsRead(roomKey, currentUser, LocalDateTime.now());
     }
 
     public ChatDtos.ChatMessageRow sendMessage(User currentUser, Long targetUserId, String content) {
@@ -66,6 +98,13 @@ public class ChatService {
                 .orElseThrow(() -> new IllegalArgumentException("대상 사용자를 찾을 수 없습니다."));
     }
 
+    private User resolveTarget(ChatMessage message, User currentUser) {
+        if (message.getSender().getId().equals(currentUser.getId())) {
+            return message.getReceiver();
+        }
+        return message.getSender();
+    }
+
     private ChatDtos.ChatMessageRow toMessageRow(ChatMessage message, User currentUser) {
         return ChatDtos.ChatMessageRow.builder()
                 .id(message.getId())
@@ -76,6 +115,7 @@ public class ChatService {
                 .content(message.getContent())
                 .createdAt(message.getCreatedAt())
                 .mine(message.getSender().getId().equals(currentUser.getId()))
+                .read(message.getReadAt() != null)
                 .build();
     }
 

@@ -39,6 +39,7 @@ public class Shipment {
     private User assignedDriver;
 
     private Long acceptedOfferId;
+    private LocalDateTime scheduledStartAt;
     private LocalDateTime startedAt;
     private LocalDateTime estimatedArrivalAt;
     private LocalDateTime completedAt;
