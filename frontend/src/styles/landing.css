@@ -763,3 +763,12 @@ body.theme-admin .app-logo__image {
   .public-directory-grid,
   .public-directory-card__stats { grid-template-columns: 1fr; }
 }
+
+.public-directory-card__profileTrigger { display: flex; align-items: center; gap: 14px; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.public-directory-card__profileTrigger:hover .public-directory-card__profileText h3 { color: var(--primary); }
+.public-directory-card__profileTrigger:hover .public-directory-card__avatar,
+.public-directory-card__profileTrigger:focus-visible .public-directory-card__avatar { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18); }
+.public-directory-card__profileTrigger:focus-visible { outline: 2px solid rgba(37, 99, 235, 0.28); outline-offset: 6px; border-radius: 20px; }
+.public-directory-card__avatar { width: 62px; height: 62px; border-radius: 999px; object-fit: cover; border: 1px solid rgba(226,232,240,0.9); background: #fff; transition: transform 0.18s ease, box-shadow 0.18s ease; flex-shrink: 0; }
+.public-directory-card__avatar--fallback { display: grid; place-items: center; background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(59,130,246,0.22)); color: var(--primary); font-size: 22px; font-weight: 800; }
+.public-directory-card__profileText small { display: block; margin-top: 8px; color: var(--primary); font-size: 12px; font-weight: 700; }

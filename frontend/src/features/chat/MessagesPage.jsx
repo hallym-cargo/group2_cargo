@@ -26,7 +26,7 @@ export default function MessagesPage({ controller }) {
                 key={room.roomKey}
                 type="button"
                 className={`messages-page__room ${controller.chatRoom?.roomKey === room.roomKey ? 'is-active' : ''}`}
-                onClick={() => controller.openChatRoomFromSummary(room)}
+                onClick={() => controller.openChatRoomFromSummary(room, { embedded: true })}
               >
                 <div className="messages-page__room-name">{room.targetProfile?.name}</div>
                 <div className="messages-page__room-text">{room.lastMessage || '대화를 시작해 보세요.'}</div>

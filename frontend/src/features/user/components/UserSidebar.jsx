@@ -7,12 +7,14 @@ export default function UserSidebar({
   setDashboardTab,
   summary,
   logout,
+  goToMain,
 }) {
   const navItems = [
     ["overview", "마이페이지"],
     ["board", "배차 보드"],
     ["register", auth.role === "SHIPPER" ? "화물 등록" : "입찰 가이드"],
     ["finance", "돈 관리"],
+    ["penalty", "패널티 관리"],
     ["ratings", "평점 관리"],
     ["bookmarks", "즐겨찾기"],
   ];
@@ -28,7 +30,7 @@ export default function UserSidebar({
       <nav className="sidebar-nav">
         <button
           className="btn btn-ghost block"
-          onClick={() => setDashboardTab("home")}
+          onClick={() => goToMain?.() ?? setDashboardTab("home")}
         >
           메인 페이지로 이동
         </button>

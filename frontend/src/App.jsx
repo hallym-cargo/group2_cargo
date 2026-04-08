@@ -44,6 +44,12 @@ export default function App() {
     page = <DriverSignupPage controller={controller} />;
   } else if (controller.routePage === "forgot-password") {
     page = <ForgotPasswordPage controller={controller} />;
+  } else if (controller.routePage === "dashboard") {
+    page = controller.isAdmin ? (
+      <AdminConsolePage controller={controller} />
+    ) : (
+      <UserConsolePage controller={controller} />
+    );
   } else if (controller.dashboardTab === "home") {
     page = <PublicHomePage controller={controller} />;
   } else if (controller.isAdmin) {
@@ -65,7 +71,7 @@ export default function App() {
         />
       )}
 
-      {controller.chatModalOpen && (
+      {controller.chatModalOpen && controller.routePage !== "messages" && (
         <ChatWindowModal
           room={controller.chatRoom}
           draft={controller.chatDraft}
@@ -90,6 +96,7 @@ export default function App() {
             onOpenRoom={controller.openChatRoomFromSummary}
             onOpenMessagesPage={() => {
               controller.closeChatInbox();
+              controller.setChatModalOpen(false);
               controller.setRoutePage("messages");
             }}
           />

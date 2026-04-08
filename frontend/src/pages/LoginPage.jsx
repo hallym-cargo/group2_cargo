@@ -7,8 +7,6 @@ const LoginPage = ({ controller }) => {
 
     const handleClickLogin = async () => {
         await controller.handleLogin();
-        controller.setDashboardTab("home");
-        controller.setRoutePage("main");
     };
 
     return (
