@@ -24,6 +24,24 @@ public class FinanceDtos {
         private List<MoneyTransactionResponse> recentTransactions;
     }
 
+
+    @Data
+    public static class ShipmentPaymentRequest {
+        private String paymentMethod;
+    }
+
+    @Data
+    @Builder
+    public static class ShipmentPaymentResponse {
+        private Long shipmentId;
+        private String shipmentTitle;
+        private Integer amount;
+        private boolean paid;
+        private LocalDateTime paidAt;
+        private String paymentMethod;
+        private String message;
+    }
+
     @Data
     @Builder
     public static class MoneyTransactionResponse {

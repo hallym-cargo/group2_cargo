@@ -1,11 +1,10 @@
 package com.logistics.app.service;
 
-import com.logistics.app.dto.InteractionDtos;
-import com.logistics.app.entity.User;
+import com.logistics.app.dto.UserNotificationDtos;
 import com.logistics.app.entity.UserNotification;
 import com.logistics.app.repository.UserNotificationRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,42 +18,75 @@ public class NotificationService {
         this.userNotificationRepository = userNotificationRepository;
     }
 
-    public void notify(User user, String type, String title, String message, String linkKey, Long linkId) {
-        if (user == null) return;
-        userNotificationRepository.save(UserNotification.builder()
-                .user(user)
-                .type(type)
-                .title(title)
-                .message(message)
-                .linkKey(linkKey)
-                .linkId(linkId)
-                .read(false)
-                .build());
+    public void notifyUser(Long userId, String type, String title, String message, String linkKey, Long linkId) {
+        UserNotification notification = new UserNotification();
+        notification.setUserId(userId);
+        notification.setType(type);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setRead(false);
+        notification.setLinkKey(linkKey);
+        notification.setLinkId(linkId);
+
+        userNotificationRepository.save(notification);
     }
 
-    @Transactional(readOnly = true)
-    public InteractionDtos.NotificationSummary getSummary(User user) {
-        List<InteractionDtos.NotificationRow> items = userNotificationRepository.findTop30ByUserOrderByCreatedAtDesc(user)
-                .stream().map(this::toRow).toList();
-        long unread = userNotificationRepository.countByUserAndReadFalse(user);
-        return InteractionDtos.NotificationSummary.builder().unreadCount(unread).items(items).build();
+    public UserNotificationDtos.NotificationSummary getUnreadSummary(Long userId) {
+        List<UserNotificationDtos.NotificationItem> items =
+                userNotificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId)
+                        .stream()
+                        .map(this::toItem)
+                        .toList();
+
+        long unreadCount = userNotificationRepository.countByUserIdAndIsReadFalse(userId);
+
+        return UserNotificationDtos.NotificationSummary.builder()
+                .unreadCount(unreadCount)
+                .items(items)
+                .build();
     }
 
-    public void markAllRead(User user) {
-        userNotificationRepository.findTop30ByUserOrderByCreatedAtDesc(user)
-                .forEach(item -> item.setRead(true));
+    public List<UserNotificationDtos.NotificationItem> getAllNotifications(Long userId) {
+        return userNotificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::toItem)
+                .toList();
     }
 
-    private InteractionDtos.NotificationRow toRow(UserNotification item) {
-        return InteractionDtos.NotificationRow.builder()
-                .id(item.getId())
-                .type(item.getType())
-                .title(item.getTitle())
-                .message(item.getMessage())
-                .isRead(item.isRead())
-                .linkKey(item.getLinkKey())
-                .linkId(item.getLinkId())
-                .createdAt(item.getCreatedAt())
+    public void markRead(Long userId, Long notificationId) {
+        UserNotification notification = userNotificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다."));
+
+        if (!notification.getUserId().equals(userId)) {
+            throw new RuntimeException("해당 알림에 접근할 수 없습니다.");
+        }
+
+        if (!notification.isRead()) {
+            notification.setRead(true);
+            userNotificationRepository.save(notification);
+        }
+    }
+
+    public void markAllRead(Long userId) {
+        List<UserNotification> notifications = userNotificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
+
+        for (UserNotification notification : notifications) {
+            notification.setRead(true);
+        }
+
+        userNotificationRepository.saveAll(notifications);
+    }
+
+    private UserNotificationDtos.NotificationItem toItem(UserNotification notification) {
+        return UserNotificationDtos.NotificationItem.builder()
+                .id(notification.getId())
+                .type(notification.getType())
+                .title(notification.getTitle())
+                .message(notification.getMessage())
+                .isRead(notification.isRead())
+                .linkKey(notification.getLinkKey())
+                .linkId(notification.getLinkId())
+                .createdAt(notification.getCreatedAt())
                 .build();
     }
 }

@@ -1,50 +1,50 @@
 package com.logistics.app.controller;
 
-import com.logistics.app.dto.InteractionDtos;
+import com.logistics.app.dto.UserNotificationDtos;
 import com.logistics.app.entity.User;
 import com.logistics.app.service.AuthService;
-import com.logistics.app.service.InteractionService;
-import org.springframework.security.access.prepost.PreAuthorize;
+import com.logistics.app.service.NotificationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/interactions")
 public class InteractionController {
 
-    private final InteractionService interactionService;
+    private final NotificationService notificationService;
     private final AuthService authService;
 
-    public InteractionController(InteractionService interactionService, AuthService authService) {
-        this.interactionService = interactionService;
+    public InteractionController(NotificationService notificationService, AuthService authService) {
+        this.notificationService = notificationService;
         this.authService = authService;
     }
 
-    @GetMapping("/peers")
-    @PreAuthorize("hasAnyRole('SHIPPER','DRIVER')")
-    public List<InteractionDtos.PeerUserRow> peers(Authentication authentication) {
-        return interactionService.getPeerUsers(currentUser(authentication));
-    }
-
-    @PostMapping("/blocks/{targetUserId}")
-    @PreAuthorize("hasAnyRole('SHIPPER','DRIVER')")
-    public InteractionDtos.BlockToggleResponse toggleBlock(@PathVariable Long targetUserId, Authentication authentication) {
-        return interactionService.toggleBlock(currentUser(authentication), targetUserId);
-    }
-
     @GetMapping("/notifications")
-    public InteractionDtos.NotificationSummary notifications(Authentication authentication) {
-        return interactionService.getNotifications(currentUser(authentication));
+    public UserNotificationDtos.NotificationSummary getNotifications(Authentication authentication) {
+        User currentUser = authService.getCurrentUser(authentication.getName());
+        return notificationService.getUnreadSummary(currentUser.getId());
+    }
+
+    @GetMapping("/notifications/all")
+    public List<UserNotificationDtos.NotificationItem> getAllNotifications(Authentication authentication) {
+        User currentUser = authService.getCurrentUser(authentication.getName());
+        return notificationService.getAllNotifications(currentUser.getId());
+    }
+
+    @PostMapping("/notifications/{id}/read")
+    public Map<String, Object> markNotificationRead(@PathVariable Long id, Authentication authentication) {
+        User currentUser = authService.getCurrentUser(authentication.getName());
+        notificationService.markRead(currentUser.getId(), id);
+        return Map.of("success", true);
     }
 
     @PostMapping("/notifications/read-all")
-    public void readAll(Authentication authentication) {
-        interactionService.readNotifications(currentUser(authentication));
-    }
-
-    private User currentUser(Authentication authentication) {
-        return authService.getCurrentUser(authentication.getName());
+    public Map<String, Object> markAllNotificationsRead(Authentication authentication) {
+        User currentUser = authService.getCurrentUser(authentication.getName());
+        notificationService.markAllRead(currentUser.getId());
+        return Map.of("success", true);
     }
 }
