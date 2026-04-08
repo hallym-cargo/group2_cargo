@@ -40,6 +40,10 @@ public class FinanceController {
         return financeService.getTransactions(currentUser(authentication));
     }
 
+    @GetMapping("/receipts/{shipmentId}")
+    public FinanceDtos.ReceiptResponse getReceipt(@PathVariable Long shipmentId,
+                                                  Authentication authentication) {
+        return financeService.getReceipt(currentUser(authentication), shipmentId);
     @PostMapping("/shipments/{shipmentId}/pay")
     public FinanceDtos.ShipmentPaymentResponse payForShipment(@PathVariable Long shipmentId,
                                                               @RequestBody(required = false) FinanceDtos.ShipmentPaymentRequest request,
@@ -48,6 +52,9 @@ public class FinanceController {
     }
 
     private User currentUser(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
         return authService.getCurrentUser(authentication.getName());
     }
 }

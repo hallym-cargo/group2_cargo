@@ -55,4 +55,23 @@ public class FinanceDtos {
         private String description;
         private LocalDateTime createdAt;
     }
+
+    @Data
+    @Builder
+    public static class ReceiptResponse {
+        private String receiptNumber;
+        private Long shipmentId;
+        private String shipmentTitle;
+        private TransactionType transactionType;
+        private Integer grossAmount;
+        private Integer feeAmount;
+        private Integer netAmount;
+        private String description;
+        private LocalDateTime createdAt;
+        private String originAddress;
+        private String destinationAddress;
+        private String shipperName;
+        private String driverName;
+        private String viewerRole;
+    }
 }

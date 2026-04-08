@@ -9,9 +9,16 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  if (config.skipAuth) {
+    delete config.headers.Authorization; // 🔥 강제 제거
+  } else if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
 });
+
 
 export const login = async (payload) =>
   (await api.post('/auth/login', payload)).data;
@@ -112,6 +119,8 @@ export const fetchFinanceSummary = async () =>
 export const fetchFinanceTransactions = async () =>
   (await api.get('/api/finance/transactions')).data;
 
+export const fetchReceipt = async (shipmentId) =>
+  (await api.get(`/api/finance/receipts/${shipmentId}`)).data;
 export const payShipment = async (shipmentId, payload = {}) =>
   (await api.post(`/api/finance/shipments/${shipmentId}/pay`, payload)).data;
 
