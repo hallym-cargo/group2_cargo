@@ -28,6 +28,9 @@ import {
   fetchBookmarks,
   fetchFinanceSummary,
   fetchFinanceTransactions,
+  payShipment,
+  fetchNotifications,
+  markAllNotificationsRead,
   fetchMyProfile,
   fetchPublicOverview,
   fetchPublicProfile,
@@ -128,6 +131,9 @@ export function useLogisticsController() {
   const [chatDraft, setChatDraft] = useState('');
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatSending, setChatSending] = useState(false);
+  const [notificationSummary, setNotificationSummary] = useState({ unreadCount: 0, items: [] });
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
 
   const [page, setPage] = useState(0);
 
@@ -267,6 +273,10 @@ export function useLogisticsController() {
     return (chatRooms || []).reduce((sum, room) => sum + (room.unreadCount || 0), 0);
   }, [chatRooms]);
 
+  const notificationUnreadCount = useMemo(() => {
+    return notificationSummary?.unreadCount || 0;
+  }, [notificationSummary]);
+
   const roleQuickActions = useMemo(() => {
     if (auth.role === 'SHIPPER') {
       return [
@@ -380,6 +390,57 @@ export function useLogisticsController() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const loadNotifications = async () => {
+    if (!isLoggedIn || isAdmin) return;
+
+    try {
+      const data = await fetchNotifications();
+      setNotificationSummary(data || { unreadCount: 0, items: [] });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const openNotificationPanel = async () => {
+    if (!isLoggedIn) {
+      setMessage('로그인 후 알림을 확인할 수 있습니다.');
+      return;
+    }
+
+    try {
+      await loadNotifications();
+      setNotificationPanelOpen(true);
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.message || '알림을 불러오지 못했습니다.');
+    }
+  };
+
+  const closeNotificationPanel = () => {
+    setNotificationPanelOpen(false);
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      await loadNotifications();
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.message || '알림 읽음 처리 실패');
+    }
+  };
+
+  const handleOpenNotificationLink = async (item) => {
+    if (item?.linkKey === 'SHIPMENT' && item?.linkId) {
+      setSelectedId(item.linkId);
+      setRoutePage('dashboard');
+      setDashboardTab('board');
+      setNotificationPanelOpen(false);
+      return;
+    }
+    setNotificationPanelOpen(false);
   };
 
   const openChatInbox = async () => {
@@ -809,6 +870,7 @@ export function useLogisticsController() {
       loadRatings().catch(() => { });
       loadProfile().catch(() => { });
       loadChatRooms().catch(() => { });
+      loadNotifications().catch(() => { });
     }
   }, [isLoggedIn, isAdmin]);
 
@@ -853,6 +915,7 @@ export function useLogisticsController() {
             loadFinance().catch(() => { });
             loadRatings().catch(() => { });
             loadChatRooms().catch(() => { });
+            loadNotifications().catch(() => { });
             if (selectedId) loadDetail(selectedId).catch(() => { });
           }
         });
@@ -967,12 +1030,28 @@ export function useLogisticsController() {
 
   const handleAcceptOffer = async (offerId) => {
     try {
-      await acceptOffer(offerId);
-      setMessage('차주가 확정되었습니다.');
+      const response = await acceptOffer(offerId);
+      if (response?.id) setSelectedId(response.id);
+      setRoutePage('payment');
+      setMessage('차주가 확정되었습니다. 결제를 진행해 주세요.');
 
-      await Promise.all([loadShipments(), loadDetail(selectedId)]);
+      await Promise.all([loadShipments(), loadDetail(response?.id || selectedId), loadNotifications()]);
     } catch (err) {
       setMessage(err.response?.data?.message || '차주 확정 실패');
+    }
+  };
+
+  const handlePayShipment = async () => {
+    try {
+      if (!selectedId) return;
+      setPaymentSubmitting(true);
+      const response = await payShipment(selectedId, { paymentMethod: profile?.paymentMethod || '' });
+      setMessage(response?.message || '결제가 완료되었습니다.');
+      await Promise.all([loadShipments(), loadDetail(selectedId), loadFinance(), loadNotifications()]);
+    } catch (err) {
+      setMessage(err.response?.data?.message || '결제 처리 실패');
+    } finally {
+      setPaymentSubmitting(false);
     }
   };
 
@@ -1186,7 +1265,11 @@ export function useLogisticsController() {
     setChatDraft,
     chatModalOpen,
     chatSending,
+    notificationSummary,
+    notificationPanelOpen,
+    paymentSubmitting,
     unreadChatCount,
+    notificationUnreadCount,
     shipments,
     bookmarks,
     selectedId,
@@ -1254,6 +1337,7 @@ export function useLogisticsController() {
     handleCreateShipment,
     handleCreateOffer,
     handleAcceptOffer,
+    handlePayShipment,
     handleStart,
     handleComplete,
     openCancelModal,
@@ -1269,6 +1353,10 @@ export function useLogisticsController() {
     closeUserProfile,
     openChatWithUser,
     openChatInbox,
+    openNotificationPanel,
+    closeNotificationPanel,
+    handleMarkAllNotificationsRead,
+    handleOpenNotificationLink,
     closeChatInbox,
     openChatRoomFromSummary,
     closeChatRoom,
