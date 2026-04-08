@@ -1,13 +1,11 @@
 import "./quoteRegister.css";
 
-export default function QuoteRegisterStepper({ steps, currentStep }) {
+export default function QuoteRegisterStepper({ steps = [], currentStep = 1 }) {
   return (
     <div className="quote-stepper-wrap">
-      <h2 className="quote-stepper-title">견적등록</h2>
-
-      <ol className="quote-stepper">
-        {steps.map((step) => {
-          let stepClassName = "";
+      <ol className="quote-stepper" aria-label="견적 등록 단계">
+        {steps.map((step, index) => {
+          let stepClassName = "upcoming";
 
           if (step.id < currentStep) {
             stepClassName = "done";
@@ -16,14 +14,30 @@ export default function QuoteRegisterStepper({ steps, currentStep }) {
           }
 
           return (
-            <li key={step.id} className={stepClassName}>
-              <span className="step-inner">
-                {step.id === currentStep && (
-                  <em className="sr-only">현재단계</em>
-                )}
-                <i className="step">{step.id}단계</i>
-                <span className="step-tit">{step.label}</span>
+            <li
+              key={step.id}
+              className={`quote-stepper-item ${stepClassName}`}
+              aria-current={step.id === currentStep ? "step" : undefined}
+            >
+              {/* 연결선 */}
+              {index !== steps.length - 1 && (
+                <span className="quote-stepper-line" aria-hidden="true" />
+              )}
+
+              {/* 원형 노드 */}
+              <span className="quote-stepper-node" aria-hidden="true">
+                <span className="quote-stepper-node-inner" />
               </span>
+
+              {/* 텍스트 */}
+              <div className="quote-stepper-text">
+                <span className="quote-stepper-label">
+                  {step.id === currentStep && (
+                    <em className="sr-only">현재 단계 </em>
+                  )}
+                  {step.label}
+                </span>
+              </div>
             </li>
           );
         })}
