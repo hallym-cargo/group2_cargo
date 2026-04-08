@@ -1,29 +1,33 @@
 package com.logistics.app.service;
 
 import com.logistics.app.dto.FinanceDtos;
+import com.logistics.app.dto.ReceiptDTO;
 import com.logistics.app.entity.*;
 import com.logistics.app.repository.MoneyTransactionRepository;
+import com.logistics.app.repository.OfferRepository;
 import com.logistics.app.repository.ShipmentRepository;
 import com.logistics.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
 public class FinanceService {
 
     public static final int SERVICE_FEE_RATE = 3;
-
+    private final OfferRepository offerRepository;
     private final MoneyTransactionRepository moneyTransactionRepository;
     private final ShipmentRepository shipmentRepository;
     private final UserRepository userRepository;
 
     public FinanceService(MoneyTransactionRepository moneyTransactionRepository,
                           ShipmentRepository shipmentRepository,
-                          UserRepository userRepository) {
-        this.moneyTransactionRepository = moneyTransactionRepository;
+                          UserRepository userRepository, OfferRepository offerRepository) {
+        this.offerRepository = offerRepository;
+		this.moneyTransactionRepository = moneyTransactionRepository;
         this.shipmentRepository = shipmentRepository;
         this.userRepository = userRepository;
     }
@@ -167,5 +171,30 @@ public class FinanceService {
 
     private int nvl(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    public ReceiptDTO getReceipt(Long shipmentId) {
+
+        Shipment shipment = shipmentRepository.findById(shipmentId)
+                .orElseThrow(() -> new RuntimeException("Shipment not found"));
+
+        Integer price = 0;
+
+        if (shipment.getAcceptedOfferId() != null) {
+            Offer offer = offerRepository.findById(shipment.getAcceptedOfferId())
+                    .orElseThrow(() -> new RuntimeException("Offer not found"));
+
+            price = offer.getPrice();
+        }
+
+        return ReceiptDTO.builder()
+                .receiptNumber(UUID.randomUUID().toString().substring(0, 10))
+                .shipmentId(shipment.getId())
+                .title(shipment.getTitle())
+                .amount(price)
+                .fee(0)
+                .finalAmount(price)
+                .createdAt(shipment.getCreatedAt())
+                .build();
     }
 }
