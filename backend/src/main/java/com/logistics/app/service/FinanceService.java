@@ -193,6 +193,9 @@ public class FinanceService {
                 .shipperName(shipment.getShipper() != null ? shipment.getShipper().getName() : null)
                 .driverName(shipment.getAssignedDriver() != null ? shipment.getAssignedDriver().getName() : null)
                 .viewerRole(user.getRole().name())
+                .build();
+    }
+
     @Transactional
     public FinanceDtos.ShipmentPaymentResponse payForShipment(Long shipmentId, User user, FinanceDtos.ShipmentPaymentRequest request) {
         Shipment shipment = shipmentRepository.findById(shipmentId)

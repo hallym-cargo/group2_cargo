@@ -66,8 +66,6 @@ export const createInquiry = async (payload) =>
   (await api.post('/public/inquiries', payload)).data;
 
 //영수증 
-export const fetchReceipt = async (shipmentId) =>
-  (await api.get(`/api/finance/receipt/${shipmentId}`)).data
 export const fetchDrivingRoute = async ({
   startLat,
   startLng,
@@ -120,7 +118,7 @@ export const fetchFinanceTransactions = async () =>
   (await api.get('/api/finance/transactions')).data;
 
 export const fetchReceipt = async (shipmentId) =>
-  (await api.get(`/api/finance/receipts/${shipmentId}`)).data;
+  (await api.get(`/api/finance/receipt/${shipmentId}`)).data;
 export const payShipment = async (shipmentId, payload = {}) =>
   (await api.post(`/api/finance/shipments/${shipmentId}/pay`, payload)).data;
 
