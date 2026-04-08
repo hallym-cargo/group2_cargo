@@ -1,10 +1,10 @@
-import { formatRatingSummary, roleText } from '../../utils/formatters'
+import { formatRatingSummary, resolveMediaUrl, roleText } from '../../utils/formatters'
 
 export default function UserProfileModal({ profile, isLoggedIn, onClose, onOpenChat }) {
   if (!profile) return null
 
   const getProfileImage = () => {
-    return profile.profileImageUrl || '/images/default-profile.png'
+    return resolveMediaUrl(profile.profileImageUrl) || '/images/default-profile.png'
   }
 
   return (
