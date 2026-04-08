@@ -26,7 +26,7 @@ export default function App() {
   } else if (controller.dashboardTab === "quoteRegister") {
     page = <QuoteRegisterPage controller={controller} />;
   } else if (controller.routePage === "status") {
-    page = <TransportStatus onBack={() => controller.setRoutePage("main")} />;
+    page = <TransportStatus controller={controller} />;
   } else if (controller.routePage === "messages") {
     page = <MessagesPage controller={controller} />;
   } else if (controller.routePage === "shippers") {

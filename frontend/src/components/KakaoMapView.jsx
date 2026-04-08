@@ -455,7 +455,7 @@ export default function KakaoMapView({ shipment }) {
 
       <div className="map-meta-grid">
         <div>
-          <span>진행률</span>
+          <span>운송 진행률</span>
           <strong>{Math.round((trackingMeta?.progress || 0) * 100)}%</strong>
         </div>
         <div>
