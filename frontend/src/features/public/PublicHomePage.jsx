@@ -4,6 +4,8 @@ import PublicHeader from './components/PublicHeader'
 import PublicHeroSection from './components/PublicHeroSection'
 import PublicInfoSection from './components/PublicInfoSection'
 import LoginPage from "../../pages/LoginPage";
+import ShipperHeader from './components/ShipperHeader'
+import DriverHeader from './components/DriverHeader'
 
 import { useEffect } from 'react'
 
@@ -33,15 +35,27 @@ export default function PublicHomePage({ controller }) {
   return (
     <div className="public-shell landing-shell">
 
-      {/* 헤더는 항상 */}
-      <PublicHeader
-        isLoggedIn={controller.isLoggedIn}
-        authMode={controller.authMode}
-        setAuthMode={controller.setAuthMode}
-        setDashboardTab={controller.setDashboardTab}
-        logout={controller.logout}
-        controller={controller}
-      />
+      {/* 로그인 전 */}
+      {!controller.isLoggedIn && (
+        <PublicHeader
+          isLoggedIn={controller.isLoggedIn}
+          authMode={controller.authMode}
+          setAuthMode={controller.setAuthMode}
+          setDashboardTab={controller.setDashboardTab}
+          logout={controller.logout}
+          controller={controller}
+        />
+      )}
+
+      {/* 화주 */}
+      {controller.isLoggedIn && controller.auth.role === 'SHIPPER' && (
+        <ShipperHeader controller={controller} />
+      )}
+
+      {/* 차주 */}
+      {controller.isLoggedIn && controller.auth.role === 'DRIVER' && (
+        <DriverHeader controller={controller} />
+      )}
 
       <div style={{ position: "relative" }}>
         <PublicHeroSection controller={controller} />

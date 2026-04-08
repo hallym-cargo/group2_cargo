@@ -22,6 +22,8 @@ export default function App() {
 
   if (controller.dashboardTab === "quotes") {
     page = <QuoteListPage controller={controller} />;
+  } else if (controller.routePage === "register") {
+    page = <QuoteRegisterPage controller={controller} />;
   } else if (controller.dashboardTab === "quoteRegister") {
     page = <QuoteRegisterPage controller={controller} />;
   } else if (controller.routePage === "status") {
@@ -61,7 +63,6 @@ export default function App() {
   return (
     <>
       {page}
-
       {controller.profileModalOpen && (
         <UserProfileModal
           profile={controller.activeProfile}
@@ -70,7 +71,6 @@ export default function App() {
           onOpenChat={controller.openChatWithUser}
         />
       )}
-
       {controller.chatModalOpen && controller.routePage !== "messages" && (
         <ChatWindowModal
           room={controller.chatRoom}
@@ -81,14 +81,12 @@ export default function App() {
           isSending={controller.chatSending}
         />
       )}
-
       {controller.isLoggedIn && !controller.isAdmin && (
         <>
           <ChatFloatingButton
             unreadCount={controller.unreadChatCount}
             onChatClick={controller.openChatInbox}
           />
-
           <ChatInboxPanel
             open={controller.chatInboxOpen}
             rooms={controller.chatRooms}

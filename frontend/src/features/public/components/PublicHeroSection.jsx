@@ -109,18 +109,19 @@ export default function PublicHeroSection({ controller }) {
             </p>
             <div className="landing-hero__actions">
               <button className="landing-btn landing-btn--primary" onClick={() => document.getElementById('board')?.scrollIntoView({ behavior: 'smooth' })}>실시간 배차 보기</button>
-              <button className="landing-btn landing-btn--light" onClick={() => document.getElementById('landing-solution')?.scrollIntoView({ behavior: 'smooth' })}>서비스 소개</button>
+              {/* <button className="landing-btn landing-btn--light" onClick={() => document.getElementById('landing-solution')?.scrollIntoView({ behavior: 'smooth' })}>서비스 소개</button> */}
             </div>
-            <div className="landing-hero__summary">
-              <div>
-                <span>핵심 가치</span>
-                <strong>배차 · 운행 · 운영 관리 통합</strong>
-              </div>
-              <div>
-                <span>지원 역할</span>
-                <strong>화주 · 차주 · 관리자</strong>
-              </div>
-            </div>
+            {/* <div className="landing-hero__summary"> 
+              <div> 
+                <span>핵심 가치</span> 
+                <strong>배차 · 운행 · 운영 관리 통합</strong> 
+              </div> 
+              <div> 
+                <span>지원 역할</span> 
+                <strong>화주 · 차주 · 관리자</strong> 
+              </div> 
+            </div> */}
+
           </div>
 
           <div className="landing-hero__visual" data-reveal>
@@ -179,8 +180,7 @@ export default function PublicHeroSection({ controller }) {
           </article>
         </div>
       </section>
-
-      <section className="landing-accessBand" data-reveal>
+      {/* <section className="landing-accessBand" data-reveal>
         <div className="landing-accessBand__inner">
           <div className="landing-accessBand__copy">
             <span>START NOW</span>
@@ -203,7 +203,7 @@ export default function PublicHeroSection({ controller }) {
             />
           )}
         </div>
-      </section>
+      </section> */}
     </>
   )
 }
