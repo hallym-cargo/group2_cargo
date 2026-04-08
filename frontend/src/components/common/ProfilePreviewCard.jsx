@@ -1,4 +1,4 @@
-import { formatRatingSummary, roleText } from '../../utils/formatters'
+import { formatRatingSummary, resolveMediaUrl, roleText } from '../../utils/formatters'
 
 export default function ProfilePreviewCard({ title, profile }) {
   if (!profile) return null
@@ -7,7 +7,7 @@ export default function ProfilePreviewCard({ title, profile }) {
     <div className="surface-sub">
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         {profile.profileImageUrl ? (
-          <img src={profile.profileImageUrl} alt={title} className="image-preview-thumb" style={{ width: 64, height: 64, objectFit: 'cover' }} />
+          <img src={resolveMediaUrl(profile.profileImageUrl)} alt={title} className="image-preview-thumb" style={{ width: 64, height: 64, objectFit: 'cover' }} />
         ) : (
           <div className="identity-mark" style={{ width: 56, height: 56 }}>{(profile.name || '?').slice(0, 1)}</div>
         )}
