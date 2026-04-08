@@ -706,3 +706,19 @@
   color: #475569;
   line-height: 1.5;
 }
+
+
+.notifications-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notifications-page__item {
+  cursor: pointer;
+}
+
+.notifications-page__item strong {
+  display: block;
+  margin-bottom: 6px;
+}

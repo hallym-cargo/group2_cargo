@@ -149,7 +149,7 @@ public class ShipmentService {
                 .message(request.getMessage())
                 .build();
         offerRepository.save(offer);
-        notificationService.notify(shipment.getShipper(), "OFFER", "새 제안이 도착했습니다.",
+        notificationService.notifyUser(shipment.getShipper().getId(), "OFFER", "새 제안이 도착했습니다.",
                 driver.getName() + "님이 " + shipment.getTitle() + " 화물에 " + String.format("%,d원", offer.getPrice()) + " 제안을 보냈습니다.", "SHIPMENT", shipment.getId());
         realtimePublisher.publishShipmentUpdated(toResponse(shipment, driver));
         return toOfferResponse(offer);
@@ -178,13 +178,13 @@ public class ShipmentService {
         shipment.setAgreedPrice(offer.getPrice());
         shipmentRepository.save(shipment);
 
-        notificationService.notify(offer.getDriver(), "OFFER_ACCEPTED", "제안이 수락되었습니다.",
+        notificationService.notifyUser(offer.getDriver().getId(), "OFFER_ACCEPTED", "제안이 수락되었습니다.",
                 shipment.getTitle() + " 의 배정이 확정되었습니다. 배차 보드에서 운송을 시작해 주세요.", "SHIPMENT", shipment.getId());
         offerRepository.findByShipment(shipment).stream()
                 .filter(item -> !item.getId().equals(offerId))
                 .map(Offer::getDriver)
                 .distinct()
-                .forEach(driverUser -> notificationService.notify(driverUser, "OFFER_REJECTED", "제안이 선택되지 않았습니다.",
+                .forEach(driverUser -> notificationService.notifyUser(driverUser.getId(), "OFFER_REJECTED", "제안이 선택되지 않았습니다.",
                         shipment.getTitle() + " 은 다른 차주가 선택되었습니다. 다른 배차를 확인해 보세요.", "SHIPMENT", shipment.getId()));
 
         logStatus(shipment, before, ShipmentStatus.CONFIRMED, shipper.getEmail(), "차주 확정");

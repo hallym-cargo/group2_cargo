@@ -11,10 +11,17 @@ const notificationTypeLabel = (type) => {
   }
 }
 
-export default function NotificationPanel({ open, summary, onClose, onMarkAllRead, onOpenLink }) {
+export default function NotificationPanel({
+  open,
+  summary,
+  onClose,
+  onMarkAllRead,
+  onOpenLink,
+  onOpenNotificationsPage,
+}) {
   if (!open) return null
 
-  const items = summary?.items || []
+  const items = (summary?.items || []).filter((item) => !item.isRead)
 
   return (
     <div className="chat-inbox-backdrop" onClick={onClose}>
@@ -33,24 +40,40 @@ export default function NotificationPanel({ open, summary, onClose, onMarkAllRea
               <button
                 key={item.id}
                 type="button"
-                className={`notification-item ${item.isRead ? '' : 'is-unread'}`}
+                className="notification-item is-unread"
                 onClick={() => onOpenLink?.(item)}
               >
                 <div className="notification-item__top">
                   <span className="notification-item__type">{notificationTypeLabel(item.type)}</span>
-                  <span className="notification-item__date">{item.createdAt ? formatDate(item.createdAt) : ''}</span>
+                  <span className="notification-item__date">
+                    {item.createdAt ? formatDate(item.createdAt) : ''}
+                  </span>
                 </div>
                 <strong>{item.title}</strong>
                 <p>{item.message}</p>
               </button>
             ))
           ) : (
-            <div className="empty-box small">아직 도착한 알림이 없습니다.</div>
+            <div className="empty-box small">새 알림이 없습니다.</div>
           )}
         </div>
 
         <div className="chat-inbox-panel__foot">
-          <button className="btn btn-secondary" type="button" onClick={onMarkAllRead}>모두 읽음 처리</button>
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={onMarkAllRead}
+            disabled={!items.length}
+          >
+            모두 읽음 처리
+          </button>
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={onOpenNotificationsPage}
+          >
+            전체 알림 보기
+          </button>
         </div>
       </aside>
     </div>

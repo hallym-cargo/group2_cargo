@@ -5,6 +5,7 @@ import ChatWindowModal from "./components/common/ChatWindowModal";
 import UserProfileModal from "./components/common/UserProfileModal";
 import AdminConsolePage from "./features/admin/AdminConsolePage";
 import MessagesPage from "./features/chat/MessagesPage";
+import NotificationsPage from "./features/chat/NotificationsPage";
 import QuoteListPage from "./features/public/QuoteListPage";
 import QuoteRegisterPage from "./features/public/QuoteRegisterPage";
 import PublicHomePage from "./features/public/PublicHomePage";
@@ -34,6 +35,8 @@ export default function App() {
     page = <TransportStatus controller={controller} />;
   } else if (controller.routePage === "messages") {
     page = <MessagesPage controller={controller} />;
+  } else if (controller.routePage === "notifications") {
+    page = <NotificationsPage controller={controller} />;
   } else if (controller.routePage === "shippers") {
     page = <PublicUserSearchPage controller={controller} role="SHIPPER" />;
   } else if (controller.routePage === "drivers") {
@@ -111,6 +114,7 @@ export default function App() {
             onClose={controller.closeNotificationPanel}
             onMarkAllRead={controller.handleMarkAllNotificationsRead}
             onOpenLink={controller.handleOpenNotificationLink}
+            onOpenNotificationsPage={controller.openNotificationsPage}
           />
         </>
       )}

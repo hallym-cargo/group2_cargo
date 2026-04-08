@@ -106,6 +106,12 @@ export const payShipment = async (shipmentId, payload = {}) =>
 export const fetchNotifications = async () =>
   (await api.get('/api/interactions/notifications')).data;
 
+export const fetchAllNotifications = async () =>
+  (await api.get('/api/interactions/notifications/all')).data;
+
+export const markNotificationRead = async (notificationId) =>
+  (await api.post(`/api/interactions/notifications/${notificationId}/read`)).data;
+
 export const markAllNotificationsRead = async () =>
   (await api.post('/api/interactions/notifications/read-all')).data;
 

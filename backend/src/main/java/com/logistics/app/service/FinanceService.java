@@ -203,10 +203,10 @@ public class FinanceService {
         }
 
         String amountText = String.format("%,d원", amount);
-        notificationService.notify(shipment.getShipper(), "PAYMENT", "결제가 완료되었습니다.",
+        notificationService.notifyUser(shipment.getShipper().getId(), "PAYMENT", "결제가 완료되었습니다.",
                 shipment.getTitle() + " 건 결제가 완료되었습니다. 결제 금액은 " + amountText + "입니다.", "SHIPMENT", shipment.getId());
         if (shipment.getAssignedDriver() != null) {
-            notificationService.notify(shipment.getAssignedDriver(), "PAYMENT", "결제 완료 알림",
+            notificationService.notifyUser(shipment.getAssignedDriver().getId(), "PAYMENT", "결제 완료 알림",
                     shipment.getTitle() + " 건이 결제되었습니다. 결제 금액은 " + amountText + "입니다.", "SHIPMENT", shipment.getId());
         }
 
