@@ -112,6 +112,21 @@ export const fetchFinanceSummary = async () =>
 export const fetchFinanceTransactions = async () =>
   (await api.get('/api/finance/transactions')).data;
 
+export const payShipment = async (shipmentId, payload = {}) =>
+  (await api.post(`/api/finance/shipments/${shipmentId}/pay`, payload)).data;
+
+export const fetchNotifications = async () =>
+  (await api.get('/api/interactions/notifications')).data;
+
+export const fetchAllNotifications = async () =>
+  (await api.get('/api/interactions/notifications/all')).data;
+
+export const markNotificationRead = async (notificationId) =>
+  (await api.post(`/api/interactions/notifications/${notificationId}/read`)).data;
+
+export const markAllNotificationsRead = async () =>
+  (await api.post('/api/interactions/notifications/read-all')).data;
+
 export const fetchRatingsDashboard = async () =>
   (await api.get('/api/ratings/dashboard')).data;
 

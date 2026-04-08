@@ -8,10 +8,7 @@ import com.logistics.app.service.FinanceService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,6 +38,13 @@ public class FinanceController {
     @GetMapping("/transactions")
     public List<FinanceDtos.MoneyTransactionResponse> transactions(Authentication authentication) {
         return financeService.getTransactions(currentUser(authentication));
+    }
+
+    @PostMapping("/shipments/{shipmentId}/pay")
+    public FinanceDtos.ShipmentPaymentResponse payForShipment(@PathVariable Long shipmentId,
+                                                              @RequestBody(required = false) FinanceDtos.ShipmentPaymentRequest request,
+                                                              Authentication authentication) {
+        return financeService.payForShipment(shipmentId, currentUser(authentication), request);
     }
 
     private User currentUser(Authentication authentication) {
