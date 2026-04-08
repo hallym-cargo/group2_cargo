@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import axios from "axios";
 import "./LoginPage.css";
+import { API_BASE_URL } from "../api";
+import VehicleTypeSelector from "../components/common/VehicleTypeSelector";
+import { stringifyVehicleTypes } from "../constants/vehicleCatalog";
 
 const DriverSignupPage = ({ controller }) => {
-    const [vehicleType, setVehicleType] = useState("");
-    const [search, setSearch] = useState("");
-    const [vehicleDropdownVisible, setVehicleDropdownVisible] = useState(false);
+    const [selectedVehicles, setSelectedVehicles] = useState([]);
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [form, setForm] = useState({
@@ -15,24 +16,17 @@ const DriverSignupPage = ({ controller }) => {
         phone: ""
     });
 
+    const selectedVehicleText = useMemo(
+        () => stringifyVehicleTypes(selectedVehicles),
+        [selectedVehicles]
+    );
+
     const handleChange = (e) => {
         setForm({
             ...form,
             [e.target.name]: e.target.value
         });
     };
-
-    const vehicleOptions = [
-        "1톤 트럭", "다마스", "라보",
-        "1.4톤 트럭", "2.5톤 트럭", "3.5톤 트럭",
-        "5톤 트럭", "5톤 플러스 트럭", "8톤 트럭",
-        "11톤 트럭", "11톤 플러스 트럭",
-        "3.5톤 광폭", "14톤 트럭", "18톤 트럭", "25톤 트럭"
-    ];
-
-    const filteredVehicles = vehicleOptions.filter(v =>
-        v.toLowerCase().includes(search.toLowerCase())
-    );
 
     const handleSignup = async () => {
         if (!form.email) {
@@ -65,15 +59,15 @@ const DriverSignupPage = ({ controller }) => {
             return;
         }
 
-        if (!vehicleType) {
-            alert("차량 종류를 선택해주세요");
+        if (!selectedVehicles.length) {
+            alert("차량 종류를 하나 이상 선택해주세요");
             return;
         }
 
         try {
-            const res = await axios.post("http://localhost:8080/auth/signup", {
+            await axios.post(`${API_BASE_URL}/auth/signup`, {
                 ...form,
-                vehicleType: vehicleType,
+                vehicleType: selectedVehicleText,
                 role: "DRIVER"
             });
 
@@ -87,7 +81,6 @@ const DriverSignupPage = ({ controller }) => {
 
     return (
         <>
-            {/* 이메일 필수 */}
             <label className="login-label">
                 이메일 <span className="required">*</span>
             </label>
@@ -98,7 +91,6 @@ const DriverSignupPage = ({ controller }) => {
                 onChange={handleChange}
             />
 
-            {/* 비밀번호 필수 */}
             <label className="login-label">
                 비밀번호 <span className="required">*</span>
             </label>
@@ -117,8 +109,7 @@ const DriverSignupPage = ({ controller }) => {
 
                 {confirmPassword && (
                     <span
-                        className={`password-check ${form.password === confirmPassword ? "success" : "error"
-                            }`}
+                        className={`password-check ${form.password === confirmPassword ? "success" : "error"}`}
                     >
                         {form.password === confirmPassword
                             ? "일치합니다"
@@ -134,7 +125,6 @@ const DriverSignupPage = ({ controller }) => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
             />
 
-            {/* 이름 필수 */}
             <label className="login-label">
                 이름 <span className="required">*</span>
             </label>
@@ -145,7 +135,6 @@ const DriverSignupPage = ({ controller }) => {
                 onChange={handleChange}
             />
 
-            {/* 전화번호 선택 */}
             <label className="login-label">전화번호</label>
             <input
                 className="login-input"
@@ -154,45 +143,17 @@ const DriverSignupPage = ({ controller }) => {
                 onChange={handleChange}
             />
 
-            {/* 차량 종류 선택 */}
             <label className="login-label">
                 차량 종류 <span className="required">*</span>
             </label>
+            <VehicleTypeSelector
+                values={selectedVehicles}
+                onChange={setSelectedVehicles}
+            />
 
-            <div className="input-wrapper">
-                <input
-                    type="text"
-                    placeholder="차량 종류 검색"
-                    value={vehicleType || search}
-                    onChange={(e) => {
-                        setSearch(e.target.value);
-                        setVehicleType("");   // 검색 시작하면 선택값 해제
-                    }}
-                    onClick={() => {
-                        setVehicleDropdownVisible(true);
-                        setVehicleType("");   // 선택값 초기화 (검색 가능하게)
-                    }}
-                    className="login-input"
-                />
-
-                {vehicleDropdownVisible && (
-                    <div className="vehicle-list">
-                        {filteredVehicles.map((v, i) => (
-                            <div
-                                key={i}
-                                className={`vehicle-item ${vehicleType === v ? "active" : ""}`}
-                                onClick={() => {
-                                    setVehicleType(v);
-                                    setVehicleDropdownVisible(false); // 선택 후 숨기기
-                                    setSearch(""); // 검색어 초기화
-                                }}
-                            >
-                                {v}
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            {selectedVehicleText ? (
+                <div className="helper-text">선택 차량: {selectedVehicleText}</div>
+            ) : null}
 
             <button className="login-button" onClick={handleSignup}>
                 회원가입

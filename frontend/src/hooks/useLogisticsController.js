@@ -55,6 +55,7 @@ import {
   updateMemberRole,
   updateMemberStatus,
   updateMyProfile,
+  uploadMyProfileImage,
   createRating,
 } from '../api';
 
@@ -78,7 +79,8 @@ export function useLogisticsController() {
     role: localStorage.getItem('role') || '',
     profileCompleted: localStorage.getItem('profileCompleted') === 'true',
   }));
-
+  const [receipt, setReceipt] = useState(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const [message, setMessage] = useState('');
   // const [authMode, setAuthMode] = useState('login');
   const [authMode, setAuthMode] = useState('');
@@ -109,12 +111,18 @@ export function useLogisticsController() {
   const [selected, setSelected] = useState(null);
   const [dashboardTab, setDashboardTab] = useState('home');
   const [profile, setProfile] = useState(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileImageUploading, setProfileImageUploading] = useState(false);
+  const [profileImageUploadError, setProfileImageUploadError] = useState('');
+  const [selectedProfileImageName, setSelectedProfileImageName] = useState('');
+  const [profileSaveSuccessOpen, setProfileSaveSuccessOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({
     bio: '',
     profileImageUrl: '',
     paymentMethod: '',
     contactEmail: '',
     contactPhone: '',
+    vehicleType: '',
   });
   const [shipmentForm, setShipmentForm] = useState(emptyShipment);
   const [offerForm, setOfferForm] = useState({ price: '', message: '' });
@@ -189,6 +197,22 @@ export function useLogisticsController() {
     });
   }, [publicData.liveBoard, publicStatusFilter]);
 
+  //영수증 팝업
+  const openReceipt = async (shipmentId) => {
+    try {
+      const data = await fetchReceipt(shipmentId);
+      setReceipt(data);
+      setReceiptOpen(true);
+    } catch (err) {
+      console.error(err);
+      setMessage('영수증 불러오기 실패');
+    }
+  };
+
+  const closeReceipt = () => {
+    setReceiptOpen(false);
+    setReceipt(null);
+  };
   const selectedPublic = useMemo(() => {
     return (
       publicData.liveBoard?.find((item) => item.id === publicSelectedId) ||
@@ -824,6 +848,7 @@ export function useLogisticsController() {
       paymentMethod: data.paymentMethod || '',
       contactEmail: data.contactEmail || '',
       contactPhone: data.contactPhone || '',
+      vehicleType: data.vehicleType || '',
     });
   };
 
@@ -855,10 +880,64 @@ export function useLogisticsController() {
     }
   };
 
+
+  const handleProfileImageFileChange = async (file) => {
+    if (!file) return;
+
+    setProfileImageUploadError('');
+    setSelectedProfileImageName(file.name || '');
+    setProfileImageUploading(true);
+
+    try {
+      const uploaded = await uploadMyProfileImage(file);
+      setProfileForm((prev) => ({
+        ...prev,
+        profileImageUrl: uploaded.imageUrl || '',
+      }));
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err.response?.data?.message || '프로필 사진 업로드 실패';
+      setProfileImageUploadError(errorMessage);
+      setMessage(errorMessage);
+    } finally {
+      setProfileImageUploading(false);
+    }
+  };
+
+  const clearProfileImage = () => {
+    setSelectedProfileImageName('');
+    setProfileImageUploadError('');
+    setProfileForm((prev) => ({
+      ...prev,
+      profileImageUrl: '',
+    }));
+  };
+
   const handleSaveProfile = async () => {
     try {
-      const saved = await updateMyProfile(profileForm);
+      setProfileSaving(true);
+      setProfileSaveSuccessOpen(false);
+      setMessage('');
+
+      const payload = {
+        bio: profileForm.bio || '',
+        profileImageUrl: profileForm.profileImageUrl || '',
+        paymentMethod: profileForm.paymentMethod || '',
+        contactEmail: profileForm.contactEmail || '',
+        contactPhone: profileForm.contactPhone || '',
+        vehicleType: auth.role === 'DRIVER' ? (profileForm.vehicleType || '') : '',
+      };
+
+      const saved = await updateMyProfile(payload);
       setProfile(saved);
+      setProfileForm({
+        bio: saved.bio || '',
+        profileImageUrl: saved.profileImageUrl || '',
+        paymentMethod: saved.paymentMethod || '',
+        contactEmail: saved.contactEmail || '',
+        contactPhone: saved.contactPhone || '',
+        vehicleType: saved.vehicleType || '',
+      });
 
       const updatedAuth = {
         ...auth,
@@ -870,10 +949,13 @@ export function useLogisticsController() {
         String(!!saved.profileCompleted),
       );
       setAuth(updatedAuth);
-      setMessage('회원정보가 저장되었습니다.');
+      setMessage('');
+      setProfileSaveSuccessOpen(true);
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.message || '회원정보 저장 실패');
+    } finally {
+      setProfileSaving(false);
     }
   };
 
@@ -1028,6 +1110,9 @@ export function useLogisticsController() {
     const timer = setInterval(() => {
       reloadChatRoom(chatRoom.targetProfile.id);
     }, 2000);
+
+
+
 
     return () => clearInterval(timer);
   }, [chatModalOpen, chatRoom?.targetProfile?.id, isLoggedIn]);
@@ -1367,6 +1452,12 @@ export function useLogisticsController() {
     profile,
     profileForm,
     setProfileForm,
+    profileSaving,
+    profileImageUploading,
+    profileImageUploadError,
+    selectedProfileImageName,
+    profileSaveSuccessOpen,
+    setProfileSaveSuccessOpen,
     shipmentForm,
     setShipmentForm,
     offerForm,
@@ -1459,11 +1550,17 @@ export function useLogisticsController() {
     handleAnswerInquiry,
     handleResolveDispute,
     handleSaveProfile,
+    handleProfileImageFileChange,
+    clearProfileImage,
     handleShipmentImagesChange,
     handleCompletionProofChange,
     loadAdmin,
     loadPublic,
     deleteAdminFaq,
     deleteAdminNotice,
+    receipt,
+    receiptOpen,
+    openReceipt,
+    closeReceipt,
   };
 }

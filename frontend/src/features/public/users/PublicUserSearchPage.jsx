@@ -1,6 +1,6 @@
 import PublicSectionLoading from '../../../components/common/PublicSectionLoading'
 import PublicHeader from '../components/PublicHeader'
-import { formatRatingSummary, roleText } from '../../../utils/formatters'
+import { formatRatingSummary, resolveMediaUrl, roleText } from '../../../utils/formatters'
 
 export default function PublicUserSearchPage({ controller, role }) {
   const isDriver = role === 'DRIVER'
@@ -14,7 +14,7 @@ export default function PublicUserSearchPage({ controller, role }) {
 
   const getProfileImage = (user) => {
     const imageUrl = user?.profileImageUrl?.trim()
-    return imageUrl || '/images/default-profile.png'
+    return resolveMediaUrl(imageUrl) || '/images/default-profile.png'
   }
 
   const renderAvatar = (user) => {

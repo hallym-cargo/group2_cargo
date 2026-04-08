@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./LoginPage.css";
+import { API_BASE_URL } from "../api";
 
 const ShipperSignupPage = ({ controller }) => {
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -52,7 +53,7 @@ const ShipperSignupPage = ({ controller }) => {
         }
 
         try {
-            const res = await axios.post("http://localhost:8080/auth/signup", {
+            const res = await axios.post(`${API_BASE_URL}/auth/signup`, {
                 ...form,
                 role: "SHIPPER"
             });
