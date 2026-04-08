@@ -6,6 +6,7 @@ import com.logistics.app.service.AuthService;
 import com.logistics.app.service.FinanceService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,7 +34,16 @@ public class FinanceController {
         return financeService.getTransactions(currentUser(authentication));
     }
 
+    @GetMapping("/receipts/{shipmentId}")
+    public FinanceDtos.ReceiptResponse getReceipt(@PathVariable Long shipmentId,
+                                                  Authentication authentication) {
+        return financeService.getReceipt(currentUser(authentication), shipmentId);
+    }
+
     private User currentUser(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
         return authService.getCurrentUser(authentication.getName());
     }
 }

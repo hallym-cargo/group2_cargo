@@ -60,11 +60,11 @@ public class FinanceService {
         int completedShipmentCount = user.getRole() == UserRole.ADMIN
                 ? (int) shipmentRepository.findAll().stream().filter(s -> s.getStatus() == ShipmentStatus.COMPLETED).count()
                 : (int) shipmentRepository.findAll().stream().filter(s ->
-                    s.getStatus() == ShipmentStatus.COMPLETED && (
+                s.getStatus() == ShipmentStatus.COMPLETED && (
                         (user.getRole() == UserRole.SHIPPER && s.getShipper() != null && s.getShipper().getId().equals(user.getId())) ||
-                        (user.getRole() == UserRole.DRIVER && s.getAssignedDriver() != null && s.getAssignedDriver().getId().equals(user.getId()))
-                    )
-                ).count();
+                                (user.getRole() == UserRole.DRIVER && s.getAssignedDriver() != null && s.getAssignedDriver().getId().equals(user.getId()))
+                )
+        ).count();
 
         List<FinanceDtos.MoneyTransactionResponse> recent = transactions.stream()
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
@@ -103,7 +103,6 @@ public class FinanceService {
         }
         var accepted = shipment.getAcceptedOfferId();
         var offer = shipment.getAcceptedOfferId() == null ? null : shipment.getAcceptedOfferId();
-        // accepted offer ID already guaranteed above; actual price comes from accepted offer on shipment detail flow.
     }
 
     @Transactional
@@ -149,6 +148,42 @@ public class FinanceService {
                     .description("플랫폼 수수료 수익")
                     .build());
         }
+    }
+
+    public FinanceDtos.ReceiptResponse getReceipt(User user, Long shipmentId) {
+        Shipment shipment = shipmentRepository.findById(shipmentId)
+                .orElseThrow(() -> new RuntimeException("화물을 찾을 수 없습니다."));
+
+        boolean canView = user.getRole() == UserRole.ADMIN
+                || (shipment.getShipper() != null && shipment.getShipper().getId().equals(user.getId()))
+                || (shipment.getAssignedDriver() != null && shipment.getAssignedDriver().getId().equals(user.getId()));
+
+        if (!canView) {
+            throw new RuntimeException("해당 영수증을 조회할 권한이 없습니다.");
+        }
+
+        MoneyTransaction tx = user.getRole() == UserRole.ADMIN
+                ? moneyTransactionRepository.findFirstByShipmentIdOrderByCreatedAtDesc(shipmentId)
+                .orElseThrow(() -> new RuntimeException("영수증이 없습니다."))
+                : moneyTransactionRepository.findFirstByUserAndShipmentIdOrderByCreatedAtDesc(user, shipmentId)
+                .orElseThrow(() -> new RuntimeException("영수증이 없습니다."));
+
+        return FinanceDtos.ReceiptResponse.builder()
+                .receiptNumber("RCPT-" + shipmentId + "-" + tx.getId())
+                .shipmentId(shipment.getId())
+                .shipmentTitle(shipment.getTitle())
+                .transactionType(tx.getType())
+                .grossAmount(tx.getGrossAmount())
+                .feeAmount(tx.getFeeAmount())
+                .netAmount(tx.getNetAmount())
+                .description(tx.getDescription())
+                .createdAt(tx.getCreatedAt())
+                .originAddress(shipment.getOriginAddress())
+                .destinationAddress(shipment.getDestinationAddress())
+                .shipperName(shipment.getShipper() != null ? shipment.getShipper().getName() : null)
+                .driverName(shipment.getAssignedDriver() != null ? shipment.getAssignedDriver().getName() : null)
+                .viewerRole(user.getRole().name())
+                .build();
     }
 
     private FinanceDtos.MoneyTransactionResponse toResponse(MoneyTransaction tx) {

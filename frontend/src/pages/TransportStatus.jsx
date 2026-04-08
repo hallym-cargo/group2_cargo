@@ -8,6 +8,8 @@ import {
   roleText,
   statusText,
 } from '../utils/formatters'
+import ReceiptModal from "../components/common/ReceiptModal"
+import { fetchReceipt } from "../api"
 
 const STATUS_META = {
   REQUESTED: { label: '요청 접수', short: '요청', emoji: '📝', tone: 'requested' },
