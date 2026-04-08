@@ -95,6 +95,8 @@ export function useLogisticsController() {
   const [publicUsers, setPublicUsers] = useState([]);
   const [publicUserKeyword, setPublicUserKeyword] = useState('');
   const [publicUserLoading, setPublicUserLoading] = useState(false);
+  const [transportLoading, setTransportLoading] = useState(false);
+  const [transportDetailLoading, setTransportDetailLoading] = useState(false);
 
   const [shipments, setShipments] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
@@ -559,24 +561,34 @@ export function useLogisticsController() {
   };
 
   const loadPublic = async () => {
-    const data = await fetchPublicOverview();
-    setPublicData(data);
+    setTransportLoading(true);
+    try {
+      const data = await fetchPublicOverview();
+      setPublicData(data);
 
-    if (!publicSelectedId && data.liveBoard?.length) {
-      setPublicSelectedId(data.liveBoard[0].id);
+      if (!publicSelectedId && data.liveBoard?.length) {
+        setPublicSelectedId(data.liveBoard[0].id);
+      }
+    } finally {
+      setTransportLoading(false);
     }
   };
 
   const loadShipments = async () => {
     if (!isLoggedIn || isAdmin) return;
 
-    const data = await fetchShipments(page, 10);
-    const items = Array.isArray(data) ? data : (data.content || []);
+    setTransportLoading(true);
+    try {
+      const data = await fetchShipments(page, 10);
+      const items = Array.isArray(data) ? data : (data.content || []);
 
-    setShipments(items);
+      setShipments(items);
 
-    if (!selectedId && items.length) {
-      setSelectedId(items[0].id);
+      if (!selectedId && items.length) {
+        setSelectedId(items[0].id);
+      }
+    } finally {
+      setTransportLoading(false);
     }
   };
 
@@ -588,8 +600,13 @@ export function useLogisticsController() {
   const loadDetail = async (id) => {
     if (!id || !isLoggedIn || isAdmin) return;
 
-    const data = await fetchShipment(id);
-    setSelected(data);
+    setTransportDetailLoading(true);
+    try {
+      const data = await fetchShipment(id);
+      setSelected(data);
+    } finally {
+      setTransportDetailLoading(false);
+    }
   };
 
   const loadAdmin = async () => {
@@ -1155,6 +1172,8 @@ export function useLogisticsController() {
     publicUsers,
     publicUserKeyword,
     publicUserLoading,
+    transportLoading,
+    transportDetailLoading,
     setPublicUserKeyword,
     activeProfile,
     profileModalOpen,

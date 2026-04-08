@@ -42,7 +42,7 @@ function resolveTabComponent(authRole, dashboardTab) {
 
 export default function UserConsolePage({ controller }) {
   if (controller.routePage === 'status') {
-    return <TransportStatus onBack={() => controller.setRoutePage('main')} />;
+    return <TransportStatus controller={controller} />;
   }
 
   const title = resolveTitle(controller.auth.role, controller.dashboardTab);

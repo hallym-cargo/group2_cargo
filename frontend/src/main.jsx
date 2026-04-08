@@ -12,6 +12,7 @@ import './styles/landing.css'
 import './styles/console.css'
 import './styles/chat.css'
 import './styles/responsive.css'
+import './styles/transport-status.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
