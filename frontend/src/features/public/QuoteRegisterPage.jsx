@@ -7,7 +7,10 @@ export default function QuoteRegisterPage({ controller }) {
       <button onClick={() => controller.setDashboardTab("quotes")}>
         견적 목록으로 돌아가기
       </button>
-      <QuoteRegisterContainer />
+
+      <QuoteRegisterContainer
+        onMoveToQuoteList={() => controller.setDashboardTab("quotes")}
+      />
     </div>
   );
 }

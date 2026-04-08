@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import CargoAssistPanel from "../components/CargoAssistPanel";
 
+function formatNumber(value) {
+  if (!value) return "";
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 export default function QuoteStepCargo({
   formData = {},
   errors = {},
@@ -34,6 +39,10 @@ export default function QuoteStepCargo({
 
   const openCargoTypePanel = () => {
     setAssistPanelMode("cargoType");
+  };
+
+  const openImagePanel = () => {
+    setAssistPanelMode("images");
   };
 
   const handleSelectVehicle = (vehicleLabel) => {
@@ -97,10 +106,8 @@ export default function QuoteStepCargo({
   };
 
   const handlePriceChange = (e) => {
-    const nextValue = e.target.value;
-    if (/^\d*$/.test(nextValue)) {
-      updateField("desiredPrice", nextValue);
-    }
+    const onlyNumber = e.target.value.replace(/[^0-9]/g, "");
+    updateField("desiredPrice", onlyNumber);
   };
 
   const handlePriceProposalChange = (e) => {
@@ -108,34 +115,47 @@ export default function QuoteStepCargo({
     updateField("priceProposalAllowed", checked);
   };
 
+  const handleAddImages = (newFiles) => {
+    const prevFiles = Array.isArray(formData.cargoImages)
+      ? formData.cargoImages
+      : [];
+
+    if (prevFiles.length + newFiles.length > 5) {
+      alert("사진은 최대 5장까지 첨부할 수 있습니다. 다시 선택해주세요.");
+      return false;
+    }
+
+    updateField("cargoImages", [...prevFiles, ...newFiles]);
+    return true;
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    const nextFiles = (formData.cargoImages || []).filter(
+      (_, index) => index !== indexToRemove,
+    );
+    updateField("cargoImages", nextFiles);
+  };
+
+  const imageCount = Array.isArray(formData.cargoImages)
+    ? formData.cargoImages.length
+    : 0;
+
   return (
     <section className="quote-step-layout">
       <div className="quote-step-layout__main">
         <div className="quote-step-form">
-          {/* 차량 */}
-          <div className="form-group">
-            <div className="label-row">
-              <label htmlFor="vehicleType">
-                차량 <span className="required-mark">*</span>
-              </label>
+          {/* 희망 차량 */}
+          <div className="form-group form-group--with-option">
+            <label htmlFor="vehicleType">
+              희망 차량 <span className="required-mark">*</span>
+            </label>
 
-              <div className="inline-check-with-tooltip">
-                {showVehicleTooltip && (
-                  <span className="inline-tooltip inline-tooltip--top">
-                    화물명에 자세하게 적어주세요.
-                  </span>
-                )}
-
-                <label className="inline-check-label custom-check-label">
-                  <input
-                    type="checkbox"
-                    checked={!!formData.vehicleNeedConsult}
-                    onChange={handleVehicleConsultChange}
-                  />
-                  <span className="custom-check-box"></span>
-                  <span className="custom-check-text"> 상담 필요</span>
-                </label>
-              </div>
+            <div className="field-top-option">
+              {showVehicleTooltip && (
+                <span className="inline-tooltip inline-tooltip--top">
+                  화물명에 자세하게 적어주세요.
+                </span>
+              )}
             </div>
 
             <button
@@ -153,7 +173,7 @@ export default function QuoteStepCargo({
             >
               {formData.vehicleNeedConsult
                 ? "상담 필요로 선택됨"
-                : formData.vehicleType || "차량을 선택해 주세요"}
+                : formData.vehicleType || "희망 차량을 선택해 주세요"}
             </button>
 
             {errors.vehicleType && !formData.vehicleNeedConsult && (
@@ -202,29 +222,17 @@ export default function QuoteStepCargo({
           </div>
 
           {/* 중량 */}
-          <div className="form-group">
-            <div className="label-row">
-              <label htmlFor="weight">
-                중량 <span className="required-mark">*</span>
-              </label>
+          <div className="form-group form-group--with-option">
+            <label htmlFor="weight">
+              중량 <span className="required-mark">*</span>
+            </label>
 
-              <div className="inline-check-with-tooltip">
-                {showWeightTooltip && (
-                  <span className="inline-tooltip inline-tooltip--top">
-                    화물명에 자세하게 적어주세요.
-                  </span>
-                )}
-
-                <label className="inline-check-label custom-check-label">
-                  <input
-                    type="checkbox"
-                    checked={!!formData.weightNeedConsult}
-                    onChange={handleWeightConsultChange}
-                  />
-                  <span className="custom-check-box"></span>
-                  <span className="custom-check-text"> 상담 필요</span>
-                </label>
-              </div>
+            <div className="field-top-option">
+              {showWeightTooltip && (
+                <span className="inline-tooltip inline-tooltip--top">
+                  화물명에 자세하게 적어주세요.
+                </span>
+              )}
             </div>
 
             <div className="input-with-toggle">
@@ -290,21 +298,43 @@ export default function QuoteStepCargo({
             )}
           </div>
 
-          {/* 희망 운임 */}
+          {/* 사진 첨부 */}
           <div className="form-group">
-            <div className="label-row">
-              <label htmlFor="desiredPrice">
-                희망 운임 <span className="required-mark">*</span>
-              </label>
+            <label htmlFor="cargoImages">사진 첨부</label>
 
-              <label className="custom-check-label">
+            <button
+              type="button"
+              id="cargoImages"
+              className={`panel-trigger-input cargo-panel-trigger ${
+                assistPanelMode === "images" ? "is-active" : ""
+              } ${imageCount === 0 ? "is-placeholder" : ""}`}
+              onClick={openImagePanel}
+            >
+              {imageCount === 0
+                ? "사진을 첨부해 주세요"
+                : `${imageCount}장 첨부됨 - 다시 눌러서 변경 가능합니다.`}
+            </button>
+
+            <p className="form-helper-text">
+              오른쪽 패널에서 미리보기, 삭제, 추가 첨부가 가능합니다.
+            </p>
+          </div>
+
+          {/* 희망 운임 */}
+          <div className="form-group form-group--with-option">
+            <label htmlFor="desiredPrice">
+              희망 운임 <span className="required-mark">*</span>
+            </label>
+
+            <div className="field-top-option">
+              <label className="inline-check-label custom-check-label">
                 <input
                   type="checkbox"
                   checked={!!formData.priceProposalAllowed}
                   onChange={handlePriceProposalChange}
                 />
                 <span className="custom-check-box"></span>
-                <span className="custom-check-text"> 가격 상담 가능</span>
+                <span className="custom-check-text">가격 상담 가능</span>
               </label>
             </div>
 
@@ -313,7 +343,7 @@ export default function QuoteStepCargo({
                 id="desiredPrice"
                 name="desiredPrice"
                 type="text"
-                value={formData.desiredPrice || ""}
+                value={formatNumber(formData.desiredPrice || "")}
                 onChange={handlePriceChange}
                 placeholder="가격을 입력해 주세요"
               />
@@ -325,7 +355,7 @@ export default function QuoteStepCargo({
               있습니다.
             </p>
 
-            {errors.desiredPrice && !formData.priceProposalAllowed && (
+            {errors.desiredPrice && (
               <p className="error-text">{errors.desiredPrice}</p>
             )}
           </div>
@@ -337,8 +367,12 @@ export default function QuoteStepCargo({
           panelMode={assistPanelMode}
           selectedVehicle={formData.vehicleType || ""}
           selectedCargoType={formData.cargoType || ""}
+          selectedImages={formData.cargoImages || []}
           onSelectVehicle={handleSelectVehicle}
           onSelectCargoType={handleSelectCargoType}
+          onAddImages={handleAddImages}
+          onRemoveImage={handleRemoveImage}
+          onApplyImages={closeAssistPanel}
           onCloseVehiclePanel={closeAssistPanel}
         />
       </aside>

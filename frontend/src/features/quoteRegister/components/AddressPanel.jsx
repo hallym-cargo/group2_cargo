@@ -144,7 +144,7 @@ export default function AddressPanel({
       </div>
 
       {panelStep === "search" && (
-        <>
+        <div className="address-panel-body">
           {currentValue && (
             <div className="selected-preview">
               <strong>현재 선택된 주소</strong>
@@ -159,7 +159,7 @@ export default function AddressPanel({
               style={{ width: "100%", height: "100%" }}
             />
           </div>
-        </>
+        </div>
       )}
 
       {panelStep === "detail" && (
@@ -180,7 +180,9 @@ export default function AddressPanel({
           </div>
 
           <div className="form-group">
-            <label>층수</label>
+            <label>
+              층수 <span className="required-mark">*</span>
+            </label>
 
             <div className="floor-input-wrapper">
               <input
@@ -204,7 +206,9 @@ export default function AddressPanel({
           </div>
 
           <div className="form-group">
-            <label>건물 내 엘리베이터</label>
+            <label>
+              건물 내 엘리베이터 <span className="required-mark">*</span>
+            </label>
             <div className="elevator-toggle-group">
               <button
                 type="button"
