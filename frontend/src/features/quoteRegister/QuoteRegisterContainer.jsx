@@ -23,13 +23,21 @@ export default function QuoteRegisterContainer() {
 
   // 1단계 유효성 검사
   const isRouteStepValid =
-    !!formData.estimateName.trim() &&
-    !!formData.originAddress.trim() &&
-    !!formData.originDetailAddress.trim() &&
-    !!formData.destinationAddress.trim() &&
-    !!formData.destinationDetailAddress.trim() &&
-    !!formData.transportDate.trim() &&
-    !!formData.transportTime.trim();
+    !!(formData.estimateName || "").trim() &&
+    !!(formData.originAddress || "").trim() &&
+    !!(formData.originDetailAddress || "").trim() &&
+    !!(formData.destinationAddress || "").trim() &&
+    !!(formData.destinationDetailAddress || "").trim() &&
+    !!(formData.transportDate || "").trim() &&
+    !!(formData.transportTime || "").trim();
+
+  // 2단계 유효성 검사
+  const isCargoStepValid =
+    (formData.vehicleNeedConsult || !!(formData.vehicleType || "").trim()) &&
+    !!(formData.cargoType || "").trim() &&
+    !!(formData.cargoName || "").trim() &&
+    (formData.weightNeedConsult || !!(formData.weight || "").trim()) &&
+    (formData.priceProposalAllowed || !!(formData.desiredPrice || "").trim());
 
   let stepContent = null;
   let isCurrentStepValid = true;
@@ -58,13 +66,11 @@ export default function QuoteRegisterContainer() {
       />
     );
 
-    // 일단 2단계는 항상 다음 가능하게 둠
-    isCurrentStepValid = true;
+    isCurrentStepValid = isCargoStepValid;
   }
 
   if (currentStep === 3) {
     stepContent = <QuoteStepReview formData={formData} />;
-
     isCurrentStepValid = true;
   }
 

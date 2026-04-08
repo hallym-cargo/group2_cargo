@@ -1,3 +1,4 @@
+/* 견적 등록 전체 페이지 */
 .quote-register-page {
   min-height: 100vh;
   background: #f5f6f8;
@@ -29,23 +30,30 @@
   margin-top: 24px;
 }
 
-.quote-route-layout {
+/* Step 1, 2 공통 레이아웃
+   - Step 1과 Step 2의 전체 감싸는 크기/비율을 동일하게 맞춤
+   - 오른쪽 패널은 고정 px이 아니라 동일한 공통 폭으로 유지 */
+.quote-step-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 28px;
   align-items: start;
+  min-height: 760px;
 }
 
-.quote-route-form-panel {
+.quote-step-layout__main {
   min-width: 0;
 }
 
-.quote-route-side-panel {
+/* Step 1, 2 공통 오른쪽 패널 */
+.quote-step-side-panel {
   border-left: 1px solid #e5e7eb;
   padding-left: 24px;
-  min-height: 520px;
+  min-height: 760px;
+  box-sizing: border-box;
 }
 
+/* 공통 form */
 .form-group {
   margin-bottom: 22px;
 }
@@ -76,6 +84,13 @@
   resize: vertical;
 }
 
+.error-text {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #dc2626;
+}
+
+/* Step 1 전용 */
 .panel-trigger-input {
   width: 100%;
   min-height: 52px;
@@ -161,6 +176,7 @@
   line-height: 1.6;
 }
 
+/* 하단 액션 버튼 */
 .quote-register-actions {
   display: flex;
   justify-content: space-between;
@@ -200,12 +216,6 @@
   border: 1px solid #d1d5db;
   background: #f3f4f6;
   color: #111827;
-}
-
-.error-text {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: #dc2626;
 }
 
 /* 운송 경로 */
@@ -369,7 +379,7 @@
   margin-top: 8px;
 }
 
-/* 운송일자 패널 - 세로 2단 구조 */
+/* 운송일자 패널 */
 .schedule-panel {
   display: flex;
   flex-direction: column;
@@ -486,4 +496,545 @@
   background: #cbd5e1;
   color: #6b7280;
   cursor: not-allowed;
+}
+
+/* Step 2 보조 패널 */
+.quote-assist-panel {
+  height: 100%;
+}
+
+.quote-assist-panel__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #374151;
+}
+.quote-assist-panel__section + .quote-assist-panel__section {
+  margin-top: 20px;
+}
+
+.quote-assist-panel__text,
+.quote-assist-panel__label,
+.quote-assist-panel__list {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #6b7280;
+}
+
+.quote-assist-panel__label {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.quote-assist-panel__list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* 반응형 */
+@media (max-width: 1024px) {
+  .quote-step-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .quote-step-side-panel {
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+    padding-left: 0;
+    padding-top: 20px;
+    min-height: auto;
+  }
+}
+/* 중량: 숫자 input + 단위 select 한 줄 배치 */
+.input-with-select {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 12px;
+  align-items: center;
+}
+
+.input-with-select input,
+.input-with-select select {
+  width: 100%;
+  height: 52px;
+  border: 1px solid #dbe1ea;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 15px;
+  box-sizing: border-box;
+  background: #f8fafc;
+}
+
+.unit-select {
+  cursor: pointer;
+  appearance: none;
+  background: #f8fafc;
+}
+
+.input-with-suffix input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid #dbe1ea;
+  border-radius: 12px;
+  padding: 0 48px 0 16px;
+  font-size: 15px;
+  box-sizing: border-box;
+  background: #f8fafc;
+}
+
+/* 희망 운임: 층수 입력처럼 input + 단위 배치 */
+.price-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-input-wrapper input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid #dbe1ea;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 15px;
+  box-sizing: border-box;
+  background: #f8fafc;
+}
+
+.price-unit {
+  font-size: 14px;
+  color: #111827;
+  white-space: nowrap;
+}
+
+/* input + 단위 토글 */
+.input-with-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 토글 버튼 묶음 */
+.unit-toggle {
+  display: flex;
+  border: 1px solid #dbe1ea;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+/* 버튼 */
+.unit-toggle button {
+  flex: 1;
+  height: 52px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+/* 선택 상태 */
+.unit-toggle button.active {
+  background: #315efb;
+  color: #fff;
+}
+
+/* 안내 텍스트 */
+.form-helper-text {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.input-with-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 12px;
+  align-items: center;
+}
+
+.unit-toggle {
+  display: flex;
+  border: 1px solid #dbe1ea;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.unit-toggle button {
+  flex: 1;
+  height: 52px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.unit-toggle button.active {
+  background: #315efb;
+  color: #fff;
+}
+
+.form-helper-text {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.price-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-input-wrapper input {
+  width: 100%;
+}
+
+.price-unit {
+  font-size: 14px;
+  color: #111827;
+  white-space: nowrap;
+}
+
+/* Step 2 차량 선택용 버튼형 필드 */
+.cargo-panel-trigger {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+/* 오른쪽 보조 패널 상단 헤더 */
+.quote-assist-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.quote-assist-panel__close-button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 9999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.vehicle-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 720px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.vehicle-select-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.vehicle-select-item:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+.vehicle-select-item.is-selected {
+  background: #eef3ff;
+  border-color: #8ea2ff;
+}
+
+.vehicle-select-item__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.vehicle-select-item__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.vehicle-select-item__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.vehicle-select-item__desc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.vehicle-select-item__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vehicle-select-item__arrow {
+  font-size: 28px;
+  line-height: 1;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.vehicle-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0 4px;
+  padding: 8px 2px;
+}
+
+.vehicle-section-header__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.vehicle-section-header__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: #1e3a8a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* 차량 탭 영역 */
+.vehicle-tab-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #e5e7eb;
+  box-sizing: border-box;
+}
+
+/* 기본 탭 버튼 */
+.vehicle-tab-button {
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #4b5563;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* 활성 탭 */
+.vehicle-tab-button.is-active {
+  background: #123f7a;
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.label-row label {
+  margin-bottom: 0;
+}
+
+.inline-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inline-check-label input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.inline-check-with-tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+/* 말풍선 공통 */
+.inline-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* 위쪽 말풍선 */
+.inline-tooltip--top {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 10;
+}
+
+/* disabled 상태 시 차량/중량 글자색 통일 */
+.panel-trigger-input--disabled,
+.input-disabled-like {
+  background: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed;
+}
+
+.inline-tooltip::before,
+.inline-tooltip::after {
+  content: none;
+}
+
+/* 아래 삼각형 추가 */
+.inline-tooltip--top::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 16px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: #1f2937 transparent transparent transparent;
+}
+
+.required-mark {
+  color: #dc2626;
+  margin-left: 4px;
+}
+
+.panel-trigger-input:disabled,
+.input-with-toggle input:disabled,
+.price-input-wrapper input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.unit-toggle button:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* placeholder처럼 보이게 */
+.panel-trigger-input.is-placeholder {
+  color: #9ca3af; /* input placeholder 색 */
+}
+
+/* 선택된 상태 */
+.panel-trigger-input:not(.is-placeholder) {
+  color: #111827; /* 일반 텍스트 */
+}
+
+.panel-trigger-input--disabled {
+  color: #9ca3af !important;
+}
+
+/* 커스텀 체크박스 */
+.custom-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+
+.custom-check-label input[type="checkbox"] {
+  display: none;
+}
+
+.custom-check-box {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  position: relative;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e1;
+  background: #fff;
+  vertical-align: middle;
+}
+
+.custom-check-label input[type="checkbox"]:checked + .custom-check-box {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.custom-check-label input[type="checkbox"]:checked + .custom-check-box::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
+.custom-check-label:hover .custom-check-box {
+  border-color: #60a5fa;
+}
+
+.custom-check-text {
+  display: inline-block;
+  line-height: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
 }

@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import "./LoginPage.css";
+import ShipperSignupForm from "./ShipperSignupForm";
+import DriverSignupForm from "./DriverSignupForm";
 
 const SignupPage = ({ controller }) => {
+    const [selectedRole, setSelectedRole] = useState(null);
+
     const handleSelectRole = (role) => {
         controller.setSignupForm({
             ...controller.signupForm,
@@ -12,17 +16,34 @@ const SignupPage = ({ controller }) => {
     };
 
     return (
-        <div className="login-container">
-            <div className="login-box">
+        <div className="signup-wrapper">
 
+            {/* 왼쪽 브랜딩 영역 */}
+            <div className="signup-left">
+                <div className="signup-left-content">
+                    <h1>입찰부터 관리까지<br />한 번에 경험해보세요</h1>
+                    <p>
+                        WANT는 입찰부터 실시간 배송 현황까지<br />
+                        한 번에 확인할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+
+            {/* 오른쪽 선택 영역 */}
+            <div className="signup-right">
                 {/* 제목 */}
-                <h2 className="login-title">회원가입</h2>
+                <div className="signup-header">
+                    <h2 className="login-title">회원가입</h2>
+                    <p className="signup-subtitle">
+                        여정을 시작할 역할을 선택하세요
+                    </p>
+                </div>
 
                 <div className="signup-card-container">
 
                     <div
-                        className="signup-card"
-                        onClick={() => controller.setRoutePage("signup-shipper")}
+                        className={`signup-card ${selectedRole === "SHIPPER" ? "active" : ""}`}
+                        onClick={() => setSelectedRole("SHIPPER")}
                     >
                         <div className="signup-card-title">화주</div>
                         <div className="signup-card-desc">
@@ -32,8 +53,8 @@ const SignupPage = ({ controller }) => {
                     </div>
 
                     <div
-                        className="signup-card"
-                        onClick={() => controller.setRoutePage("signup-driver")}
+                        className={`signup-card ${selectedRole === "DRIVER" ? "active" : ""}`}
+                        onClick={() => setSelectedRole("DRIVER")}
                     >
                         <div className="signup-card-title">차주</div>
                         <div className="signup-card-desc">
@@ -41,6 +62,18 @@ const SignupPage = ({ controller }) => {
                         </div>
                     </div>
 
+                </div>
+
+                {/* 선택된 폼 영역 */}
+                <div className={`signup-form-area ${!selectedRole ? "disabled" : ""}`}>
+
+                    {selectedRole === "SHIPPER" && (
+                        <ShipperSignupForm controller={controller} />
+                    )}
+
+                    {selectedRole === "DRIVER" && (
+                        <DriverSignupForm controller={controller} />
+                    )}
                 </div>
 
                 {/* 뒤로가기 */}

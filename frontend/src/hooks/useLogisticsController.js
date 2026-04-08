@@ -766,7 +766,7 @@ export function useLogisticsController() {
   };
 
   useEffect(() => {
-    loadPublic().catch(() => {});
+    loadPublic().catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -798,17 +798,17 @@ export function useLogisticsController() {
       loadAdmin().catch((err) =>
         setMessage(err.response?.data?.message || '관리자 데이터 로드 실패'),
       );
-      loadFinance().catch(() => {});
-      loadRatings().catch(() => {});
+      loadFinance().catch(() => { });
+      loadRatings().catch(() => { });
     } else {
       loadShipments().catch((err) =>
         setMessage(err.response?.data?.message || '목록 로드 실패'),
       );
-      loadBookmarks().catch(() => {});
-      loadFinance().catch(() => {});
-      loadRatings().catch(() => {});
-      loadProfile().catch(() => {});
-      loadChatRooms().catch(() => {});
+      loadBookmarks().catch(() => { });
+      loadFinance().catch(() => { });
+      loadRatings().catch(() => { });
+      loadProfile().catch(() => { });
+      loadChatRooms().catch(() => { });
     }
   }, [isLoggedIn, isAdmin]);
 
@@ -841,26 +841,26 @@ export function useLogisticsController() {
       reconnectDelay: 4000,
       onConnect: () => {
         client.subscribe('/topic/shipments', () => {
-          loadPublic().catch(() => {});
+          loadPublic().catch(() => { });
 
           if (isAdmin) {
-            loadAdmin().catch(() => {});
-            loadFinance().catch(() => {});
-            loadRatings().catch(() => {});
+            loadAdmin().catch(() => { });
+            loadFinance().catch(() => { });
+            loadRatings().catch(() => { });
           } else if (isLoggedIn) {
-            loadShipments().catch(() => {});
-            loadBookmarks().catch(() => {});
-            loadFinance().catch(() => {});
-            loadRatings().catch(() => {});
-            loadChatRooms().catch(() => {});
-            if (selectedId) loadDetail(selectedId).catch(() => {});
+            loadShipments().catch(() => { });
+            loadBookmarks().catch(() => { });
+            loadFinance().catch(() => { });
+            loadRatings().catch(() => { });
+            loadChatRooms().catch(() => { });
+            if (selectedId) loadDetail(selectedId).catch(() => { });
           }
         });
 
         if (selectedId) {
           client.subscribe(`/topic/shipments/${selectedId}`, () => {
             if (!isAdmin && isLoggedIn && selectedId) {
-              loadDetail(selectedId).catch(() => {});
+              loadDetail(selectedId).catch(() => { });
             }
           });
         }
@@ -893,8 +893,10 @@ export function useLogisticsController() {
           ? '로그인되었습니다. 공개 메인 페이지에서도 역할별 기능으로 이동할 수 있습니다.'
           : '첫 로그인입니다. 선택 정보만 입력해도 되니 회원정보를 한 번 확인해 주세요.',
       );
+      return true; // 로그인 성공 시 true 반환
     } catch (err) {
       setMessage(err.response?.data?.message || '로그인 실패');
+      return false; // 로그인 실패 시 false 반환
     }
   };
 

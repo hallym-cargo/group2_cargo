@@ -6,7 +6,10 @@ const LoginPage = ({ controller }) => {
     const { loginForm, setLoginForm, handleLogin } = controller;
 
     const handleClickLogin = async () => {
-        await controller.handleLogin();
+        const success = await controller.handleLogin();
+        if (success) {
+            controller.setRoutePage("main"); // 로그인 성공 시 바로 이동
+        }
     };
 
     return (
@@ -51,7 +54,12 @@ const LoginPage = ({ controller }) => {
                         <input type="checkbox" />
                         로그인 유지
                     </label>
-                    <span className="find-password">비밀번호 찾기</span>
+                    <div
+                        className="find-password"
+                        onClick={() => controller.setRoutePage("forgot-password")}
+                    >
+                        비밀번호 찾기
+                    </div>
                 </div>
 
                 <button
