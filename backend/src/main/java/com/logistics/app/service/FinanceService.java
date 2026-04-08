@@ -22,7 +22,6 @@ public class FinanceService {
     private final MoneyTransactionRepository moneyTransactionRepository;
     private final ShipmentRepository shipmentRepository;
     private final UserRepository userRepository;
-    private final OfferRepository offerRepository;
     private final NotificationService notificationService;
 
     public FinanceService(MoneyTransactionRepository moneyTransactionRepository,
