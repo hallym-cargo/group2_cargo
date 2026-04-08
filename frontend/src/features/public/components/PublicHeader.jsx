@@ -31,6 +31,8 @@ export default function PublicHeader({
   return (
     <header className="landing-header">
       <div className="landing-header__inner">
+
+        {/* 로고 */}
         <button
           type="button"
           className="landing-brand"
@@ -40,6 +42,7 @@ export default function PublicHeader({
           <AppLogo subtitle="운송 운영 플랫폼" hideTitle />
         </button>
 
+        {/* 메뉴 */}
         <nav className="landing-nav">
           <button
             type="button"
@@ -50,40 +53,20 @@ export default function PublicHeader({
 
           <button
             type="button"
+            onClick={() => moveToMain(controller, 'board')}
+          >
+            배차보드
+          </button>
+
+          <button
+            type="button"
             onClick={() => moveToMain(controller, 'notice-faq')}
           >
-            공지 · 문의
-          </button>
-          <button
-            type="button"
-            className={navButtonClass(currentDashboard === 'quotes')}
-            onClick={() => setDashboardTab('quotes')}
-          >
-            견적 목록 보기
-          </button>
-          <button
-            type="button"
-            className={navButtonClass(currentRoute === 'status')}
-            onClick={() => controller.setRoutePage('status')}
-          >
-            운송 현황
-          </button>
-          <button
-            type="button"
-            className={navButtonClass(currentRoute === 'shippers')}
-            onClick={() => controller.openPublicUserPage('SHIPPER')}
-          >
-            화주 찾기
-          </button>
-          <button
-            type="button"
-            className={navButtonClass(currentRoute === 'drivers')}
-            onClick={() => controller.openPublicUserPage('DRIVER')}
-          >
-            차주 찾기
+            FAQ · 문의
           </button>
         </nav>
 
+        {/* 오른쪽 버튼 */}
         <div className="landing-header__actions">
           {isLoggedIn ? (
             <>

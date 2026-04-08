@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import PublicHeader from '../features/public/components/PublicHeader'
+import ShipperHeader from '../features/public/components/ShipperHeader';
+import DriverHeader from '../features/public/components/DriverHeader';
 import KakaoMapView from '../components/KakaoMapView'
 import {
   formatCurrency,
@@ -338,14 +340,33 @@ export default function TransportStatus({ controller }) {
 
   return (
     <div className="public-shell landing-shell transport-shell">
-      <PublicHeader
-        isLoggedIn={controller.isLoggedIn}
-        authMode={controller.authMode}
-        setAuthMode={controller.setAuthMode}
-        setDashboardTab={controller.setDashboardTab}
-        logout={controller.logout}
-        controller={controller}
-      />
+      {
+        controller.isLoggedIn ? (
+          controller.auth.role === 'DRIVER' ? (
+            <DriverHeader controller={controller} />
+          ) : controller.auth.role === 'SHIPPER' ? (
+            <ShipperHeader controller={controller} />
+          ) : (
+            <PublicHeader
+              isLoggedIn={controller.isLoggedIn}
+              authMode={controller.authMode}
+              setAuthMode={controller.setAuthMode}
+              setDashboardTab={controller.setDashboardTab}
+              logout={controller.logout}
+              controller={controller}
+            />
+          )
+        ) : (
+          <PublicHeader
+            isLoggedIn={controller.isLoggedIn}
+            authMode={controller.authMode}
+            setAuthMode={controller.setAuthMode}
+            setDashboardTab={controller.setDashboardTab}
+            logout={controller.logout}
+            controller={controller}
+          />
+        )
+      }
 
       <section className="transport-hero">
         <div className="transport-hero__inner">

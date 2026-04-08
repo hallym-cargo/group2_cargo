@@ -1,5 +1,7 @@
 import PublicSectionLoading from '../../../components/common/PublicSectionLoading'
 import PublicHeader from '../components/PublicHeader'
+import ShipperHeader from '../components/ShipperHeader'
+import DriverHeader from '../components/DriverHeader'
 import { formatRatingSummary, roleText } from '../../../utils/formatters'
 
 export default function PublicUserSearchPage({ controller, role }) {
@@ -33,14 +35,35 @@ export default function PublicUserSearchPage({ controller, role }) {
 
   return (
     <div className="public-shell landing-shell public-directory-shell">
-      <PublicHeader
-        isLoggedIn={controller.isLoggedIn}
-        authMode={controller.authMode}
-        setAuthMode={controller.setAuthMode}
-        setDashboardTab={controller.setDashboardTab}
-        logout={controller.logout}
-        controller={controller}
-      />
+      {
+        controller.isLoggedIn ? (
+          controller.auth.role === 'DRIVER' ? (
+            <DriverHeader controller={controller} />
+          ) : controller.auth.role === 'SHIPPER' ? (
+            <ShipperHeader controller={controller} />
+          ) : controller.auth?.role === 'ADMIN' ? (
+            <PublicHeader controller={controller} />
+          ) : (
+            <PublicHeader
+              isLoggedIn={controller.isLoggedIn}
+              authMode={controller.authMode}
+              setAuthMode={controller.setAuthMode}
+              setDashboardTab={controller.setDashboardTab}
+              logout={controller.logout}
+              controller={controller}
+            />
+          )
+        ) : (
+          <PublicHeader
+            isLoggedIn={controller.isLoggedIn}
+            authMode={controller.authMode}
+            setAuthMode={controller.setAuthMode}
+            setDashboardTab={controller.setDashboardTab}
+            logout={controller.logout}
+            controller={controller}
+          />
+        )
+      }
 
       <section className="landing-info public-directory-hero">
         <div className="landing-info__inner">
