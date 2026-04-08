@@ -73,7 +73,8 @@ export function useLogisticsController() {
     role: localStorage.getItem('role') || '',
     profileCompleted: localStorage.getItem('profileCompleted') === 'true',
   }));
-
+  const [receipt, setReceipt] = useState(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const [message, setMessage] = useState('');
   // const [authMode, setAuthMode] = useState('login');
   const [authMode, setAuthMode] = useState('');
@@ -180,6 +181,22 @@ export function useLogisticsController() {
     });
   }, [publicData.liveBoard, publicStatusFilter]);
 
+  //영수증 팝업
+  const openReceipt = async (shipmentId) => {
+    try {
+      const data = await fetchReceipt(shipmentId);
+      setReceipt(data);
+      setReceiptOpen(true);
+    } catch (err) {
+      console.error(err);
+      setMessage('영수증 불러오기 실패');
+    }
+  };
+
+  const closeReceipt = () => {
+    setReceiptOpen(false);
+    setReceipt(null);
+  };
   const selectedPublic = useMemo(() => {
     return (
       publicData.liveBoard?.find((item) => item.id === publicSelectedId) ||
@@ -880,6 +897,9 @@ export function useLogisticsController() {
       reloadChatRoom(chatRoom.targetProfile.id);
     }, 2000);
 
+
+
+
     return () => clearInterval(timer);
   }, [chatModalOpen, chatRoom?.targetProfile?.id, isLoggedIn]);
 
@@ -1289,5 +1309,9 @@ export function useLogisticsController() {
     loadPublic,
     deleteAdminFaq,
     deleteAdminNotice,
+    receipt,
+    receiptOpen,
+    openReceipt,
+    closeReceipt,
   };
 }

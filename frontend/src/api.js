@@ -49,6 +49,9 @@ export const sendChatMessage = async (targetUserId, content) =>
 export const createInquiry = async (payload) =>
   (await api.post('/public/inquiries', payload)).data;
 
+//영수증 
+export const fetchReceipt = async (shipmentId) =>
+  (await api.get(`/api/finance/receipt/${shipmentId}`)).data
 export const fetchDrivingRoute = async ({
   startLat,
   startLng,

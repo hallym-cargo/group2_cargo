@@ -1,11 +1,15 @@
 package com.logistics.app.controller;
 
 import com.logistics.app.dto.FinanceDtos;
+import com.logistics.app.dto.ReceiptDTO;
 import com.logistics.app.entity.User;
 import com.logistics.app.service.AuthService;
 import com.logistics.app.service.FinanceService;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/finance")
+
 public class FinanceController {
 
     private final FinanceService financeService;
@@ -28,6 +33,11 @@ public class FinanceController {
         return financeService.getSummary(currentUser(authentication));
     }
 
+    @GetMapping("/receipt/{shipmentId}")
+    public ResponseEntity<ReceiptDTO> getReceipt(@PathVariable Long shipmentId) {
+        return ResponseEntity.ok(financeService.getReceipt(shipmentId));
+    }
+    
     @GetMapping("/transactions")
     public List<FinanceDtos.MoneyTransactionResponse> transactions(Authentication authentication) {
         return financeService.getTransactions(currentUser(authentication));
