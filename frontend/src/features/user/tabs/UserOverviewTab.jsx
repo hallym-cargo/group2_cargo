@@ -1,6 +1,9 @@
 import ProfilePreviewCard from '../../../components/common/ProfilePreviewCard'
 import SectionTitle from '../../../components/common/SectionTitle'
-import { formatCurrency, statusText } from '../../../utils/formatters'
+import VehicleTypeSelector from '../../../components/common/VehicleTypeSelector'
+import { formatCurrency, resolveMediaUrl, statusText } from '../../../utils/formatters'
+import { useRef } from 'react'
+import { parseVehicleTypeString, stringifyVehicleTypes } from '../../../constants/vehicleCatalog'
 
 function renderPenaltyStatus(profile) {
   if (!profile) return '정보 불러오는 중'
@@ -18,6 +21,14 @@ export default function UserOverviewTab({ controller }) {
     setProfileForm,
     signupForm,
     handleSaveProfile,
+    handleProfileImageFileChange,
+    clearProfileImage,
+    profileSaving,
+    profileImageUploading,
+    profileImageUploadError,
+    selectedProfileImageName,
+    profileSaveSuccessOpen,
+    setProfileSaveSuccessOpen,
     roleTheme,
     summary,
     userAlerts,
@@ -28,9 +39,12 @@ export default function UserOverviewTab({ controller }) {
     setDashboardTab,
   } = controller
 
+  const profileImageInputRef = useRef(null)
+
   const penaltyScore = Number(profile?.penaltyScore30d || 0)
   const cancelRate = Number(profile?.cancelRate || 0)
   const penaltyStatus = renderPenaltyStatus(profile)
+  const selectedVehicles = parseVehicleTypeString(profileForm.vehicleType)
 
   return (
     <div className="page-stack">
@@ -41,18 +55,159 @@ export default function UserOverviewTab({ controller }) {
       )}
 
       <div className="admin-grid-2">
-        <div className="surface">
+        <div className="surface profile-edit-surface">
+          {profileSaving && (
+            <div className="profile-save-panelOverlay" role="status" aria-live="polite">
+              <div className="transport-loadingCard profile-save-panelOverlay__card">
+                <div className="transport-loadingBadge">PROFILE SAVE</div>
+                <div className="transport-loadingVisual" aria-hidden="true">
+                  <span className="transport-loadingDot transport-loadingDot--left" />
+                  <span className="transport-loadingTrack">
+                    <span className="transport-loadingTruck">🚚</span>
+                  </span>
+                  <span className="transport-loadingDot transport-loadingDot--right" />
+                </div>
+                <strong>회원정보를 저장하고 있어요</strong>
+                <p>입력한 프로필 정보와 보유 차량 정보를 반영하는 중입니다.</p>
+              </div>
+            </div>
+          )}
+
+          {profileSaveSuccessOpen && (
+            <div className="profile-save-panelOverlay profile-save-panelOverlay--success">
+              <div className="transport-loadingCard profile-save-panelOverlay__card profile-save-panelOverlay__card--success">
+                <div className="transport-loadingBadge">PROFILE SAVE</div>
+                <strong>저장되었습니다.</strong>
+                <p>회원정보가 정상적으로 저장되었습니다.</p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setProfileSaveSuccessOpen(false)}
+                >
+                  확인
+                </button>
+              </div>
+            </div>
+          )}
           <SectionTitle
             title="회원정보 수정"
             desc="현재 회원가입 필수 정보는 유지하고, 아래 정보는 선택으로 추가할 수 있습니다."
           />
 
           <div className="form-stack">
-            <input
-              placeholder="프로필 사진 URL"
-              value={profileForm.profileImageUrl}
-              onChange={(e) => setProfileForm({ ...profileForm, profileImageUrl: e.target.value })}
-            />
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 0 14px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: '100%' }}>
+                <div style={{ position: 'relative', width: 96, height: 96, flexShrink: 0 }}>
+                  {profileForm.profileImageUrl ? (
+                    <img
+                      src={resolveMediaUrl(profileForm.profileImageUrl)}
+                      alt="프로필 사진"
+                      style={{
+                        width: 96,
+                        height: 96,
+                        minWidth: 96,
+                        minHeight: 96,
+                        maxWidth: 96,
+                        maxHeight: 96,
+                        borderRadius: 14,
+                        objectFit: 'cover',
+                        display: 'block',
+                        border: '1px solid var(--line)',
+                        boxShadow: '0 10px 24px rgba(15, 23, 42, 0.12)',
+                        background: '#fff',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="identity-mark"
+                      style={{
+                        width: 96,
+                        height: 96,
+                        minWidth: 96,
+                        minHeight: 96,
+                        maxWidth: 96,
+                        maxHeight: 96,
+                        borderRadius: 14,
+                        border: '1px solid var(--line)',
+                        boxShadow: '0 10px 24px rgba(15, 23, 42, 0.12)',
+                        fontSize: 34,
+                      }}
+                    >
+                      {(auth.name || '?').slice(0, 1)}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    aria-label="프로필 사진 선택"
+                    onClick={() => profileImageInputRef.current?.click()}
+                    style={{
+                      position: 'absolute',
+                      right: -8,
+                      bottom: -8,
+                      width: 32,
+                      height: 32,
+                      border: 0,
+                      background: 'transparent',
+                      padding: 0,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 999,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(255,255,255,0.96)',
+                        boxShadow: '0 6px 14px rgba(15, 23, 42, 0.20)',
+                        fontSize: 14,
+                        lineHeight: 1,
+                      }}
+                    >
+                      📷
+                    </span>
+                  </button>
+
+                  <input
+                    ref={profileImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        handleProfileImageFileChange(file)
+                      }
+                      e.target.value = ''
+                    }}
+                  />
+                </div>
+
+                {profileImageUploading && (
+                  <div style={{ fontSize: 14, color: 'var(--text-muted)', textAlign: 'center' }}>이미지 업로드 중...</div>
+                )}
+                {!profileImageUploading && profileImageUploadError && (
+                  <div style={{ fontSize: 14, color: 'var(--red)', fontWeight: 700, textAlign: 'center' }}>{profileImageUploadError}</div>
+                )}
+
+                {!!profileForm.profileImageUrl && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ minWidth: 190, alignSelf: 'center' }}
+                    onClick={clearProfileImage}
+                  >
+                    기본 프로필로 돌아가기
+                  </button>
+                )}
+              </div>
+            </div>
             <textarea
               rows="4"
               placeholder="자기소개"
@@ -76,13 +231,36 @@ export default function UserOverviewTab({ controller }) {
                 onChange={(e) => setProfileForm({ ...profileForm, contactPhone: e.target.value })}
               />
             </div>
+
+            {auth.role === 'DRIVER' && (
+              <div className="form-stack">
+                <div>
+                  <strong style={{ display: 'block', marginBottom: 8 }}>보유 차량 선택</strong>
+                  <VehicleTypeSelector
+                    values={selectedVehicles}
+                    onChange={(values) =>
+                      setProfileForm({
+                        ...profileForm,
+                        vehicleType: stringifyVehicleTypes(values),
+                      })
+                    }
+                    inputClassName="login-input"
+                    placeholder="보유 차량을 검색하거나 아래 목록에서 선택해 주세요"
+                  />
+                  <small style={{ display: 'block', marginTop: 8, color: '#6f7b91' }}>
+                    여러 차량을 동시에 선택할 수 있습니다.
+                  </small>
+                </div>
+              </div>
+            )}
+
             <button className="btn btn-primary" onClick={handleSaveProfile}>
               회원정보 저장
             </button>
           </div>
         </div>
 
-        <div className="surface">
+        <div className="surface profile-edit-surface">
           <SectionTitle title="내 공개 프로필 미리보기" desc="거래 상대가 거래 전에 볼 수 있는 정보입니다." />
           <ProfilePreviewCard
             title="내 프로필"
@@ -94,7 +272,7 @@ export default function UserOverviewTab({ controller }) {
                     name: auth.name,
                     role: auth.role,
                     companyName: signupForm.companyName,
-                    vehicleType: signupForm.vehicleType,
+                    vehicleType: profileForm.vehicleType || signupForm.vehicleType,
                     averageRating: profile?.averageRating,
                     ratingCount: profile?.ratingCount,
                     completedCount: profile?.completedCount,
@@ -158,7 +336,7 @@ export default function UserOverviewTab({ controller }) {
       </div>
 
       <div className="admin-grid-2">
-        <div className="surface">
+        <div className="surface profile-edit-surface">
           <SectionTitle title="운영 알림" desc="역할에 따라 먼저 봐야 할 항목을 자동으로 묶었습니다." />
           <div className="signal-grid">
             {userAlerts.map((item) => (
@@ -171,7 +349,7 @@ export default function UserOverviewTab({ controller }) {
           </div>
         </div>
 
-        <div className="surface">
+        <div className="surface profile-edit-surface">
           <SectionTitle title="빠른 액션" desc="자주 쓰는 흐름으로 바로 이동합니다." />
           <div className="shortcut-grid">
             {roleQuickActions.map((item) => (
@@ -186,7 +364,7 @@ export default function UserOverviewTab({ controller }) {
       </div>
 
       <div className="admin-grid-2">
-        <div className="surface">
+        <div className="surface profile-edit-surface">
           <SectionTitle title="최근 배차" />
           <table className="board-table compact">
             <thead>
@@ -223,7 +401,7 @@ export default function UserOverviewTab({ controller }) {
           </table>
         </div>
 
-        <div className="surface">
+        <div className="surface profile-edit-surface">
           <SectionTitle title="즐겨찾기" />
           <div className="list-stack">
             {bookmarks.length ? (

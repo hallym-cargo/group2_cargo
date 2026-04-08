@@ -31,6 +31,15 @@ export const updateMyProfile = async (payload) =>
 export const fetchPublicProfile = async (userId) =>
   (await api.get(`/api/users/${userId}/public-profile`)).data;
 
+export const uploadMyProfileImage = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return (
+    await api.post('/api/users/me/profile-image', formData)
+  ).data;
+};
+
 export const fetchPublicUsers = async (role, keyword = '') =>
   (await api.get('/api/users/public-search', { params: { role, keyword } })).data;
 
