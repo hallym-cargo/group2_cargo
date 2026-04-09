@@ -270,7 +270,11 @@ public class FinanceService {
                 .feeAmount(tx.getFeeAmount())
                 .netAmount(tx.getNetAmount())
                 .description(tx.getDescription())
-                .paymentMethod(tx.getPaymentMethod() != null ? tx.getPaymentMethod() : shipment.getPaymentMethod())
+                .paymentMethod(
+                        tx.getPaymentMethod() != null
+                                ? tx.getPaymentMethod()
+                                : (tx.getShipment() != null ? tx.getShipment().getPaymentMethod() : null)
+                )
                 .createdAt(tx.getCreatedAt())
                 .build();
     }
