@@ -13,7 +13,7 @@ export default function PublicInfoSection({ controller }) {
         </div>
 
         <div className="landing-infoGrid">
-          <article className="landing-infoPanel" data-reveal>
+          {/* <article className="landing-infoPanel" data-reveal>
             <div className="landing-infoPanel__top">
               <span>공지사항</span>
               <strong>운영 안내</strong>
@@ -31,7 +31,7 @@ export default function PublicInfoSection({ controller }) {
                 </div>
               ))}
             </div>
-          </article>
+          </article> */}
 
           <article className="landing-infoPanel" data-reveal>
             <div className="landing-infoPanel__top">

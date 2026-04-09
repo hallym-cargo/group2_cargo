@@ -7,7 +7,7 @@ import QuoteStepReview from "./steps/QuoteStepReview";
 import useQuoteRegisterForm from "./hooks/useQuoteRegisterForm";
 import { QUOTE_REGISTER_STEPS } from "./constants/quoteRegisterSteps";
 
-export default function QuoteRegisterContainer() {
+export default function QuoteRegisterContainer({ onMoveToQuoteList }) {
   const {
     currentStep,
     formData,
@@ -37,7 +37,19 @@ export default function QuoteRegisterContainer() {
     !!(formData.cargoType || "").trim() &&
     !!(formData.cargoName || "").trim() &&
     (formData.weightNeedConsult || !!(formData.weight || "").trim()) &&
-    (formData.priceProposalAllowed || !!(formData.desiredPrice || "").trim());
+    !!(formData.desiredPrice || "").trim();
+
+  const handleSubmit = async () => {
+    const isSuccess = await submitForm();
+
+    if (!isSuccess) return;
+
+    alert("견적이 등록되었습니다.");
+
+    if (typeof onMoveToQuoteList === "function") {
+      onMoveToQuoteList();
+    }
+  };
 
   let stepContent = null;
   let isCurrentStepValid = true;
@@ -89,7 +101,7 @@ export default function QuoteRegisterContainer() {
           totalSteps={QUOTE_REGISTER_STEPS.length}
           onPrev={goPrevStep}
           onNext={goNextStep}
-          onSubmit={submitForm}
+          onSubmit={handleSubmit}
           isCurrentStepValid={isCurrentStepValid}
         />
       </div>
