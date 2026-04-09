@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import PublicHeader from '../features/public/components/PublicHeader'
 import ShipperHeader from '../features/public/components/ShipperHeader';
 import DriverHeader from '../features/public/components/DriverHeader';
@@ -117,6 +117,21 @@ function normalizePublicItem(item) {
     histories: item.histories || [],
     offers: item.offers || [],
   }
+}
+
+function isTransportMine(item, auth) {
+  if (!item || !auth?.role) return false
+
+  if (auth.role === 'SHIPPER') {
+    return item.shipperId === Number(localStorage.getItem('userId') || item.shipperId || 0)
+  }
+
+  if (auth.role === 'DRIVER') {
+    if (item.assignedToMe) return true
+    return item.status === 'BIDDING' && !!item.hasMyOffer
+  }
+
+  return false
 }
 
 
@@ -254,8 +269,11 @@ export default function TransportStatus({ controller }) {
     message,
   } = controller
 
-  const [tab, setTab] = useState(() => (isLoggedIn && !isAdmin ? 'MY' : 'ALL'))
-  const [initialLoadingVisible, setInitialLoadingVisible] = useState(true)
+  const [tab, setTab] = useState('ALL')
+  const [showDetailLoading, setShowDetailLoading] = useState(false)
+  const detailLoadingStartedAtRef = useRef(0)
+  const detailTransitionReadyRef = useRef(false)
+  const detailTransitionKeyRef = useRef('')
 
   const shipmentItems = useMemo(
     () => (shipments || []).map((item) => normalizeShipment(item, auth, bookmarks)),
@@ -268,45 +286,105 @@ export default function TransportStatus({ controller }) {
   )
 
   useEffect(() => {
-    setTab(isLoggedIn && !isAdmin ? 'MY' : 'ALL')
+    setTab('ALL')
   }, [isLoggedIn, isAdmin])
 
-  useEffect(() => {
-    if (transportLoading || transportDetailLoading) {
-      setInitialLoadingVisible(true)
-      return undefined
-    }
-
-    const timer = window.setTimeout(() => {
-      setInitialLoadingVisible(false)
-    }, 250)
-
-    return () => window.clearTimeout(timer)
-  }, [transportLoading, transportDetailLoading, shipmentItems.length, publicItems.length])
 
   const sourceItems = isLoggedIn && !isAdmin ? shipmentItems : publicItems
 
   const visibleItems = useMemo(() => {
     if (!(isLoggedIn && !isAdmin)) return sourceItems
-    return tab === 'MY' ? sourceItems.filter((item) => item.isMine) : sourceItems
-  }, [isLoggedIn, isAdmin, sourceItems, tab])
+    return tab === 'MY'
+      ? sourceItems.filter((item) => isTransportMine(item, auth))
+      : sourceItems
+  }, [isLoggedIn, isAdmin, sourceItems, tab, auth])
+
+  const hasVisibleSelected = !!selectedId && visibleItems.some((item) => item.id === selectedId)
+  const matchingSelected = isLoggedIn && !isAdmin && selected && selected.id === selectedId && visibleItems.some((item) => item.id === selected.id)
+    ? normalizeShipment(selected, auth, bookmarks)
+    : null
 
   const activeItem = isLoggedIn && !isAdmin
-    ? (selected ? normalizeShipment(selected, auth, bookmarks) : visibleItems.find((item) => item.id === selectedId) || visibleItems[0] || null)
+    ? (matchingSelected || visibleItems.find((item) => item.id === selectedId) || visibleItems[0] || null)
     : (selectedPublic ? normalizePublicItem(selectedPublic) : visibleItems.find((item) => item.id === publicSelectedId) || visibleItems[0] || null)
 
   const overallProgressPercent = getOverallProgressPercent(activeItem?.status)
   const transitProgressPercent = getTransitProgressPercent(activeItem)
-  const showLoadingOverlay = transportLoading || transportDetailLoading || initialLoadingVisible
+  const detailPanelLoading = isLoggedIn && !isAdmin
+    ? (!!selectedId && (transportDetailLoading || !matchingSelected))
+    : false
 
   useEffect(() => {
-    if (!visibleItems.length) return
+    if (!(isLoggedIn && !isAdmin)) {
+      detailTransitionReadyRef.current = false
+      detailTransitionKeyRef.current = ''
+      return
+    }
+
+    const nextKey = `${tab}:${activeItem?.id ?? 'none'}`
+
+    if (!detailTransitionReadyRef.current) {
+      detailTransitionReadyRef.current = true
+      detailTransitionKeyRef.current = nextKey
+      return
+    }
+
+    if (detailTransitionKeyRef.current === nextKey) return
+
+    detailTransitionKeyRef.current = nextKey
+
+    if (!activeItem) {
+      setShowDetailLoading(false)
+      detailLoadingStartedAtRef.current = 0
+      return
+    }
+
+    detailLoadingStartedAtRef.current = Date.now()
+    setShowDetailLoading(true)
+  }, [tab, activeItem?.id, isLoggedIn, isAdmin])
+
+  useEffect(() => {
+    if (!(isLoggedIn && !isAdmin)) {
+      setShowDetailLoading(false)
+      detailLoadingStartedAtRef.current = 0
+      return undefined
+    }
+
+    if (detailPanelLoading) {
+      if (!showDetailLoading) {
+        detailLoadingStartedAtRef.current = Date.now()
+        setShowDetailLoading(true)
+      }
+      return undefined
+    }
+
+    if (!showDetailLoading) return undefined
+
+    const elapsed = Date.now() - detailLoadingStartedAtRef.current
+    const remaining = Math.max(0, 1900 - elapsed)
+    const timeoutId = window.setTimeout(() => {
+      setShowDetailLoading(false)
+      detailLoadingStartedAtRef.current = 0
+    }, remaining)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [detailPanelLoading, isLoggedIn, isAdmin, showDetailLoading])
+
+  useEffect(() => {
     if (isLoggedIn && !isAdmin) {
+      if (!visibleItems.length) {
+        if (selectedId !== null) setSelectedId(null)
+        return
+      }
+
       if (!selectedId || !visibleItems.some((item) => item.id === selectedId)) {
         setSelectedId(visibleItems[0].id)
       }
       return
     }
+
+    if (!visibleItems.length) return
+
     if (!publicSelectedId || !visibleItems.some((item) => item.id === publicSelectedId)) {
       setPublicSelectedId(visibleItems[0].id)
     }
@@ -316,15 +394,16 @@ export default function TransportStatus({ controller }) {
   const stepState = buildStepState(activeItem?.status, activeItem)
 
   const pendingRatings = ratingsDashboard?.pendingRatings || []
-  const canRate = !!activeItem?.isMine && activeItem?.status === 'COMPLETED' && pendingRatings.some((item) => item.shipmentId === activeItem.id)
-  const canSettle = !!activeItem?.isMine && activeItem?.status === 'COMPLETED'
+  const isMyTransportTrade = isTransportMine(activeItem, auth)
+  const canRate = !!isMyTransportTrade && activeItem?.status === 'COMPLETED' && pendingRatings.some((item) => item.shipmentId === activeItem.id)
+  const canSettle = !!isMyTransportTrade && activeItem?.status === 'COMPLETED'
   const canStart = auth.role === 'DRIVER' && !!activeItem?.assignedToMe && activeItem?.status === 'CONFIRMED'
   const canComplete = auth.role === 'DRIVER' && !!activeItem?.assignedToMe && activeItem?.status === 'IN_TRANSIT'
-  const canCancel = !!activeItem?.isMine && ['BIDDING', 'CONFIRMED', 'IN_TRANSIT'].includes(activeItem?.status)
+  const canCancel = !!isMyTransportTrade && ['BIDDING', 'CONFIRMED', 'IN_TRANSIT'].includes(activeItem?.status)
 
   const handleSelectItem = (item) => {
     if (isLoggedIn && !isAdmin) {
-      if (item.canAccessDetail !== false) setSelectedId(item.id)
+      setSelectedId(item.id)
       return
     }
     setPublicSelectedId(item.id)
@@ -397,14 +476,11 @@ export default function TransportStatus({ controller }) {
       </section>
 
       <section className="transport-stage">
-        <div className={`transport-stage__inner transport-stage__inner--status ${showLoadingOverlay ? 'is-loading' : ''}`} aria-busy={showLoadingOverlay}>
-          {showLoadingOverlay && (
-            <TransportStatusLoading detail={transportDetailLoading && !transportLoading} />
-          )}
+        <div className="transport-stage__inner transport-stage__inner--status">
           <aside className="transport-listPanel surface">
             <div className="transport-listPanel__head">
               <div>
-                <strong>{tab === 'MY' ? '내 거래' : '배차 목록'}</strong>
+                <strong>{tab === 'MY' ? '내 거래' : '전체 기록'}</strong>
                 <small>{visibleItems.length}건</small>
               </div>
               <span className="transport-listPanel__hint">5개씩 표시</span>
@@ -441,7 +517,8 @@ export default function TransportStatus({ controller }) {
             </div>
           </aside>
 
-          <div className="transport-detailPanel surface">
+          <div className={`transport-detailPanel surface ${showDetailLoading && activeItem ? 'is-loading' : ''}`} aria-busy={showDetailLoading && !!activeItem}>
+            {showDetailLoading && activeItem ? <TransportStatusLoading detail /> : null}
             {activeItem ? (
               <>
                 <div className="transport-detailHead">
@@ -471,7 +548,7 @@ export default function TransportStatus({ controller }) {
 
                 <div className="transport-mainGrid">
                   <div className="transport-mapCard">
-                    {isLoggedIn && !isAdmin && activeItem.canAccessDetail !== false ? (
+                    {isLoggedIn && !isAdmin ? (
                       <KakaoMapView shipment={activeItem} />
                     ) : (
                       <div className="transport-mapPlaceholder">

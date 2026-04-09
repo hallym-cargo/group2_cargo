@@ -68,7 +68,7 @@ export default function UserBoardTab({ controller }) {
                 key={item.id}
                 className={selectedId === item.id ? 'is-selected' : ''}
                 onClick={() => {
-                  if (item.canAccessDetail !== false) setSelectedId(item.id)
+                  setSelectedId(item.id)
                 }}
               >
                 <td>
@@ -100,7 +100,7 @@ export default function UserBoardTab({ controller }) {
                       {item.assignedToMe && <span className="tag tag-dark">내 배차</span>}
                       {!item.assignedToMe && item.hasMyOffer && <span className="tag">내 입찰</span>}
                       {!item.assignedToMe && !item.hasMyOffer && item.status === 'BIDDING' && (
-                        <span className="tag">공개</span>
+                        <span className="tag">입찰 가능</span>
                       )}
                       {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
                     </div>
