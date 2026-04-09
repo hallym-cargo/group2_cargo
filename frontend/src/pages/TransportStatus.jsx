@@ -10,6 +10,8 @@ import {
   roleText,
   statusText,
 } from '../utils/formatters'
+import ReceiptModal from "../components/common/ReceiptModal"
+import { fetchReceipt } from "../api"
 
 const STATUS_META = {
   REQUESTED: { label: '요청 접수', short: '요청', emoji: '📝', tone: 'requested' },
@@ -547,7 +549,7 @@ export default function TransportStatus({ controller }) {
                     <div className="transport-cardTitle">내 거래 액션</div>
                     <div className="transport-actionButtons">
                       {canStart && (
-                        <button type="button" className="landing-btn landing-btn--primary" onClick={handleStart}>운행 시작</button>
+                        <button type="button" className="landing-btn landing-btn--primary" onClick={handleStart} disabled={!selected?.paid}>운행 시작</button>
                       )}
                       {canComplete && (
                         <>

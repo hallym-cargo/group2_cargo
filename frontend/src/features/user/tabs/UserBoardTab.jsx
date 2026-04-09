@@ -18,6 +18,7 @@ export default function UserBoardTab({ controller }) {
     setOfferForm,
     handleCreateOffer,
     handleAcceptOffer,
+    handlePayShipment,
     handleStart,
     handleCompletionProofChange,
     completionProof,
@@ -327,6 +328,20 @@ export default function UserBoardTab({ controller }) {
                 </div>
               )}
 
+              {auth.role === 'SHIPPER' && selected.status === 'CONFIRMED' && (
+                <div className="surface-sub">
+                  <strong>{selected.paid ? '결제 완료' : '결제 필요'}</strong>
+                  <p className="section-desc">
+                    {selected.paid
+                      ? '결제가 완료되어 차주가 운반을 시작할 수 있습니다.'
+                      : `선택한 차주에게 ${formatCurrency(selected.agreedPrice || 0)}을 결제해야 운행이 시작됩니다.`}
+                  </p>
+                  <button className="btn btn-primary" onClick={handlePayShipment} disabled={selected.paid}>
+                    {selected.paid ? '결제 완료' : '바로 결제하기'}
+                  </button>
+                </div>
+              )}
+
               {auth.role === 'SHIPPER' && (
                 <div className="list-stack">
                   {(selected.offers || []).length ? (
@@ -362,9 +377,17 @@ export default function UserBoardTab({ controller }) {
               {auth.role === 'DRIVER' && selected.assignedDriverName === auth.name && (
                 <div className="form-stack">
                   {selected.status === 'CONFIRMED' && (
-                    <button className="btn btn-primary" onClick={handleStart}>
-                      운반 시작
-                    </button>
+                    <>
+                      {!selected.paid && (
+                        <div className="surface-sub">
+                          <strong>결제 대기</strong>
+                          <p className="section-desc">화주가 결제를 완료하면 운반 시작 버튼을 사용할 수 있습니다.</p>
+                        </div>
+                      )}
+                      <button className="btn btn-primary" onClick={handleStart} disabled={!selected.paid}>
+                        운반 시작
+                      </button>
+                    </>
                   )}
 
                   {selected.status === 'IN_TRANSIT' && (

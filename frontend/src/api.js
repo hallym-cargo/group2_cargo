@@ -9,9 +9,16 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  if (config.skipAuth) {
+    delete config.headers.Authorization; // 🔥 강제 제거
+  } else if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
 });
+
 
 export const login = async (payload) =>
   (await api.post('/auth/login', payload)).data;
@@ -31,6 +38,15 @@ export const updateMyProfile = async (payload) =>
 export const fetchPublicProfile = async (userId) =>
   (await api.get(`/api/users/${userId}/public-profile`)).data;
 
+export const uploadMyProfileImage = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return (
+    await api.post('/api/users/me/profile-image', formData)
+  ).data;
+};
+
 export const fetchPublicUsers = async (role, keyword = '') =>
   (await api.get('/api/users/public-search', { params: { role, keyword } })).data;
 
@@ -49,6 +65,7 @@ export const sendChatMessage = async (targetUserId, content) =>
 export const createInquiry = async (payload) =>
   (await api.post('/public/inquiries', payload)).data;
 
+//영수증 
 export const fetchDrivingRoute = async ({
   startLat,
   startLng,
@@ -99,6 +116,23 @@ export const fetchFinanceSummary = async () =>
 
 export const fetchFinanceTransactions = async () =>
   (await api.get('/api/finance/transactions')).data;
+
+export const fetchReceipt = async (shipmentId) =>
+  (await api.get(`/api/finance/receipt/${shipmentId}`)).data;
+export const payShipment = async (shipmentId, payload = {}) =>
+  (await api.post(`/api/finance/shipments/${shipmentId}/pay`, payload)).data;
+
+export const fetchNotifications = async () =>
+  (await api.get('/api/interactions/notifications')).data;
+
+export const fetchAllNotifications = async () =>
+  (await api.get('/api/interactions/notifications/all')).data;
+
+export const markNotificationRead = async (notificationId) =>
+  (await api.post(`/api/interactions/notifications/${notificationId}/read`)).data;
+
+export const markAllNotificationsRead = async () =>
+  (await api.post('/api/interactions/notifications/read-all')).data;
 
 export const fetchRatingsDashboard = async () =>
   (await api.get('/api/ratings/dashboard')).data;

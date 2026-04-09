@@ -1,41 +1,48 @@
 package com.logistics.app.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_notification")
-@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
 public class UserNotification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(nullable = false)
+    private Long userId;
 
-    @Column(nullable = false, length = 40)
+    @Column(nullable = false, length = 50)
     private String type;
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false, length = 150)
     private String title;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
+    @Column(nullable = false)
+    private boolean isRead = false;
+
+    @Column(length = 50)
     private String linkKey;
+
     private Long linkId;
 
-    @Column(name = "is_read")
-    private boolean read;
-
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     public void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
     }
 }
