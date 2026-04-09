@@ -1,4 +1,11 @@
+import { useState } from "react";
+import SimpleSelect from "./SimpleSelect";
+
 export default function QuoteListSummaryBar({ totalCount }) {
+  const [onlyOpen, setOnlyOpen] = useState(false);
+  const [pageSize, setPageSize] = useState("10개씩 보기");
+  const [sortOrder, setSortOrder] = useState("최신 등록순");
+
   return (
     <section className="quote-list-summary-bar">
       <div className="quote-list-summary-bar__left">
@@ -8,22 +15,19 @@ export default function QuoteListSummaryBar({ totalCount }) {
       </div>
 
       <div className="quote-list-summary-bar__right">
-        <label className="quote-list-checkbox">
-          <input type="checkbox" />
-          <span>진행중인 공고만 보기</span>
-        </label>
+        <SimpleSelect
+          value={pageSize}
+          options={["10개씩 보기", "20개씩 보기", "30개씩 보기"]}
+          onChange={setPageSize}
+          className="quote-list-size-select"
+        />
 
-        <select className="quote-list-control-select quote-list-size-select">
-          <option>10개씩 보기</option>
-          <option>20개씩 보기</option>
-          <option>30개씩 보기</option>
-        </select>
-
-        <select className="quote-list-control-select quote-list-sort-select">
-          <option>최신 등록순</option>
-          <option>마감 임박순</option>
-          <option>희망 운임순</option>
-        </select>
+        <SimpleSelect
+          value={sortOrder}
+          options={["최신 등록순", "마감 임박순", "높은 운임순"]}
+          onChange={setSortOrder}
+          className="quote-list-sort-select"
+        />
       </div>
     </section>
   );

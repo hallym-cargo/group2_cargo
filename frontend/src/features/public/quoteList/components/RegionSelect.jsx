@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const REGION_DATA = {
   전체: ["전체"],
@@ -27,7 +27,7 @@ const REGION_DATA = {
     "고양시",
     "과천시",
     "광명시",
-    "광주시",
+    "광주시(경기)",
     "구리시",
     "군포시",
     "김포시",
@@ -68,11 +68,7 @@ const REGION_DATA = {
     "의령군",
     "진주시",
     "창녕군",
-    "창원시 마산합포구",
-    "창원시 마산회원구",
-    "창원시 성산구",
-    "창원시 의창구",
-    "창원시 진해구",
+    "창원시",
     "통영시",
     "하동군",
     "함안군",
@@ -103,33 +99,212 @@ const REGION_DATA = {
     "칠곡군",
     "포항시",
   ],
-  //   광양항
-  //   광주광역시: ["광산구","남구","동구","북구","서구"]
-  //   대구광역시
-  //   대전광역시
-  //   부산광역시
-  //   부산신항
-  //   부산항
-  //   서울특별시
-  //   세종특별자치시
+  광주광역시: ["광산구", "남구", "동구", "북구", "서구"],
+  대구광역시: [
+    "군위군",
+    "남구",
+    "달서구",
+    "달성군",
+    "동구",
+    "북구",
+    "서구",
+    "수성구",
+    "중구",
+  ],
+  대전광역시: ["대덕구", "동구", "서구", "유성구", "중구"],
+  부산광역시: [
+    "강서구",
+    "금정구",
+    "기장군",
+    "남구",
+    "동구",
+    "동래구",
+    "부산진구",
+    "북구",
+    "사상구",
+    "사하구",
+    "서구",
+    "수영구",
+    "연제구",
+    "영도구",
+    "중구",
+    "해운대구",
+  ],
+  서울특별시: [
+    "강남구",
+    "강동구",
+    "강북구",
+    "강서구",
+    "관악구",
+    "광진구",
+    "구로구",
+    "금천구",
+    "노원구",
+    "도봉구",
+    "동대문구",
+    "동작구",
+    "마포구",
+    "서대문구",
+    "서초구",
+    "성동구",
+    "성북구",
+    "송파구",
+    "양천구",
+    "영등포구",
+    "용산구",
+    "은평구",
+    "종로구",
+    "중구",
+    "중랑구",
+  ],
+  세종특별자치시: ["세종특별자치시"],
+  울산광역시: ["남구", "동구", "북구", "울주군", "중구"],
+  인천광역시: [
+    "강화군",
+    "계양구",
+    "남동구",
+    "동구",
+    "미추홀구",
+    "부평구",
+    "서구",
+    "연수구",
+    "옹진군",
+    "중구",
+  ],
+  전라남도: [
+    "강진군",
+    "고흥군",
+    "곡성군",
+    "광양시",
+    "구례군",
+    "나주시",
+    "담양군",
+    "목포시",
+    "무안군",
+    "보성군",
+    "순천시",
+    "신안군",
+    "여수시",
+    "영광군",
+    "영암군",
+    "완도군",
+    "장성군",
+    "장흥군",
+    "진도군",
+    "함평군",
+    "해남군",
+    "화순군",
+  ],
+  전북특별자치도: [
+    "고창군",
+    "군산시",
+    "김제시",
+    "남원시",
+    "무주군",
+    "부안군",
+    "순창군",
+    "완주군",
+    "익산시",
+    "임실군",
+    "장수군",
+    "전주시",
+    "정읍시",
+    "진안군",
+  ],
+  제주특별자치도: ["서귀포시", "제주시"],
+  충청남도: [
+    "계룡시",
+    "공주시",
+    "금산군",
+    "논산시",
+    "당진시",
+    "보령시",
+    "부여군",
+    "서산시",
+    "서천군",
+    "아산시",
+    "예산군",
+    "천안시",
+    "청양군",
+    "태안군",
+    "홍성군",
+  ],
+  충청북도: [
+    "괴산군",
+    "단양군",
+    "보은군",
+    "영동군",
+    "옥천군",
+    "음성군",
+    "제천시",
+    "증평군",
+    "진천군",
+    "청주시",
+    "충주시",
+  ],
 };
 
 export default function RegionSelect({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const [selectedDo, setSelectedDo] = useState("전체");
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!value || value === "전체") {
+      setSelectedDo("전체");
+      return;
+    }
+
+    const matchedDo = Object.keys(REGION_DATA).find((doName) => {
+      if (doName === "전체") return false;
+      return value.startsWith(doName);
+    });
+
+    if (matchedDo) {
+      setSelectedDo(matchedDo);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!containerRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSelectCity = (city) => {
+    const nextValue =
+      selectedDo === "전체" || city === "전체"
+        ? "전체"
+        : `${selectedDo} ${city}`;
+
+    onChange(nextValue);
+    setOpen(false);
+  };
 
   return (
-    <div className="region-select">
-      <div className="region-select-trigger" onClick={() => setOpen(!open)}>
-        {value || "전체"}
-      </div>
+    <div className="region-select" ref={containerRef}>
+      <button
+        type="button"
+        className="region-select-trigger"
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        <span>{value || "전체"}</span>
+        <span className="region-select-arrow">{open ? "▴" : "▾"}</span>
+      </button>
 
       {open && (
         <div className="region-select-dropdown">
-          {/* 시/도 */}
           <div className="region-select-left">
             {Object.keys(REGION_DATA).map((doName) => (
-              <div
+              <button
+                type="button"
                 key={doName}
                 className={`region-item ${
                   selectedDo === doName ? "active" : ""
@@ -137,23 +312,20 @@ export default function RegionSelect({ value, onChange }) {
                 onClick={() => setSelectedDo(doName)}
               >
                 {doName}
-              </div>
+              </button>
             ))}
           </div>
 
-          {/* 시/군/구 */}
           <div className="region-select-right">
             {REGION_DATA[selectedDo].map((city) => (
-              <div
+              <button
+                type="button"
                 key={city}
                 className="region-item"
-                onClick={() => {
-                  onChange(`${selectedDo} ${city}`);
-                  setOpen(false);
-                }}
+                onClick={() => handleSelectCity(city)}
               >
                 {city}
-              </div>
+              </button>
             ))}
           </div>
         </div>
