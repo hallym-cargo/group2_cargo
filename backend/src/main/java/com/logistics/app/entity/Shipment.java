@@ -39,11 +39,6 @@ public class Shipment {
     private User assignedDriver;
 
     private Long acceptedOfferId;
-    private Integer agreedPrice;
-
-    @Column(nullable = false)
-    private boolean paid = false;
-    private LocalDateTime paymentCompletedAt;
     private LocalDateTime scheduledStartAt;
     private LocalDateTime startedAt;
     private LocalDateTime estimatedArrivalAt;

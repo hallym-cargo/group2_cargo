@@ -14,15 +14,6 @@ public class UserDtos {
         private String paymentMethod;
         private String contactEmail;
         private String contactPhone;
-        private String vehicleType;
-    }
-
-
-    @Data
-    @Builder
-    public static class ProfileImageUploadResponse {
-        private String imageUrl;
-        private String originalFilename;
     }
 
     @Data

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { formatDate, resolveMediaUrl } from '../../utils/formatters'
+import { formatDate } from '../../utils/formatters'
 
 const CHAT_MODAL_POSITION_KEY = 'chatWindowPosition'
 const CHAT_MODAL_MARGIN = 24
@@ -157,7 +157,7 @@ export default function ChatWindowModal({ room, draft, setDraft, onSend, onClose
       >
         <div className="chat-modal__peer">
           {room.targetProfile?.profileImageUrl ? (
-            <img src={resolveMediaUrl(room.targetProfile.profileImageUrl)} alt={room.targetProfile.name} className="chat-modal__avatar" />
+            <img src={room.targetProfile.profileImageUrl} alt={room.targetProfile.name} className="chat-modal__avatar" />
           ) : (
             <div className="chat-modal__avatar chat-modal__avatar--fallback">{(room.targetProfile?.name || '?').slice(0, 1)}</div>
           )}

@@ -1,7 +1,6 @@
 package com.logistics.app.service;
 
 import com.logistics.app.dto.InteractionDtos;
-import com.logistics.app.dto.UserNotificationDtos;
 import com.logistics.app.entity.BlockUser;
 import com.logistics.app.entity.User;
 import com.logistics.app.entity.UserRole;
@@ -72,26 +71,17 @@ public class InteractionService {
         } else {
             blockUserRepository.save(BlockUser.builder().blocker(me).blocked(target).build());
             blocked = true;
-            notificationService.notifyUser(target.getId(), "BLOCK", "거래 차단 알림", me.getName() + "님이 거래 차단을 설정했습니다.", "USER", me.getId());
+            notificationService.notify(target, "BLOCK", "거래 차단 알림", me.getName() + "님이 거래 차단을 설정했습니다.", "USER", me.getId());
         }
         return InteractionDtos.BlockToggleResponse.builder().blocked(blocked).build();
     }
 
     @Transactional(readOnly = true)
-    public UserNotificationDtos.NotificationSummary getNotifications(User me) {
-        return notificationService.getUnreadSummary(me.getId());
-    }
-
-    @Transactional(readOnly = true)
-    public List<UserNotificationDtos.NotificationItem> getAllNotifications(User me) {
-        return notificationService.getAllNotifications(me.getId());
+    public InteractionDtos.NotificationSummary getNotifications(User me) {
+        return notificationService.getSummary(me);
     }
 
     public void readNotifications(User me) {
-        notificationService.markAllRead(me.getId());
-    }
-
-    public void readNotification(User me, Long notificationId) {
-        notificationService.markRead(me.getId(), notificationId);
+        notificationService.markAllRead(me);
     }
 }

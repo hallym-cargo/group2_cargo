@@ -90,9 +90,6 @@ public class ShipmentDtos {
         private String assignedDriverContactEmail;
         private String assignedDriverContactPhone;
         private Long acceptedOfferId;
-        private Integer agreedPrice;
-        private boolean paid;
-        private LocalDateTime paymentCompletedAt;
         private boolean bookmarked;
         private boolean hasMyOffer;
         private boolean assignedToMe;

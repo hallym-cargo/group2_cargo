@@ -28,11 +28,6 @@ import {
   fetchBookmarks,
   fetchFinanceSummary,
   fetchFinanceTransactions,
-  payShipment,
-  fetchNotifications,
-  fetchAllNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
   fetchMyProfile,
   fetchPublicOverview,
   fetchPublicProfile,
@@ -55,7 +50,6 @@ import {
   updateMemberRole,
   updateMemberStatus,
   updateMyProfile,
-  uploadMyProfileImage,
   createRating,
 } from '../api';
 
@@ -79,8 +73,7 @@ export function useLogisticsController() {
     role: localStorage.getItem('role') || '',
     profileCompleted: localStorage.getItem('profileCompleted') === 'true',
   }));
-  const [receipt, setReceipt] = useState(null);
-  const [receiptOpen, setReceiptOpen] = useState(false);
+
   const [message, setMessage] = useState('');
   // const [authMode, setAuthMode] = useState('login');
   const [authMode, setAuthMode] = useState('');
@@ -111,18 +104,12 @@ export function useLogisticsController() {
   const [selected, setSelected] = useState(null);
   const [dashboardTab, setDashboardTab] = useState('home');
   const [profile, setProfile] = useState(null);
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileImageUploading, setProfileImageUploading] = useState(false);
-  const [profileImageUploadError, setProfileImageUploadError] = useState('');
-  const [selectedProfileImageName, setSelectedProfileImageName] = useState('');
-  const [profileSaveSuccessOpen, setProfileSaveSuccessOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({
     bio: '',
     profileImageUrl: '',
     paymentMethod: '',
     contactEmail: '',
     contactPhone: '',
-    vehicleType: '',
   });
   const [shipmentForm, setShipmentForm] = useState(emptyShipment);
   const [offerForm, setOfferForm] = useState({ price: '', message: '' });
@@ -141,10 +128,6 @@ export function useLogisticsController() {
   const [chatDraft, setChatDraft] = useState('');
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatSending, setChatSending] = useState(false);
-  const [notificationSummary, setNotificationSummary] = useState({ unreadCount: 0, items: [] });
-  const [allNotifications, setAllNotifications] = useState([]);
-  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
-  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
 
   const [page, setPage] = useState(0);
 
@@ -197,22 +180,6 @@ export function useLogisticsController() {
     });
   }, [publicData.liveBoard, publicStatusFilter]);
 
-  //영수증 팝업
-  const openReceipt = async (shipmentId) => {
-    try {
-      const data = await fetchReceipt(shipmentId);
-      setReceipt(data);
-      setReceiptOpen(true);
-    } catch (err) {
-      console.error(err);
-      setMessage('영수증 불러오기 실패');
-    }
-  };
-
-  const closeReceipt = () => {
-    setReceiptOpen(false);
-    setReceipt(null);
-  };
   const selectedPublic = useMemo(() => {
     return (
       publicData.liveBoard?.find((item) => item.id === publicSelectedId) ||
@@ -299,10 +266,6 @@ export function useLogisticsController() {
   const unreadChatCount = useMemo(() => {
     return (chatRooms || []).reduce((sum, room) => sum + (room.unreadCount || 0), 0);
   }, [chatRooms]);
-
-  const notificationUnreadCount = useMemo(() => {
-    return notificationSummary?.unreadCount || 0;
-  }, [notificationSummary]);
 
   const roleQuickActions = useMemo(() => {
     if (auth.role === 'SHIPPER') {
@@ -418,138 +381,6 @@ export function useLogisticsController() {
       console.error(err);
     }
   };
-
-  const loadNotifications = async () => {
-    if (!isLoggedIn || isAdmin) return
-
-    try {
-      const data = await fetchNotifications()
-      const nextSummary = data || { unreadCount: 0, items: [] }
-      setNotificationSummary(nextSummary)
-      return nextSummary
-    } catch (err) {
-      console.error(err)
-      throw err
-    }
-  }
-
-  const openNotificationPanel = async () => {
-    if (!isLoggedIn) {
-      setMessage('로그인 후 알림을 확인할 수 있습니다.')
-      return
-    }
-
-    try {
-      await loadNotifications()
-      setNotificationPanelOpen(true)
-    } catch (err) {
-      console.error(err)
-      setMessage(err.response?.data?.message || '알림을 불러오지 못했습니다.')
-    }
-  }
-
-  const closeNotificationPanel = () => {
-    setNotificationPanelOpen(false)
-  }
-
-  const loadAllNotifications = async () => {
-    if (!isLoggedIn || isAdmin) return
-
-    try {
-      const data = await fetchAllNotifications()
-      const nextItems = data || []
-      setAllNotifications(nextItems)
-      return nextItems
-    } catch (err) {
-      console.error(err)
-      throw err
-    }
-  }
-
-  const handleMarkAllNotificationsRead = async () => {
-    try {
-      await markAllNotificationsRead()
-
-      setNotificationSummary((prev) => ({
-        unreadCount: 0,
-        items: (prev?.items || []).map((item) => ({
-          ...item,
-          isRead: true,
-        })),
-      }))
-
-      setAllNotifications((prev) =>
-        (prev || []).map((item) => ({
-          ...item,
-          isRead: true,
-        })),
-      )
-    } catch (err) {
-      console.error(err)
-      setMessage(err.response?.data?.message || '알림 읽음 처리 실패')
-    }
-  }
-
-  const handleOpenNotificationLink = async (item, options = {}) => {
-    const { keepPanelClosed = false } = options
-
-    if (item?.id && !item.isRead) {
-      try {
-        await markNotificationRead(item.id)
-
-        setNotificationSummary((prev) => {
-          const nextItems = (prev?.items || []).map((notification) =>
-            notification.id === item.id
-              ? { ...notification, isRead: true }
-              : notification,
-          )
-
-          return {
-            unreadCount: nextItems.filter((notification) => !notification.isRead).length,
-            items: nextItems,
-          }
-        })
-
-        setAllNotifications((prev) =>
-          (prev || []).map((notification) =>
-            notification.id === item.id
-              ? { ...notification, isRead: true }
-              : notification,
-          ),
-        )
-      } catch (err) {
-        console.error(err)
-      }
-    }
-
-    if (item?.linkKey === 'SHIPMENT' && item?.linkId) {
-      setNotificationPanelOpen(false)
-      setSelectedId(item.linkId)
-      setRoutePage('dashboard')
-      setDashboardTab('board')
-      return
-    }
-
-    if (keepPanelClosed) {
-      setNotificationPanelOpen(false)
-    }
-  }
-
-  const openNotificationsPage = async () => {
-    if (!isLoggedIn) {
-      setMessage('로그인 후 알림을 확인할 수 있습니다.')
-      return
-    }
-
-    try {
-      await Promise.all([loadNotifications(), loadAllNotifications()])
-      setNotificationPanelOpen(false)
-      setRoutePage('notifications')
-    } catch (err) {
-      console.error(err)
-      setMessage(err.response?.data?.message || '알림을 불러오지 못했습니다.')
-    }
-  }
 
   const openChatInbox = async () => {
     if (!isLoggedIn) {
@@ -848,7 +679,6 @@ export function useLogisticsController() {
       paymentMethod: data.paymentMethod || '',
       contactEmail: data.contactEmail || '',
       contactPhone: data.contactPhone || '',
-      vehicleType: data.vehicleType || '',
     });
   };
 
@@ -880,64 +710,10 @@ export function useLogisticsController() {
     }
   };
 
-
-  const handleProfileImageFileChange = async (file) => {
-    if (!file) return;
-
-    setProfileImageUploadError('');
-    setSelectedProfileImageName(file.name || '');
-    setProfileImageUploading(true);
-
-    try {
-      const uploaded = await uploadMyProfileImage(file);
-      setProfileForm((prev) => ({
-        ...prev,
-        profileImageUrl: uploaded.imageUrl || '',
-      }));
-    } catch (err) {
-      console.error(err);
-      const errorMessage = err.response?.data?.message || '프로필 사진 업로드 실패';
-      setProfileImageUploadError(errorMessage);
-      setMessage(errorMessage);
-    } finally {
-      setProfileImageUploading(false);
-    }
-  };
-
-  const clearProfileImage = () => {
-    setSelectedProfileImageName('');
-    setProfileImageUploadError('');
-    setProfileForm((prev) => ({
-      ...prev,
-      profileImageUrl: '',
-    }));
-  };
-
   const handleSaveProfile = async () => {
     try {
-      setProfileSaving(true);
-      setProfileSaveSuccessOpen(false);
-      setMessage('');
-
-      const payload = {
-        bio: profileForm.bio || '',
-        profileImageUrl: profileForm.profileImageUrl || '',
-        paymentMethod: profileForm.paymentMethod || '',
-        contactEmail: profileForm.contactEmail || '',
-        contactPhone: profileForm.contactPhone || '',
-        vehicleType: auth.role === 'DRIVER' ? (profileForm.vehicleType || '') : '',
-      };
-
-      const saved = await updateMyProfile(payload);
+      const saved = await updateMyProfile(profileForm);
       setProfile(saved);
-      setProfileForm({
-        bio: saved.bio || '',
-        profileImageUrl: saved.profileImageUrl || '',
-        paymentMethod: saved.paymentMethod || '',
-        contactEmail: saved.contactEmail || '',
-        contactPhone: saved.contactPhone || '',
-        vehicleType: saved.vehicleType || '',
-      });
 
       const updatedAuth = {
         ...auth,
@@ -949,13 +725,10 @@ export function useLogisticsController() {
         String(!!saved.profileCompleted),
       );
       setAuth(updatedAuth);
-      setMessage('');
-      setProfileSaveSuccessOpen(true);
+      setMessage('회원정보가 저장되었습니다.');
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.message || '회원정보 저장 실패');
-    } finally {
-      setProfileSaving(false);
     }
   };
 
@@ -1036,8 +809,6 @@ export function useLogisticsController() {
       loadRatings().catch(() => { });
       loadProfile().catch(() => { });
       loadChatRooms().catch(() => { });
-      loadNotifications().catch(() => { });
-      loadAllNotifications().catch(() => { });
     }
   }, [isLoggedIn, isAdmin]);
 
@@ -1082,8 +853,6 @@ export function useLogisticsController() {
             loadFinance().catch(() => { });
             loadRatings().catch(() => { });
             loadChatRooms().catch(() => { });
-            loadNotifications().catch(() => { });
-            loadAllNotifications().catch(() => { });
             if (selectedId) loadDetail(selectedId).catch(() => { });
           }
         });
@@ -1110,9 +879,6 @@ export function useLogisticsController() {
     const timer = setInterval(() => {
       reloadChatRoom(chatRoom.targetProfile.id);
     }, 2000);
-
-
-
 
     return () => clearInterval(timer);
   }, [chatModalOpen, chatRoom?.targetProfile?.id, isLoggedIn]);
@@ -1201,28 +967,12 @@ export function useLogisticsController() {
 
   const handleAcceptOffer = async (offerId) => {
     try {
-      const response = await acceptOffer(offerId);
-      if (response?.id) setSelectedId(response.id);
-      setRoutePage('payment');
-      setMessage('차주가 확정되었습니다. 결제를 진행해 주세요.');
+      await acceptOffer(offerId);
+      setMessage('차주가 확정되었습니다.');
 
-      await Promise.all([loadShipments(), loadDetail(response?.id || selectedId), loadNotifications()]);
+      await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
       setMessage(err.response?.data?.message || '차주 확정 실패');
-    }
-  };
-
-  const handlePayShipment = async () => {
-    try {
-      if (!selectedId) return;
-      setPaymentSubmitting(true);
-      const response = await payShipment(selectedId, { paymentMethod: profile?.paymentMethod || '' });
-      setMessage(response?.message || '결제가 완료되었습니다.');
-      await Promise.all([loadShipments(), loadDetail(selectedId), loadFinance(), loadNotifications()]);
-    } catch (err) {
-      setMessage(err.response?.data?.message || '결제 처리 실패');
-    } finally {
-      setPaymentSubmitting(false);
     }
   };
 
@@ -1436,12 +1186,7 @@ export function useLogisticsController() {
     setChatDraft,
     chatModalOpen,
     chatSending,
-    notificationSummary,
-    allNotifications,
-    notificationPanelOpen,
-    paymentSubmitting,
     unreadChatCount,
-    notificationUnreadCount,
     shipments,
     bookmarks,
     selectedId,
@@ -1452,12 +1197,6 @@ export function useLogisticsController() {
     profile,
     profileForm,
     setProfileForm,
-    profileSaving,
-    profileImageUploading,
-    profileImageUploadError,
-    selectedProfileImageName,
-    profileSaveSuccessOpen,
-    setProfileSaveSuccessOpen,
     shipmentForm,
     setShipmentForm,
     offerForm,
@@ -1515,7 +1254,6 @@ export function useLogisticsController() {
     handleCreateShipment,
     handleCreateOffer,
     handleAcceptOffer,
-    handlePayShipment,
     handleStart,
     handleComplete,
     openCancelModal,
@@ -1531,11 +1269,6 @@ export function useLogisticsController() {
     closeUserProfile,
     openChatWithUser,
     openChatInbox,
-    openNotificationPanel,
-    openNotificationsPage,
-    closeNotificationPanel,
-    handleMarkAllNotificationsRead,
-    handleOpenNotificationLink,
     closeChatInbox,
     openChatRoomFromSummary,
     closeChatRoom,
@@ -1550,17 +1283,11 @@ export function useLogisticsController() {
     handleAnswerInquiry,
     handleResolveDispute,
     handleSaveProfile,
-    handleProfileImageFileChange,
-    clearProfileImage,
     handleShipmentImagesChange,
     handleCompletionProofChange,
     loadAdmin,
     loadPublic,
     deleteAdminFaq,
     deleteAdminNotice,
-    receipt,
-    receiptOpen,
-    openReceipt,
-    closeReceipt,
   };
 }

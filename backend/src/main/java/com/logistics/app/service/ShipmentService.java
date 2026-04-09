@@ -29,7 +29,6 @@ public class ShipmentService {
     private final FinanceService financeService;
     private final UserRepository userRepository;
     private final UserService userService;
-    private final NotificationService notificationService;
 
     public ShipmentService(ShipmentRepository shipmentRepository,
                            OfferRepository offerRepository,
@@ -42,8 +41,7 @@ public class ShipmentService {
                            ShipmentRealtimePublisher realtimePublisher,
                            FinanceService financeService,
                            UserRepository userRepository,
-                           UserService userService,
-                           NotificationService notificationService) {
+                           UserService userService) {
         this.shipmentRepository = shipmentRepository;
         this.offerRepository = offerRepository;
         this.locationLogRepository = locationLogRepository;
@@ -56,7 +54,6 @@ public class ShipmentService {
         this.financeService = financeService;
         this.userRepository = userRepository;
         this.userService = userService;
-        this.notificationService = notificationService;
     }
 
     public ShipmentDtos.ShipmentResponse createShipment(User shipper, ShipmentDtos.CreateShipmentRequest request) {
@@ -149,8 +146,6 @@ public class ShipmentService {
                 .message(request.getMessage())
                 .build();
         offerRepository.save(offer);
-        notificationService.notifyUser(shipment.getShipper().getId(), "OFFER", "새 제안이 도착했습니다.",
-                driver.getName() + "님이 " + shipment.getTitle() + " 화물에 " + String.format("%,d원", offer.getPrice()) + " 제안을 보냈습니다.", "SHIPMENT", shipment.getId());
         realtimePublisher.publishShipmentUpdated(toResponse(shipment, driver));
         return toOfferResponse(offer);
     }
@@ -175,17 +170,7 @@ public class ShipmentService {
         shipment.setAssignedDriver(offer.getDriver());
         shipment.setAcceptedOfferId(offerId);
         shipment.setStatus(ShipmentStatus.CONFIRMED);
-        shipment.setAgreedPrice(offer.getPrice());
         shipmentRepository.save(shipment);
-
-        notificationService.notifyUser(offer.getDriver().getId(), "OFFER_ACCEPTED", "제안이 수락되었습니다.",
-                shipment.getTitle() + " 의 배정이 확정되었습니다. 배차 보드에서 운송을 시작해 주세요.", "SHIPMENT", shipment.getId());
-        offerRepository.findByShipment(shipment).stream()
-                .filter(item -> !item.getId().equals(offerId))
-                .map(Offer::getDriver)
-                .distinct()
-                .forEach(driverUser -> notificationService.notifyUser(driverUser.getId(), "OFFER_REJECTED", "제안이 선택되지 않았습니다.",
-                        shipment.getTitle() + " 은 다른 차주가 선택되었습니다. 다른 배차를 확인해 보세요.", "SHIPMENT", shipment.getId()));
 
         logStatus(shipment, before, ShipmentStatus.CONFIRMED, shipper.getEmail(), "차주 확정");
         ShipmentDtos.ShipmentResponse response = toResponse(shipment, shipper);
@@ -197,9 +182,6 @@ public class ShipmentService {
         Shipment shipment = getById(shipmentId);
         if (shipment.getAssignedDriver() == null || !shipment.getAssignedDriver().getId().equals(driver.getId())) {
             throw new RuntimeException("배정된 차주만 운반을 시작할 수 있습니다.");
-        }
-        if (!shipment.isPaid()) {
-            throw new RuntimeException("결제 완료 후에만 운반을 시작할 수 있습니다.");
         }
         ShipmentStatus before = shipment.getStatus();
         shipment.setStatus(ShipmentStatus.IN_TRANSIT);
@@ -459,9 +441,6 @@ public class ShipmentService {
                 .assignedDriverContactEmail(assignedDriverProfile != null ? assignedDriverProfile.getContactEmail() : null)
                 .assignedDriverContactPhone(assignedDriverProfile != null ? assignedDriverProfile.getContactPhone() : null)
                 .acceptedOfferId(shipment.getAcceptedOfferId())
-                .agreedPrice(shipment.getAgreedPrice())
-                .paid(shipment.isPaid())
-                .paymentCompletedAt(shipment.getPaymentCompletedAt())
                 .bookmarked(bookmarked)
                 .hasMyOffer(hasMyOffer)
                 .assignedToMe(assignedToMe)

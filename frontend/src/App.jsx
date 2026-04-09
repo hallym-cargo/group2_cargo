@@ -1,21 +1,16 @@
 import ChatFloatingButton from "./components/common/ChatFloatingButton";
 import ChatInboxPanel from "./components/common/ChatInboxPanel";
-import NotificationPanel from "./components/common/NotificationPanel";
 import ChatWindowModal from "./components/common/ChatWindowModal";
 import UserProfileModal from "./components/common/UserProfileModal";
 import AdminConsolePage from "./features/admin/AdminConsolePage";
 import MessagesPage from "./features/chat/MessagesPage";
-import NotificationsPage from "./features/chat/NotificationsPage";
 import QuoteListPage from "./features/public/QuoteListPage";
 import QuoteRegisterPage from "./features/public/QuoteRegisterPage";
 import PublicHomePage from "./features/public/PublicHomePage";
 import PublicUserSearchPage from "./features/public/users/PublicUserSearchPage";
 import UserConsolePage from "./features/user/UserConsolePage";
 import { useLogisticsController } from "./hooks/useLogisticsController";
-import DriverSignupPage from "./pages/DriverSignupForm";
-import ShipperSignupPage from "./pages/ShipperSignupForm";
 import TransportStatus from "./pages/TransportStatus";
-import PaymentPage from "./pages/PaymentPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -25,9 +20,7 @@ export default function App() {
 
   let page = null;
 
-  if (controller.routePage === "payment") {
-    page = <PaymentPage controller={controller} />;
-  } else if (controller.dashboardTab === "quotes") {
+  if (controller.dashboardTab === "quotes") {
     page = <QuoteListPage controller={controller} />;
   } else if (controller.dashboardTab === "quoteRegister") {
     page = <QuoteRegisterPage controller={controller} />;
@@ -35,8 +28,6 @@ export default function App() {
     page = <TransportStatus controller={controller} />;
   } else if (controller.routePage === "messages") {
     page = <MessagesPage controller={controller} />;
-  } else if (controller.routePage === "notifications") {
-    page = <NotificationsPage controller={controller} />;
   } else if (controller.routePage === "shippers") {
     page = <PublicUserSearchPage controller={controller} role="SHIPPER" />;
   } else if (controller.routePage === "drivers") {
@@ -54,7 +45,11 @@ export default function App() {
   } else if (controller.routePage === "forgot-password") {
     page = <ForgotPasswordPage controller={controller} />;
   } else if (controller.routePage === "dashboard") {
-    page = controller.isAdmin ? <AdminConsolePage controller={controller} /> : <UserConsolePage controller={controller} />;
+    page = controller.isAdmin ? (
+      <AdminConsolePage controller={controller} />
+    ) : (
+      <UserConsolePage controller={controller} />
+    );
   } else if (controller.dashboardTab === "home") {
     page = <PublicHomePage controller={controller} />;
   } else if (controller.isAdmin) {
@@ -91,9 +86,7 @@ export default function App() {
         <>
           <ChatFloatingButton
             unreadCount={controller.unreadChatCount}
-            notificationUnreadCount={controller.notificationUnreadCount}
             onChatClick={controller.openChatInbox}
-            onNotificationClick={controller.openNotificationPanel}
           />
 
           <ChatInboxPanel
@@ -106,15 +99,6 @@ export default function App() {
               controller.setChatModalOpen(false);
               controller.setRoutePage("messages");
             }}
-          />
-
-          <NotificationPanel
-            open={controller.notificationPanelOpen}
-            summary={controller.notificationSummary}
-            onClose={controller.closeNotificationPanel}
-            onMarkAllRead={controller.handleMarkAllNotificationsRead}
-            onOpenLink={controller.handleOpenNotificationLink}
-            onOpenNotificationsPage={controller.openNotificationsPage}
           />
         </>
       )}

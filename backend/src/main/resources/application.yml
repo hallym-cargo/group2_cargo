@@ -7,7 +7,7 @@ spring:
 
     jpa:
         hibernate:
-            ddl-auto: none
+            ddl-auto: update
         show-sql: true
         properties:
             hibernate:
@@ -30,5 +30,3 @@ app:
 
     tmap:
         app-key: ${TMAP_APP_KEY:58gaUoZNnGcuRTIDz7hD5PxkVw8wd6nxyZYwhVc0}
-
-    upload-dir: ${APP_UPLOAD_DIR:uploads}

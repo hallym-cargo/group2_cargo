@@ -1,4 +1,4 @@
-import { formatDate, resolveMediaUrl } from '../../utils/formatters'
+import { formatDate } from '../../utils/formatters'
 
 export default function ChatInboxPanel({
   open,
@@ -31,7 +31,7 @@ export default function ChatInboxPanel({
               >
                 {room.targetProfile?.profileImageUrl ? (
                   <img
-                    src={resolveMediaUrl(room.targetProfile.profileImageUrl)}
+                    src={room.targetProfile.profileImageUrl}
                     alt={room.targetProfile?.name}
                     className="chat-inbox-item__avatar"
                   />

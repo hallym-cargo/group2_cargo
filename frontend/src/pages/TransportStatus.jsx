@@ -528,7 +528,7 @@ export default function TransportStatus({ controller }) {
                     <div className="transport-cardTitle">내 거래 액션</div>
                     <div className="transport-actionButtons">
                       {canStart && (
-                        <button type="button" className="landing-btn landing-btn--primary" onClick={handleStart} disabled={!selected?.paid}>운행 시작</button>
+                        <button type="button" className="landing-btn landing-btn--primary" onClick={handleStart}>운행 시작</button>
                       )}
                       {canComplete && (
                         <>

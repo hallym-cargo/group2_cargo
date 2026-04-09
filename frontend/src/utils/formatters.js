@@ -58,14 +58,3 @@ export const fileToDataUrl = (file) => new Promise((resolve, reject) => {
   reader.onerror = reject
   reader.readAsDataURL(file)
 })
-
-
-const MEDIA_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
-
-export const resolveMediaUrl = (value) => {
-  const raw = (value || '').trim()
-  if (!raw) return ''
-  if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw
-  if (raw.startsWith('/uploads/')) return `${MEDIA_BASE_URL}${raw}`
-  return raw
-}

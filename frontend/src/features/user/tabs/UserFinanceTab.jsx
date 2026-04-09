@@ -1,52 +1,41 @@
 import { useState } from "react"
-import SectionTitle from '../../../components/common/SectionTitle'
-import { formatCurrency, formatDate, transactionTypeText } from '../../../utils/formatters'
+import SectionTitle from "../../../components/common/SectionTitle"
+import { formatCurrency, formatDate, transactionTypeText } from "../../../utils/formatters"
 import ReceiptModal from "../../../components/common/ReceiptModal"
 import { fetchReceipt } from "../../../api"
-
-const emptyReceiptModalState = {
-  open: false,
-  loading: false,
-  error: "",
-  data: null,
-}
 
 export default function UserFinanceTab({ controller }) {
   const { auth, financeSummary, financeTransactions } = controller
 
-  const [receiptModal, setReceiptModal] = useState(emptyReceiptModalState)
+  const [receiptOpen, setReceiptOpen] = useState(false)
+  const [receiptLoading, setReceiptLoading] = useState(false)
+  const [receiptError, setReceiptError] = useState("")
+  const [selectedReceipt, setSelectedReceipt] = useState(null)
 
   const handleRowClick = async (shipmentId) => {
     if (!shipmentId) return
 
-    setReceiptModal({
-      open: true,
-      loading: true,
-      error: "",
-      data: null,
-    })
+    setReceiptOpen(true)
+    setReceiptLoading(true)
+    setReceiptError("")
+    setSelectedReceipt(null)
 
     try {
       const data = await fetchReceipt(shipmentId)
-      setReceiptModal({
-        open: true,
-        loading: false,
-        error: "",
-        data,
-      })
+      setSelectedReceipt(data)
     } catch (e) {
       console.error("영수증 조회 실패", e)
-      setReceiptModal({
-        open: true,
-        loading: false,
-        error: e?.response?.data?.message || "영수증을 불러오지 못했습니다.",
-        data: null,
-      })
+      setReceiptError("영수증을 불러오지 못했습니다.")
+    } finally {
+      setReceiptLoading(false)
     }
   }
 
   const handleClose = () => {
-    setReceiptModal(emptyReceiptModalState)
+    setReceiptOpen(false)
+    setReceiptLoading(false)
+    setReceiptError("")
+    setSelectedReceipt(null)
   }
 
   if (!financeSummary) return null
@@ -54,7 +43,7 @@ export default function UserFinanceTab({ controller }) {
   return (
     <div className="page-stack">
       <div className="kpi-grid">
-        {auth.role === 'SHIPPER' ? (
+        {auth.role === "SHIPPER" ? (
           <>
             <div className="kpi-card"><span>총 사용 금액</span><strong>{formatCurrency(financeSummary.totalSpent)}</strong><p>완료 정산 기준 누적</p></div>
             <div className="kpi-card"><span>지불 수수료</span><strong>{formatCurrency(0)}</strong><p>수수료는 차주 정산 금액에서만 차감됩니다.</p></div>
@@ -73,10 +62,12 @@ export default function UserFinanceTab({ controller }) {
 
       <div className="surface">
         <SectionTitle
-          title={auth.role === 'SHIPPER' ? '지출 내역' : '정산 내역'}
-          desc={auth.role === 'SHIPPER'
-            ? '화주는 확정된 운임 총액만 결제하며, 플랫폼 수수료는 차주 정산 금액에서만 차감됩니다. 행을 클릭하면 영수증을 확인할 수 있습니다.'
-            : '차주는 거래 원금, 수수료, 실제 정산 금액을 한 번에 확인합니다. 행을 클릭하면 영수증을 확인할 수 있습니다.'}
+          title={auth.role === "SHIPPER" ? "지출 내역" : "정산 내역"}
+          desc={
+            auth.role === "SHIPPER"
+              ? "화주는 확정된 운임 총액만 결제하며, 플랫폼 수수료는 차주 정산 금액에서만 차감됩니다."
+              : "차주는 거래 원금, 수수료, 실제 정산 금액을 한 번에 확인합니다."
+          }
         />
 
         <table className="board-table compact">
@@ -92,21 +83,17 @@ export default function UserFinanceTab({ controller }) {
           </thead>
 
           <tbody>
-            {financeTransactions.map(item => (
+            {financeTransactions.map((item) => (
               <tr
                 key={item.id}
-                className={item.shipmentId ? 'receipt-row' : ''}
+                className={item.shipmentId ? "receipt-row" : ""}
                 onClick={() => handleRowClick(item.shipmentId)}
-                style={{ cursor: item.shipmentId ? 'pointer' : 'default' }}
-                title={item.shipmentId ? '클릭하여 영수증 보기' : ''}
+                style={{ cursor: item.shipmentId ? "pointer" : "default" }}
               >
                 <td>{transactionTypeText(item.type)}</td>
                 <td>
-                  {item.shipmentTitle || '-'}
-                  <small>
-                    #{item.shipmentId || '-'}
-                    {item.shipmentId ? ' · 영수증 보기' : ''}
-                  </small>
+                  {item.shipmentTitle || "-"}
+                  <small>#{item.shipmentId || "-"}</small>
                 </td>
                 <td>{formatCurrency(item.grossAmount)}</td>
                 <td>{formatCurrency(item.feeAmount)}</td>
@@ -119,12 +106,12 @@ export default function UserFinanceTab({ controller }) {
       </div>
 
       <ReceiptModal
-        open={receiptModal.open}
-        data={receiptModal.data}
-        isLoading={receiptModal.loading}
-        error={receiptModal.error}
+        open={receiptOpen}
+        data={selectedReceipt}
+        isLoading={receiptLoading}
+        error={receiptError}
         onClose={handleClose}
-        role={auth.role}
+        role={auth?.role}
       />
     </div>
   )
