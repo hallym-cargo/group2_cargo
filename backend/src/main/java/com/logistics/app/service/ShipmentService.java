@@ -439,6 +439,7 @@ public class ShipmentService {
                 .acceptedOfferId(shipment.getAcceptedOfferId())
                 .agreedPrice(shipment.getAgreedPrice())
                 .paid(shipment.isPaid())
+                .paymentMethod(shipment.getPaymentMethod())
                 .paymentCompletedAt(shipment.getPaymentCompletedAt())
                 .bookmarked(bookmarked)
                 .hasMyOffer(hasMyOffer)

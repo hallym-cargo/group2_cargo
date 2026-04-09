@@ -31,7 +31,12 @@ public class SchemaPatchRunner implements CommandLineRunner {
         addColumnIfMissing("shipment", "agreed_price", "integer");
         addColumnIfMissing("shipment", "paid", "boolean");
         addColumnIfMissing("shipment", "payment_completed_at", "timestamp");
+        addColumnIfMissing("shipment", "payment_method", "varchar(255)");
         addColumnIfMissing("shipment", "scheduled_start_at", "timestamp");
+
+        if (tableExists("money_transaction")) {
+            addColumnIfMissing("money_transaction", "payment_method", "varchar(255)");
+        }
 
         jdbcTemplate.execute("UPDATE shipment SET paid = false WHERE paid IS NULL");
         jdbcTemplate.execute("ALTER TABLE shipment ALTER COLUMN paid SET DEFAULT false");

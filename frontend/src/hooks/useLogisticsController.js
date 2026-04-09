@@ -145,6 +145,9 @@ export function useLogisticsController() {
   const [allNotifications, setAllNotifications] = useState([]);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentModalStep, setPaymentModalStep] = useState('summary');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('REGISTERED');
 
   const [page, setPage] = useState(0);
 
@@ -767,12 +770,13 @@ export function useLogisticsController() {
   };
 
   const loadDetail = async (id) => {
-    if (!id || !isLoggedIn || isAdmin) return;
+    if (!id || !isLoggedIn || isAdmin) return null;
 
     setTransportDetailLoading(true);
     try {
       const data = await fetchShipment(id);
       setSelected(data);
+      return data;
     } finally {
       setTransportDetailLoading(false);
     }
@@ -1199,14 +1203,69 @@ export function useLogisticsController() {
     }
   };
 
+  const openPaymentModal = async (shipmentId = selectedId) => {
+    const targetId = shipmentId || selectedId;
+    if (!targetId) return;
+
+    if (!selected || selected.id !== targetId) {
+      await loadDetail(targetId);
+    }
+
+    const preferredMethod = profile?.paymentMethod?.trim() ? 'REGISTERED' : 'CARD';
+    setSelectedPaymentMethod(preferredMethod);
+    setPaymentModalStep('summary');
+    setPaymentModalOpen(true);
+  };
+
+  const closePaymentModal = () => {
+    const preferredMethod = profile?.paymentMethod?.trim() ? 'REGISTERED' : 'CARD';
+    setSelectedPaymentMethod(preferredMethod);
+    setPaymentModalStep('summary');
+    setPaymentModalOpen(false);
+  };
+
+  const openPaymentMethodStep = () => {
+    const preferredMethod = profile?.paymentMethod?.trim() ? selectedPaymentMethod || 'REGISTERED' : selectedPaymentMethod === 'REGISTERED' ? 'CARD' : (selectedPaymentMethod || 'CARD');
+    setSelectedPaymentMethod(preferredMethod);
+    setPaymentModalStep('method');
+  };
+
+  const resolveSelectedPaymentMethodLabel = () => {
+    if (selectedPaymentMethod === 'REGISTERED') {
+      return profile?.paymentMethod?.trim() || '등록된 결제수단';
+    }
+
+    switch (selectedPaymentMethod) {
+      case 'NAVER_PAY':
+        return '네이버페이';
+      case 'KAKAO_PAY':
+        return '카카오페이';
+      case 'TOSS_PAY':
+        return '토스페이';
+      case 'CARD':
+        return '신용카드';
+      case 'BANK_TRANSFER':
+        return '실시간 계좌이체';
+      case 'WIRE_TRANSFER':
+        return '무통장 입금';
+      default:
+        return profile?.paymentMethod?.trim() || '등록된 결제수단';
+    }
+  };
+
   const handleAcceptOffer = async (offerId) => {
     try {
       const response = await acceptOffer(offerId);
-      if (response?.id) setSelectedId(response.id);
-      setRoutePage('payment');
-      setMessage('차주가 확정되었습니다. 결제를 진행해 주세요.');
+      const shipmentId = response?.id || selectedId;
 
-      await Promise.all([loadShipments(), loadDetail(response?.id || selectedId), loadNotifications()]);
+      if (shipmentId) {
+        setSelectedId(shipmentId);
+      }
+
+      await Promise.all([loadShipments(), loadNotifications()]);
+      await loadDetail(shipmentId);
+      await openPaymentModal(shipmentId);
+      setMessage('차주가 확정되었습니다. 결제를 진행해 주세요.');
     } catch (err) {
       setMessage(err.response?.data?.message || '차주 확정 실패');
     }
@@ -1216,9 +1275,10 @@ export function useLogisticsController() {
     try {
       if (!selectedId) return;
       setPaymentSubmitting(true);
-      const response = await payShipment(selectedId, { paymentMethod: profile?.paymentMethod || '' });
+      const response = await payShipment(selectedId, { paymentMethod: resolveSelectedPaymentMethodLabel() });
       setMessage(response?.message || '결제가 완료되었습니다.');
       await Promise.all([loadShipments(), loadDetail(selectedId), loadFinance(), loadNotifications()]);
+      setPaymentModalStep('complete');
     } catch (err) {
       setMessage(err.response?.data?.message || '결제 처리 실패');
     } finally {
@@ -1440,6 +1500,9 @@ export function useLogisticsController() {
     allNotifications,
     notificationPanelOpen,
     paymentSubmitting,
+    paymentModalOpen,
+    paymentModalStep,
+    selectedPaymentMethod,
     unreadChatCount,
     notificationUnreadCount,
     shipments,
@@ -1516,6 +1579,11 @@ export function useLogisticsController() {
     handleCreateOffer,
     handleAcceptOffer,
     handlePayShipment,
+    openPaymentModal,
+    closePaymentModal,
+    openPaymentMethodStep,
+    setPaymentModalStep,
+    setSelectedPaymentMethod,
     handleStart,
     handleComplete,
     openCancelModal,

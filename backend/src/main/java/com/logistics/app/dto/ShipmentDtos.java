@@ -92,6 +92,7 @@ public class ShipmentDtos {
         private Long acceptedOfferId;
         private Integer agreedPrice;
         private boolean paid;
+        private String paymentMethod;
         private LocalDateTime paymentCompletedAt;
         private boolean bookmarked;
         private boolean hasMyOffer;

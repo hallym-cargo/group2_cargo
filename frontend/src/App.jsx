@@ -1,6 +1,7 @@
 import ChatFloatingButton from "./components/common/ChatFloatingButton";
 import ChatInboxPanel from "./components/common/ChatInboxPanel";
 import NotificationPanel from "./components/common/NotificationPanel";
+import PaymentModal from "./components/common/PaymentModal";
 import ChatWindowModal from "./components/common/ChatWindowModal";
 import UserProfileModal from "./components/common/UserProfileModal";
 import AdminConsolePage from "./features/admin/AdminConsolePage";
@@ -85,6 +86,9 @@ export default function App() {
           onClose={controller.closeChatRoom}
           isSending={controller.chatSending}
         />
+      )}
+      {controller.paymentModalOpen && (
+        <PaymentModal controller={controller} />
       )}
       {controller.isLoggedIn && !controller.isAdmin && (
         <>

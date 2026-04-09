@@ -43,6 +43,7 @@ public class Shipment {
 
     @Column(nullable = false)
     private boolean paid = false;
+    private String paymentMethod;
     private LocalDateTime paymentCompletedAt;
     private LocalDateTime scheduledStartAt;
     private LocalDateTime startedAt;
