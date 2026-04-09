@@ -89,13 +89,14 @@ export default function UserOverviewTab({ controller }) {
               </div>
             </div>
           )}
+
           <SectionTitle
             title="회원정보 수정"
             desc="현재 회원가입 필수 정보는 유지하고, 아래 정보는 선택으로 추가할 수 있습니다."
           />
 
           <div className="form-stack">
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 0 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0 14px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: '100%' }}>
                 <div style={{ position: 'relative', width: 96, height: 96, flexShrink: 0 }}>
                   {profileForm.profileImageUrl ? (
@@ -209,7 +210,7 @@ export default function UserOverviewTab({ controller }) {
               </div>
             </div>
             <textarea
-              rows="4"
+              rows="3"
               placeholder="자기소개"
               value={profileForm.bio}
               onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
@@ -268,18 +269,25 @@ export default function UserOverviewTab({ controller }) {
               profile
                 ? { ...profile, role: auth.role }
                 : {
-                    ...profileForm,
-                    name: auth.name,
-                    role: auth.role,
-                    companyName: signupForm.companyName,
-                    vehicleType: profileForm.vehicleType || signupForm.vehicleType,
-                    averageRating: profile?.averageRating,
-                    ratingCount: profile?.ratingCount,
-                    completedCount: profile?.completedCount,
-                  }
+                  ...profileForm,
+                  name: auth.name,
+                  role: auth.role,
+                  companyName: signupForm.companyName,
+                  vehicleType: profileForm.vehicleType || signupForm.vehicleType,
+                  averageRating: profile?.averageRating,
+                  ratingCount: profile?.ratingCount,
+                  completedCount: profile?.completedCount,
+                }
             }
           />
         </div>
+      </div>
+
+      <div className="kpi-grid">
+        <div className="kpi-card"><span>전체 배차</span><strong>{summary.total}</strong></div>
+        <div className="kpi-card"><span>입찰중</span><strong>{summary.bidding}</strong></div>
+        <div className="kpi-card"><span>운행중</span><strong>{summary.live}</strong></div>
+        <div className="kpi-card"><span>완료</span><strong>{summary.completed}</strong></div>
       </div>
 
       <div className="surface">
@@ -317,7 +325,7 @@ export default function UserOverviewTab({ controller }) {
         </div>
       </div>
 
-      <section className={`role-banner role-banner-${roleTheme?.accent || 'shipper'}`}>
+      {/* <section className={`role-banner role-banner-${roleTheme?.accent || 'shipper'}`}>
         <div>
           <div className="eyebrow">ROLE FOCUSED THEME</div>
           <h2>{roleTheme?.label}</h2>
@@ -326,16 +334,16 @@ export default function UserOverviewTab({ controller }) {
         <div className="role-banner-notes">
           {(roleTheme?.bullets || []).map((item) => <span key={item}>{item}</span>)}
         </div>
-      </section>
+      </section> */}
 
-      <div className="kpi-grid">
+      {/* <div className="kpi-grid">
         <div className="kpi-card"><span>전체 배차</span><strong>{summary.total}</strong></div>
         <div className="kpi-card"><span>입찰중</span><strong>{summary.bidding}</strong></div>
         <div className="kpi-card"><span>운행중</span><strong>{summary.live}</strong></div>
         <div className="kpi-card"><span>완료</span><strong>{summary.completed}</strong></div>
-      </div>
+      </div> */}
 
-      <div className="admin-grid-2">
+      {/* <div className="admin-grid-2">
         <div className="surface profile-edit-surface">
           <SectionTitle title="운영 알림" desc="역할에 따라 먼저 봐야 할 항목을 자동으로 묶었습니다." />
           <div className="signal-grid">
@@ -361,11 +369,11 @@ export default function UserOverviewTab({ controller }) {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="admin-grid-2">
-        <div className="surface profile-edit-surface">
-          <SectionTitle title="최근 배차" />
+        {/* <div className="surface profile-edit-surface">
+          <SectionTitle title="공지 사항" />
           <table className="board-table compact">
             <thead>
               <tr>
@@ -399,10 +407,34 @@ export default function UserOverviewTab({ controller }) {
               ))}
             </tbody>
           </table>
+        </div> */}
+        <div className="surface profile-edit-surface">
+          <SectionTitle title="공지사항" desc="운영 관련 주요 안내입니다." />
+
+          <article className="landing-infoPanel">
+            <div className="landing-infoPanel__top">
+              <span>공지사항</span>
+              <strong>운영 안내</strong>
+            </div>
+
+            <div className="landing-noticeList">
+              {(controller.publicData?.notices || []).map((notice) => (
+                <div key={notice.id} className="landing-noticeItem">
+                  <div className="landing-noticeItem__meta">
+                    <em>{notice.category}</em>
+                    {notice.pinned && <b>중요</b>}
+                  </div>
+                  <strong>{notice.title}</strong>
+                  <p>{notice.summary}</p>
+                  <small>{notice.publishedAt}</small>
+                </div>
+              ))}
+            </div>
+          </article>
         </div>
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="즐겨찾기" />
+          <SectionTitle title="관심차주" />
           <div className="list-stack">
             {bookmarks.length ? (
               bookmarks.slice(0, 5).map((item) => (
