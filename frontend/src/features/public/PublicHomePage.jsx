@@ -57,6 +57,18 @@ export default function PublicHomePage({ controller }) {
         <DriverHeader controller={controller} />
       )}
 
+      {/* 관리자 */}
+      {controller.isLoggedIn && controller.auth.role === 'ADMIN' && (
+        <PublicHeader
+          isLoggedIn={controller.isLoggedIn}
+          authMode={controller.authMode}
+          setAuthMode={controller.setAuthMode}
+          setDashboardTab={controller.setDashboardTab}
+          logout={controller.logout}
+          controller={controller}
+        />
+      )}
+
       <div style={{ position: "relative" }}>
         <PublicHeroSection controller={controller} />
       </div>

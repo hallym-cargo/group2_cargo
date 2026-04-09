@@ -29,6 +29,17 @@ export const signup = async (payload) =>
 export const fetchPublicOverview = async () =>
   (await api.get('/public/overview')).data;
 
+
+export const sendPasswordResetCode = async (email) =>
+  (await api.post('/auth/password-reset/send-code', { email }, { skipAuth: true })).data;
+
+export const verifyPasswordResetCode = async (email, code) =>
+  (await api.post('/auth/password-reset/verify-code', { email, code }, { skipAuth: true })).data;
+
+export const confirmPasswordReset = async (email, resetToken, newPassword) =>
+  (await api.post('/auth/password-reset/confirm', { email, resetToken, newPassword }, { skipAuth: true })).data;
+
+
 export const fetchMyProfile = async () =>
   (await api.get('/api/users/me/profile')).data;
 
