@@ -53,6 +53,7 @@ public class FinanceDtos {
         private Integer feeAmount;
         private Integer netAmount;
         private String description;
+        private String paymentMethod;
         private LocalDateTime createdAt;
     }
 
@@ -67,6 +68,7 @@ public class FinanceDtos {
         private Integer feeAmount;
         private Integer netAmount;
         private String description;
+        private String paymentMethod;
         private LocalDateTime createdAt;
         private String originAddress;
         private String destinationAddress;

@@ -18,7 +18,7 @@ export default function UserBoardTab({ controller }) {
     setOfferForm,
     handleCreateOffer,
     handleAcceptOffer,
-    handlePayShipment,
+    openPaymentModal,
     handleStart,
     handleCompletionProofChange,
     completionProof,
@@ -336,9 +336,11 @@ export default function UserBoardTab({ controller }) {
                       ? '결제가 완료되어 차주가 운반을 시작할 수 있습니다.'
                       : `선택한 차주에게 ${formatCurrency(selected.agreedPrice || 0)}을 결제해야 운행이 시작됩니다.`}
                   </p>
-                  <button className="btn btn-primary" onClick={handlePayShipment} disabled={selected.paid}>
-                    {selected.paid ? '결제 완료' : '바로 결제하기'}
-                  </button>
+                  {!selected.paid && (
+                    <button className="btn btn-primary" onClick={() => openPaymentModal(selected.id)}>
+                      결제하기
+                    </button>
+                  )}
                 </div>
               )}
 
