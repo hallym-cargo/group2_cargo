@@ -1,13 +1,13 @@
 spring:
     datasource:
-        url: ${DB_URL:jdbc:postgresql://ep-round-sea-am1z6zcf-pooler.c-5.us-east-1.aws.neon.tech:5432/neondb?sslmode=require}
-        username: ${DB_USERNAME:neondb_owner}
-        password: ${DB_PASSWORD:npg_yjGf5BD9tYRC}
+        url: ${DB_URL:jdbc:postgresql://192.168.0.23:5432/logistics}
+        username: ${DB_USERNAME:postgres}
+        password: ${DB_PASSWORD:1111}
         driver-class-name: org.postgresql.Driver
 
     jpa:
         hibernate:
-            ddl-auto: none
+            ddl-auto: ${JPA_DDL_AUTO:update}
         show-sql: true
         properties:
             hibernate:
@@ -17,6 +17,19 @@ spring:
     jackson:
         serialization:
             write-dates-as-timestamps: false
+
+
+    mail:
+        host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+        port: ${SPRING_MAIL_PORT:587}
+        username: ${SPRING_MAIL_USERNAME:tim92080888@gmail.com}
+        password: ${SPRING_MAIL_PASSWORD:xxmsloufozroxicc}
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
 
 server:
     port: ${PORT:${SERVER_PORT:8080}}
@@ -32,3 +45,6 @@ app:
         app-key: ${TMAP_APP_KEY:58gaUoZNnGcuRTIDz7hD5PxkVw8wd6nxyZYwhVc0}
 
     upload-dir: ${APP_UPLOAD_DIR:uploads}
+    mail:
+        from: ${APP_MAIL_FROM:${SPRING_MAIL_USERNAME:tim92080888@gmail.com}}
+        from-name: ${MAIL_FROM_NAME:want}
