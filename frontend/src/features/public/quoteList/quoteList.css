@@ -1,0 +1,377 @@
+.quote-list-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.quote-list-hero {
+  margin-bottom: 28px;
+}
+
+.quote-list-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 112px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #edf3ff;
+  color: #3d63f2;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+.quote-list-hero h1 {
+  margin: 0 0 10px;
+  font-size: 36px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.quote-list-hero p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.quote-list-filter-bar {
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  background: #ffffff;
+  margin-bottom: 20px;
+}
+
+.quote-list-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.quote-list-filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quote-list-filter-item label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.quote-list-filter-item select,
+.quote-list-search-input {
+  height: 48px;
+  border: 1px solid #d7deea;
+  border-radius: 14px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+  outline: none;
+}
+
+.quote-list-filter-item select:focus,
+.quote-list-search-input:focus {
+  border-color: #9db4ff;
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.12);
+}
+
+.quote-list-search-row {
+  display: flex;
+}
+
+.quote-list-search-input {
+  width: 100%;
+}
+
+.quote-list-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 18px 0 22px;
+}
+
+.quote-list-summary-bar__left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.quote-list-summary-bar__left strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.quote-list-summary-bar__left strong span {
+  color: #4a6cf7;
+}
+
+.quote-list-summary-bar__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.quote-list-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.quote-list-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: #4a6cf7;
+  cursor: pointer;
+}
+
+.quote-list-control-select {
+  height: 36px;
+  min-width: 120px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #374151;
+  outline: none;
+}
+
+.quote-list-control-select:focus {
+  border-color: #9db4ff;
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+}
+
+.quote-list-size-select {
+  min-width: 110px;
+}
+
+.quote-list-sort-select {
+  min-width: 115px;
+}
+
+.quote-list-register-button {
+  height: 44px;
+  padding: 0 18px;
+}
+
+.quote-list-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quote-card {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.quote-card-status {
+  padding: 20px 18px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 184px;
+}
+
+.quote-card-status.is-bidding {
+  background: linear-gradient(180deg, #5f7cff 0%, #4463f0 100%);
+}
+
+.quote-card-status.is-matched {
+  background: linear-gradient(180deg, #7188ff 0%, #5871f7 100%);
+}
+
+.quote-card-status.is-transporting {
+  background: linear-gradient(180deg, #6078ff 0%, #4057de 100%);
+}
+
+.quote-card-status.is-completed {
+  background: linear-gradient(180deg, #7f8aa3 0%, #5f6a82 100%);
+}
+
+.quote-card-status__label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+  font-weight: 700;
+}
+
+.quote-card-status strong {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 10px 0 18px;
+}
+
+.quote-card-status__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  opacity: 0.95;
+}
+
+.quote-card-body {
+  padding: 24px 26px;
+}
+
+.quote-card-body__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.quote-card-body__top h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.4;
+}
+
+.quote-card-body__top p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.quote-card-detail-button {
+  border: none;
+  background: transparent;
+  color: #4463f0;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.quote-card-info-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.quote-card-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quote-card-info-item span {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.quote-card-info-item strong {
+  font-size: 14px;
+  color: #111827;
+  line-height: 1.45;
+}
+
+.quote-list-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.quote-list-page-button,
+.quote-list-page-number {
+  min-width: 40px;
+  height: 40px;
+  border: 1px solid #d7deea;
+  background: #fff;
+  border-radius: 10px;
+  color: #374151;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.quote-list-page-number.is-active {
+  background: #4463f0;
+  color: #fff;
+  border-color: #4463f0;
+}
+
+@media (max-width: 1100px) {
+  .quote-card {
+    grid-template-columns: 1fr;
+  }
+
+  .quote-card-status {
+    min-height: auto;
+    gap: 14px;
+  }
+
+  .quote-card-info-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .quote-list-page {
+    padding: 28px 16px 60px;
+  }
+
+  .quote-list-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quote-list-summary-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quote-list-summary-bar__right {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .quote-card-body__top {
+    flex-direction: column;
+  }
+
+  .quote-card-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .quote-list-summary-bar__right {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quote-list-control-select {
+    width: 100%;
+  }
+
+  .quote-card-info-grid {
+    grid-template-columns: 1fr;
+  }
+}

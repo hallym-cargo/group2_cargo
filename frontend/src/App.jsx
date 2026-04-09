@@ -27,11 +27,11 @@ export default function App() {
 
   if (controller.routePage === "payment") {
     page = <PaymentPage controller={controller} />;
-  } else if (controller.dashboardTab === "quotes") {
+  } else if (controller.routePage === "quotes") {
     page = <QuoteListPage controller={controller} />;
   } else if (controller.routePage === "register") {
     page = <QuoteRegisterPage controller={controller} />;
-  } else if (controller.dashboardTab === "quoteRegister") {
+  } else if (controller.routePage === "quoteRegister") {
     page = <QuoteRegisterPage controller={controller} />;
   } else if (controller.routePage === "status") {
     page = <TransportStatus controller={controller} />;
@@ -56,7 +56,11 @@ export default function App() {
   } else if (controller.routePage === "forgot-password") {
     page = <ForgotPasswordPage controller={controller} />;
   } else if (controller.routePage === "dashboard") {
-    page = controller.isAdmin ? <AdminConsolePage controller={controller} /> : <UserConsolePage controller={controller} />;
+    page = controller.isAdmin ? (
+      <AdminConsolePage controller={controller} />
+    ) : (
+      <UserConsolePage controller={controller} />
+    );
   } else if (controller.dashboardTab === "home") {
     page = <PublicHomePage controller={controller} />;
   } else if (controller.isAdmin) {
