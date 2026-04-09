@@ -12,8 +12,8 @@ export default function UserSidebar({
   const navItems = [
     ["overview", "마이페이지"],
     ["board", "배차 보드"],
-    ["register", auth.role === "SHIPPER" ? "화물 등록" : "입찰 가이드"],
-    ["finance", "돈 관리"],
+    // ["register", auth.role === "SHIPPER" ? "화물 등록" : "입찰 가이드"],
+    ["finance", "정산 내역"],
     ["penalty", "패널티 관리"],
     ["ratings", "평점 관리"],
     ["bookmarks", "즐겨찾기"],
@@ -43,9 +43,27 @@ export default function UserSidebar({
             {label}
           </button>
         ))}
+
+        <div className="sidebar-divider" />
+
+        <button
+          className={dashboardTab === "quotes" ? "nav-link active" : "nav-link"}
+          onClick={() => setDashboardTab("quotes")}
+        >
+          견적목록 보기
+        </button>
+
+        <button
+          className={dashboardTab === "transport" ? "nav-link active" : "nav-link"}
+          onClick={() => setDashboardTab("transport")}
+        >
+          운송현황
+        </button>
+
+
       </nav>
       <div className="side-mini-kpis">
-        <div>
+        {/* <div>
           <span>전체</span>
           <strong>{summary.total}</strong>
         </div>
@@ -60,7 +78,7 @@ export default function UserSidebar({
         <div>
           <span>완료</span>
           <strong>{summary.completed}</strong>
-        </div>
+        </div> */}
       </div>
       <button className="btn btn-secondary block" onClick={logout}>
         로그아웃

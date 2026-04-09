@@ -5,9 +5,23 @@
 .segmented,
 .hero-kpis,
 .side-mini-kpis,
-.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.hero-grid { display: grid; grid-template-columns: 1.35fr .65fr; gap: 18px; }
-.auth-card { display: flex; flex-direction: column; gap: 16px; }
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.35fr .65fr;
+  gap: 18px;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 .eyebrow {
   color: var(--primary);
@@ -55,8 +69,17 @@
   line-height: 1.5;
 }
 
-.list-stack { display: flex; flex-direction: column; gap: 12px; }
-.list-stack.tight { gap: 10px; }
+.list-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.list-stack.tight {
+  gap: 10px;
+}
+
 .list-row {
   background: var(--surface-2);
   border: 1px solid var(--line);
@@ -67,7 +90,12 @@
   align-items: center;
   gap: 10px;
 }
-.list-row.block { display: flex; flex-direction: column; align-items: flex-start; }
+
+.list-row.block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
 
 .news-card,
 .offer-card,
@@ -88,12 +116,35 @@
 .issue-card,
 .bookmark-item,
 .signal-card,
-.shortcut-card { padding: 14px; }
-.bookmark-item { text-align: left; }
-.bookmark-item span { color: var(--primary); font-weight: 700; font-size: 13px; }
-.form-stack { display: flex; flex-direction: column; gap: 12px; }
-.compact-form { gap: 10px; }
-.split-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.shortcut-card {
+  padding: 14px;
+}
+
+.bookmark-item {
+  text-align: left;
+}
+
+.bookmark-item span {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compact-form {
+  gap: 10px;
+}
+
+.split-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
 
 .btn {
   height: 40px;
@@ -109,12 +160,38 @@
   align-items: center;
   justify-content: center;
 }
-.btn.small { height: 34px; font-size: 12px; padding: 0 10px; }
-.btn.block { width: 100%; }
-.btn-primary { background: var(--primary-dark); color: #fff; border-color: var(--primary-dark); }
-.btn-secondary { background: #eef2f7; color: var(--text); border: 1px solid var(--line); }
-.btn-ghost { background: transparent; color: var(--text-sub); border: 1px solid var(--line); }
-.btn-ghost.danger { color: var(--red); }
+
+.btn.small {
+  height: 34px;
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+.btn.block {
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--primary-dark);
+  color: #fff;
+  border-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: #eef2f7;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-sub);
+  border: 1px solid var(--line);
+}
+
+.btn-ghost.danger {
+  color: var(--red);
+}
 
 .segmented {
   background: #f1f4f8;
@@ -122,6 +199,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
 }
+
 .segmented button {
   flex: 1;
   height: 36px;
@@ -131,7 +209,11 @@
   font-weight: 600;
   border: 0;
 }
-.segmented button.active { background: #fff; color: var(--text); }
+
+.segmented button.active {
+  background: #fff;
+  color: var(--text);
+}
 
 .alert-info {
   background: rgba(var(--accent-rgb), .08);
@@ -142,9 +224,18 @@
   font-size: 13px;
   font-weight: 600;
 }
-.alert-info.slim { padding: 10px 12px; min-width: 320px; }
 
-.board-block { display: flex; flex-direction: column; gap: 14px; }
+.alert-info.slim {
+  padding: 10px 12px;
+  min-width: 320px;
+}
+
+.board-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .public-board-grid,
 .admin-grid-2,
 .detail-layout,
@@ -152,8 +243,19 @@
   display: grid;
   gap: 18px;
 }
-.public-board-grid { grid-template-columns: 1.08fr .92fr; }
-.admin-grid-2 { grid-template-columns: 1fr 1fr; }
-.detail-layout { grid-template-columns: 1.12fr .88fr; }
-.info-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
+.public-board-grid {
+  grid-template-columns: 1.08fr .92fr;
+}
+
+.admin-grid-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.detail-layout {
+  grid-template-columns: 1.12fr .88fr;
+}
+
+.info-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
