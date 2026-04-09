@@ -163,7 +163,14 @@
 .transport-statusChip.is-cancelled { background: rgba(244, 114, 182, 0.16); color:#b42361; }
 .transport-statusChip.is-requested { background: rgba(151, 161, 176, 0.16); color:#546173; }
 
-.transport-detailPanel { padding: 24px; }
+.transport-detailPanel { position: relative; overflow: hidden; padding: 24px; min-height: 640px; }
+.transport-detailPanel.is-loading > :not(.transport-loadingOverlay) {
+  filter: blur(5px);
+  opacity: 0.28;
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.24s ease, opacity 0.24s ease;
+}
 .transport-detailHead {
   display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:18px;
 }
@@ -363,27 +370,27 @@
 .transport-loadingOverlay {
   position: absolute;
   inset: 0;
-  z-index: 6;
+  z-index: 12;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  border-radius: 32px;
-  background:
-    radial-gradient(circle at top, rgba(99, 124, 255, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(248, 250, 255, 0.88), rgba(244, 247, 252, 0.84));
-  backdrop-filter: blur(18px);
+  padding: 32px 24px 24px;
+  background: rgba(247, 250, 252, 0.18);
+  backdrop-filter: blur(10px);
 }
 
+
 .transport-loadingCard {
-  width: min(520px, 100%);
-  padding: 30px 28px;
-  border-radius: 30px;
-  border: 1px solid rgba(166, 180, 214, 0.34);
-  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(246,249,255,0.94));
-  box-shadow: 0 26px 60px rgba(23, 35, 67, 0.12);
+  width: min(520px, calc(100% - 56px));
+  border-radius: 34px;
+  border: 1px solid rgba(180, 191, 213, 0.34);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 26px 70px rgba(17, 27, 48, 0.12);
+  padding: 30px 34px 28px;
   text-align: center;
+  transform: translateY(14px);
 }
+
 
 .transport-loadingBadge {
   display: inline-flex;

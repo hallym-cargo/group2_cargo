@@ -60,8 +60,7 @@ public class PublicService {
 
         return shipments.stream()
                 .sorted(Comparator.comparing(Shipment::getUpdatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                .limit(12)
-                .map(this::toPublicCard)
+                                .map(this::toPublicCard)
                 .toList();
     }
 
