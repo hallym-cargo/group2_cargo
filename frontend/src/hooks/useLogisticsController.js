@@ -233,12 +233,12 @@ export function useLogisticsController() {
 
       if (auth.role === 'DRIVER') {
         if (driverBoardTag === 'BIDDING') byTag = item.status === 'BIDDING';
-        if (driverBoardTag === 'MY_BIDS') byTag = !!item.hasMyOffer;
+        if (driverBoardTag === 'MY_BIDS') byTag = item.status === 'BIDDING' && !!item.hasMyOffer;
         if (driverBoardTag === 'MY_ASSIGNED') {
           byTag = !!item.assignedToMe && item.status === 'CONFIRMED';
         }
         if (driverBoardTag === 'MY_TRANSIT') {
-          byTag = !!item.assignedToMe && item.status === 'IN_TRANSIT';
+          byTag = !!item.assignedToMe && ['IN_TRANSIT', 'COMPLETED'].includes(item.status);
         }
       }
 
