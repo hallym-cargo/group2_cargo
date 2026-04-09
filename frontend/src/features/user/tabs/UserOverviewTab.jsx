@@ -315,14 +315,14 @@ export default function UserOverviewTab({ controller }) {
           </div>
         </div>
 
-        <div className="admin-grid-2" style={{ marginTop: 16 }}>
+        {/* <div className="admin-grid-2" style={{ marginTop: 16 }}>
           <div className="surface-sub">
             <span>상세 확인</span>
             <button className="btn btn-secondary" onClick={() => setDashboardTab('penalty')}>
               패널티 탭 보기
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* <section className={`role-banner role-banner-${roleTheme?.accent || 'shipper'}`}>
@@ -409,13 +409,13 @@ export default function UserOverviewTab({ controller }) {
           </table>
         </div> */}
         <div className="surface profile-edit-surface">
-          <SectionTitle title="공지사항" desc="운영 관련 주요 안내입니다." />
+          <SectionTitle title="공지사항" />
 
           <article className="landing-infoPanel">
-            <div className="landing-infoPanel__top">
+            {/* <div className="landing-infoPanel__top">
               <span>공지사항</span>
               <strong>운영 안내</strong>
-            </div>
+            </div> */}
 
             <div className="landing-noticeList">
               {(controller.publicData?.notices || []).map((notice) => (
@@ -434,7 +434,7 @@ export default function UserOverviewTab({ controller }) {
         </div>
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="관심차주" />
+          <SectionTitle title="관심 견적" />
           <div className="list-stack">
             {bookmarks.length ? (
               bookmarks.slice(0, 5).map((item) => (

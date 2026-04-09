@@ -912,7 +912,7 @@ body.theme-admin .app-logo__image {
 }
 
 .landing-infoPanel {
-  padding: 24px;
+  padding: 20px;
 }
 
 .landing-infoPanel--form {
@@ -931,7 +931,9 @@ body.theme-admin .app-logo__image {
 .landing-faqList {
   display: grid;
   gap: 14px;
-  margin-top: 24px;
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .landing-noticeItem,

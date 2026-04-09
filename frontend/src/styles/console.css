@@ -539,6 +539,10 @@
   min-height: 500px;
 }
 
+.profile-edit-surface>div:last-child {
+  margin-top: 16px;
+}
+
 .profile-save-panelOverlay {
   position: absolute;
   inset: 0;
@@ -570,4 +574,10 @@
   .profile-edit-surface {
     min-height: 620px;
   }
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 12px 0;
 }
