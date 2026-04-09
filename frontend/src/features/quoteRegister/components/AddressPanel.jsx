@@ -16,6 +16,15 @@ export default function AddressPanel({
   const [hasElevator, setHasElevator] = useState("");
 
   useEffect(() => {
+    // 기존에 선택한 주소가 있으면 다시 열 때 상세주소 입력 화면부터 보여주기
+    if (currentValue) {
+      setSelectedBaseAddress(currentValue);
+      setPanelStep("detail");
+    } else {
+      setSelectedBaseAddress("");
+      setPanelStep("search");
+    }
+
     if (!currentDetailValue) {
       setDetailAddress("");
       setFloor("");
@@ -37,7 +46,7 @@ export default function AddressPanel({
 
     setDetailAddress(cleanedDetail);
     setHasElevator(elevatorMatch ? elevatorMatch[1] : "");
-  }, [currentDetailValue]);
+  }, [currentValue, currentDetailValue]);
 
   const getDetailFieldName = () => {
     if (fieldName === "originAddress") return "originDetailAddress";
@@ -119,20 +128,7 @@ export default function AddressPanel({
   return (
     <div className="side-panel-content">
       <div className="side-panel-header">
-        {panelStep === "search" ? (
-          <h3>{title}</h3>
-        ) : (
-          <div className="detail-panel-title-row">
-            <button
-              type="button"
-              className="panel-back-button"
-              onClick={handleBackToSearch}
-            >
-              ←
-            </button>
-            <h3>상세주소 입력</h3>
-          </div>
-        )}
+        <h3>{panelStep === "search" ? title : "상세주소 입력"}</h3>
 
         <button
           type="button"
@@ -165,7 +161,18 @@ export default function AddressPanel({
       {panelStep === "detail" && (
         <div className="detail-address-panel">
           <div className="selected-preview">
-            <strong>선택한 주소</strong>
+            <div className="selected-preview-header">
+              <strong>선택한 주소</strong>
+
+              <button
+                type="button"
+                className="address-research-button"
+                onClick={handleBackToSearch}
+              >
+                주소 다시 검색
+              </button>
+            </div>
+
             <p>{baseAddressText}</p>
           </div>
 
