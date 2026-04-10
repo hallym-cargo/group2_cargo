@@ -1,18 +1,62 @@
+import { useEffect, useMemo, useState } from "react";
 import PublicSectionLoading from "../../../components/common/PublicSectionLoading";
 import PublicHeader from "../components/PublicHeader";
 import ShipperHeader from "../components/ShipperHeader";
 import DriverHeader from "../components/DriverHeader";
-import {
-  formatRatingSummary,
-  resolveMediaUrl,
-  roleText,
-} from "../../../utils/formatters";
+import { resolveMediaUrl } from "../../../utils/formatters";
+
+const FAVORITE_STORAGE_KEY = "public-user-favorites";
+
+function readFavoriteMap() {
+  try {
+    const raw = localStorage.getItem(FAVORITE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    console.error(error);
+    return {};
+  }
+}
+
+function writeFavoriteMap(nextValue) {
+  try {
+    localStorage.setItem(FAVORITE_STORAGE_KEY, JSON.stringify(nextValue));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function getFavoriteKey(user, role, authUserId) {
+  return `${authUserId || "guest"}:${role}:${user.id}`;
+}
+
+function BookmarkIcon({ active }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="public-directory-card__bookmarkIcon"
+      fill={active ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 4.75C6 3.78 6.78 3 7.75 3h8.5C17.22 3 18 3.78 18 4.75V21l-6-3.6L6 21V4.75z" />
+    </svg>
+  );
+}
 
 export default function PublicUserSearchPage({ controller, role }) {
   const isDriver = role === "DRIVER";
   const users = controller.publicUsers;
   const keyword = controller.publicUserKeyword;
   const isLoading = controller.publicUserLoading;
+  const authUserId = controller.auth?.id || localStorage.getItem("userId") || "guest";
+  const [favoriteMap, setFavoriteMap] = useState(() => readFavoriteMap());
+
+  useEffect(() => {
+    setFavoriteMap(readFavoriteMap());
+  }, [role, authUserId]);
 
   const handleOpenProfile = (user) => {
     controller.openUserProfile(user.id, user);
@@ -21,6 +65,47 @@ export default function PublicUserSearchPage({ controller, role }) {
   const getProfileImage = (user) => {
     const imageUrl = user?.profileImageUrl?.trim();
     return resolveMediaUrl(imageUrl) || "/images/default-profile.png";
+  };
+
+  const isFavoriteUser = (user) => {
+    return !!favoriteMap[getFavoriteKey(user, role, authUserId)];
+  };
+
+  const sortedUsers = useMemo(() => {
+    const favoriteUsers = [];
+    const normalUsers = [];
+
+    users.forEach((user) => {
+      if (isFavoriteUser(user)) {
+        favoriteUsers.push(user);
+      } else {
+        normalUsers.push(user);
+      }
+    });
+
+    return [...favoriteUsers, ...normalUsers];
+  }, [users, favoriteMap, role, authUserId]);
+
+  const toggleFavoriteUser = (user) => {
+    const storageKey = getFavoriteKey(user, role, authUserId);
+
+    setFavoriteMap((prev) => {
+      const next = { ...prev };
+
+      if (next[storageKey]) {
+        delete next[storageKey];
+      } else {
+        next[storageKey] = {
+          id: user.id,
+          role,
+          name: user.name,
+          savedAt: Date.now(),
+        };
+      }
+
+      writeFavoriteMap(next);
+      return next;
+    });
   };
 
   const renderAvatar = (user) => {
@@ -35,6 +120,13 @@ export default function PublicUserSearchPage({ controller, role }) {
         }}
       />
     );
+  };
+
+  const getSubtitle = (user) => {
+    if (user.role === "DRIVER") {
+      return `차주 / ${user.vehicleType?.trim() || "등록된 차종 없음"}`;
+    }
+    return `화주 / ${user.companyName?.trim() || "회사 이름 없음"}`;
   };
 
   return (
@@ -115,36 +207,28 @@ export default function PublicUserSearchPage({ controller, role }) {
 
           <div className="public-directory-search surface">
             <div className="public-directory-search__meta">
-              <strong>{roleText(role)} 목록</strong>
+              <strong>{isDriver ? "차주 목록" : "화주 목록"}</strong>
               <small>
-                {isLoading
-                  ? "목록을 갱신하는 중입니다."
-                  : `총 ${users.length}명`}
+                {isLoading ? "목록을 갱신하는 중입니다." : `총 ${users.length}명`}
               </small>
             </div>
+
             <div className="public-directory-search__controls">
               <input
                 type="text"
                 placeholder={isDriver ? "차주 이름 검색" : "화주 이름 검색"}
                 value={keyword}
-                onChange={(e) =>
-                  controller.setPublicUserKeyword(e.target.value)
-                }
+                onChange={(e) => controller.setPublicUserKeyword(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter")
-                    controller.searchPublicUsers(
-                      role,
-                      controller.publicUserKeyword,
-                    );
+                  if (e.key === "Enter") {
+                    controller.searchPublicUsers(role, controller.publicUserKeyword);
+                  }
                 }}
               />
               <button
                 className="landing-btn landing-btn--primary"
                 onClick={() =>
-                  controller.searchPublicUsers(
-                    role,
-                    controller.publicUserKeyword,
-                  )
+                  controller.searchPublicUsers(role, controller.publicUserKeyword)
                 }
               >
                 검색
@@ -158,9 +242,7 @@ export default function PublicUserSearchPage({ controller, role }) {
             </div>
           </div>
 
-          <div
-            className={`public-directory-results ${isLoading ? "is-loading" : ""}`}
-          >
+          <div className={`public-directory-results ${isLoading ? "is-loading" : ""}`}>
             {isLoading && (
               <PublicSectionLoading
                 text={`${isDriver ? "차주" : "화주"} 데이터를 불러오는 중입니다...`}
@@ -168,67 +250,71 @@ export default function PublicUserSearchPage({ controller, role }) {
             )}
 
             <div className="public-directory-grid" aria-busy={isLoading}>
-              {!isLoading && users.length ? (
-                users.map((user) => (
-                  <article
-                    key={user.id}
-                    className="public-directory-card surface"
-                  >
-                    <div className="public-directory-card__head">
-                      <button
-                        type="button"
-                        className="public-directory-card__profileTrigger"
-                        onClick={() => handleOpenProfile(user)}
-                      >
-                        {renderAvatar(user)}
-                        <div className="public-directory-card__profileText">
-                          <span>{roleText(user.role)}</span>
-                          <h3>{user.name}</h3>
-                          <small>프로필 보기</small>
+              {!isLoading && sortedUsers.length ? (
+                sortedUsers.map((user) => {
+                  const isFavorite = isFavoriteUser(user);
+
+                  return (
+                    <article
+                      key={user.id}
+                      className={`public-directory-card surface ${isFavorite ? "is-favorite" : ""}`}
+                    >
+                      <div className="public-directory-card__topRow">
+                        <button
+                          type="button"
+                          className="public-directory-card__profileTrigger"
+                          onClick={() => handleOpenProfile(user)}
+                        >
+                          {renderAvatar(user)}
+                          <div className="public-directory-card__profileText">
+                            <h3>{user.name}</h3>
+                            <span>{getSubtitle(user)}</span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            isFavorite
+                              ? "public-directory-card__favoriteBtn is-active"
+                              : "public-directory-card__favoriteBtn"
+                          }
+                          onClick={() => toggleFavoriteUser(user)}
+                          aria-label={isFavorite ? "즐겨찾기 해제" : "즐겨찾기 추가"}
+                          title={isFavorite ? "즐겨찾기 해제" : "즐겨찾기 추가"}
+                        >
+                          <BookmarkIcon active={isFavorite} />
+                        </button>
+                      </div>
+
+                      <p className="public-directory-card__bio">
+                        {user.bio ||
+                          (isDriver
+                            ? "등록된 차주 소개가 없습니다."
+                            : "등록된 화주 소개가 없습니다.")}
+                      </p>
+
+                      <div className="public-directory-card__summaryStats">
+                        <div>
+                          <span>거래 횟수</span>
+                          <strong>{user.completedCount || 0}건</strong>
                         </div>
-                      </button>
-                      <strong>
-                        {formatRatingSummary(
-                          user.averageRating,
-                          user.ratingCount,
-                        )}
-                      </strong>
-                    </div>
-
-                    <div className="public-directory-card__stats">
-                      <div>
-                        <span>{isDriver ? "차량 정보" : "회사명"}</span>
-                        <strong>
-                          {isDriver
-                            ? user.vehicleType || "-"
-                            : user.companyName || "-"}
-                        </strong>
+                        <div>
+                          <span>평점</span>
+                          <strong>
+                            {user.averageRating && Number(user.averageRating) > 0
+                              ? `${Number(user.averageRating).toFixed(1)}점`
+                              : "0점"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>패널티 점수</span>
+                          <strong>{user.penaltyScore || 0}점</strong>
+                        </div>
                       </div>
-                      <div>
-                        <span>완료 건수</span>
-                        <strong>{user.completedCount || 0}건</strong>
-                      </div>
-                    </div>
-
-                    <dl className="public-directory-card__info">
-                      <div>
-                        <dt>연락 이메일</dt>
-                        <dd>{user.contactEmail || "-"}</dd>
-                      </div>
-                      <div>
-                        <dt>연락처</dt>
-                        <dd>{user.contactPhone || "-"}</dd>
-                      </div>
-                    </dl>
-
-                    <p>
-                      {user.bio ||
-                        (isDriver
-                          ? "등록된 차주 소개가 없습니다."
-                          : "등록된 화주 소개가 없습니다.")}
-                    </p>
-                  </article>
-                ))
+                    </article>
+                  );
+                })
               ) : !isLoading ? (
                 <div className="public-directory-empty surface">
                   검색 결과가 없습니다.
