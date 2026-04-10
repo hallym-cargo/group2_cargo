@@ -1,7 +1,6 @@
 package com.logistics.app.controller;
 
 import com.logistics.app.dto.FinanceDtos;
-import com.logistics.app.dto.ReceiptDTO;
 import com.logistics.app.entity.User;
 import com.logistics.app.service.AuthService;
 import com.logistics.app.service.FinanceService;
@@ -29,8 +28,9 @@ public class FinanceController {
     }
 
     @GetMapping("/receipt/{shipmentId}")
-    public ResponseEntity<ReceiptDTO> getReceipt(@PathVariable("shipmentId") Long shipmentId) {
-        return ResponseEntity.ok(financeService.getReceipt(shipmentId));
+    public FinanceDtos.ReceiptResponse getReceiptLegacyAlias(@PathVariable("shipmentId") Long shipmentId,
+                                                             Authentication authentication) {
+        return financeService.getReceipt(currentUser(authentication), shipmentId);
     }
 
     @GetMapping("/transactions")
