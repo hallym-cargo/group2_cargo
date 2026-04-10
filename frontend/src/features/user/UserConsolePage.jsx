@@ -11,6 +11,7 @@ import UserRatingsTab from './tabs/UserRatingsTab';
 import UserRegisterDriverTab from './tabs/UserRegisterDriverTab';
 import UserRegisterShipperTab from './tabs/UserRegisterShipperTab';
 import TransportStatus from '../../pages/TransportStatus';
+import QuoteListPage from '../public/QuoteListPage';  // 추가
 
 function resolveTitle(authRole, dashboardTab) {
   if (dashboardTab === 'register') {
@@ -35,12 +36,17 @@ function resolveTabComponent(authRole, dashboardTab) {
     penalty: UserPenaltyTab,
     ratings: UserRatingsTab,
     bookmarks: UserBookmarksTab,
+    quotes: QuoteListPage,  // 추가
   };
 
   return map[dashboardTab] || UserOverviewTab;
 }
 
 export default function UserConsolePage({ controller }) {
+  if (controller.routePage === 'quotes') {
+    return <QuoteListPage controller={controller} />;
+  } // 추가
+
   if (controller.routePage === 'status') {
     return <TransportStatus controller={controller} />;
   }
@@ -62,6 +68,8 @@ export default function UserConsolePage({ controller }) {
           summary={controller.summary}
           logout={controller.logout}
           goToMain={() => controller.goToMainSection()}
+          setRoutePage={controller.setRoutePage}  // 추가
+          routePage={controller.routePage}  // 추가
         />
       }
       topbar={

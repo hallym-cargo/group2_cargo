@@ -59,6 +59,9 @@
   line-height: 1.3;
   letter-spacing: -0.02em;
   color: var(--text-strong);
+
+  /* 추가 */
+  margin-bottom: 16px;
 }
 
 .section-desc {
