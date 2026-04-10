@@ -78,6 +78,8 @@ export default function UserBoardTab({ controller }) {
                       e.stopPropagation()
                       handleToggleBookmark(item.id)
                     }}
+                    aria-label={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                    title={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
                   >
                     ★
                   </button>
@@ -145,8 +147,10 @@ export default function UserBoardTab({ controller }) {
                   <button
                     className={selected.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'}
                     onClick={() => handleToggleBookmark(selected.id)}
+                    aria-label={selected.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                    title={selected.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
                   >
-                    ★ 즐겨찾기
+                    ★
                   </button>
 
                   <span className={`badge badge-${selected.status.toLowerCase()}`}>
