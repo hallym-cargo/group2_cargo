@@ -1319,3 +1319,14 @@ body.theme-admin .app-logo__image {
   font-size: 12px;
   font-weight: 700;
 }
+
+/* 추가 */
+.faq-section .landing-faqItem {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}

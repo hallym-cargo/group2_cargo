@@ -457,6 +457,110 @@ export default function UserOverviewTab({ controller }) {
           </div>
         </div>
       </div>
-    </div>
+
+
+      <div className="admin-grid-2">
+
+        <div className="surface profile-edit-surface">
+          <SectionTitle title="FAQ" desc="자주 묻는 질문" />
+          <div className="faq-section">
+            <div className="landing-faqList">
+              {(controller.publicData?.faqs || []).map((faq) => (
+                <details key={faq.id} className="landing-faqItem">
+                  <summary>{faq.question}</summary>
+                  <p>{faq.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="surface profile-edit-surface">
+          <SectionTitle title="도입 문의" desc="서비스 관련 상담 요청" />
+
+          <div className="landing-formStack">
+            <input
+              placeholder="회사명"
+              value={controller.inquiryForm.companyName}
+              onChange={(e) =>
+                controller.setInquiryForm({
+                  ...controller.inquiryForm,
+                  companyName: e.target.value,
+                })
+              }
+            />
+
+            <div className="landing-split2">
+              <input
+                placeholder="담당자명"
+                value={controller.inquiryForm.contactName}
+                onChange={(e) =>
+                  controller.setInquiryForm({
+                    ...controller.inquiryForm,
+                    contactName: e.target.value,
+                  })
+                }
+              />
+              <input
+                placeholder="연락처"
+                value={controller.inquiryForm.phone}
+                onChange={(e) =>
+                  controller.setInquiryForm({
+                    ...controller.inquiryForm,
+                    phone: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <input
+              placeholder="이메일"
+              value={controller.inquiryForm.email}
+              onChange={(e) =>
+                controller.setInquiryForm({
+                  ...controller.inquiryForm,
+                  email: e.target.value,
+                })
+              }
+            />
+
+            <select
+              value={controller.inquiryForm.inquiryType}
+              onChange={(e) =>
+                controller.setInquiryForm({
+                  ...controller.inquiryForm,
+                  inquiryType: e.target.value,
+                })
+              }
+            >
+              <option>도입 문의</option>
+              <option>데모 요청</option>
+              <option>요금 상담</option>
+              <option>기술 협의</option>
+            </select>
+
+            <textarea
+              rows="6"
+              placeholder="문의 내용을 입력해주세요"
+              value={controller.inquiryForm.message}
+              onChange={(e) =>
+                controller.setInquiryForm({
+                  ...controller.inquiryForm,
+                  message: e.target.value,
+                })
+              }
+            />
+
+            <button
+              className="btn btn-primary"
+              onClick={controller.handleInquiry}
+            >
+              문의 접수
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div >
   )
 }

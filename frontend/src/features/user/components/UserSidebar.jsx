@@ -8,6 +8,8 @@ export default function UserSidebar({
   summary,
   logout,
   goToMain,
+  setRoutePage, // 추가
+  routePage,  // 추가
 }) {
   const navItems = [
     ["overview", "마이페이지"],
@@ -18,6 +20,8 @@ export default function UserSidebar({
     ["ratings", "평점 관리"],
     ["bookmarks", "즐겨찾기"],
   ];
+
+  const isRouteActive = (page) => controllerRoutePage === page; // 추가
 
   return (
     <aside className="console-sidebar">
@@ -46,18 +50,30 @@ export default function UserSidebar({
 
         <div className="sidebar-divider" />
 
-        <button
+        {/* <button
           className={dashboardTab === "quotes" ? "nav-link active" : "nav-link"}
           onClick={() => setDashboardTab("quotes")}
         >
           견적목록 보기
+        </button> */}
+        <button
+          className={routePage === "quotes" ? "nav-link active" : "nav-link"}
+          onClick={() => setRoutePage("quotes")}
+        >
+          견적 목록 보기
         </button>
 
-        <button
+        {/* <button
           className={dashboardTab === "transport" ? "nav-link active" : "nav-link"}
           onClick={() => setDashboardTab("transport")}
         >
           운송현황
+        </button> */}
+        <button
+          className={routePage === "status" ? "nav-link active" : "nav-link"}
+          onClick={() => setRoutePage("status")}
+        >
+          운송 현황
         </button>
 
 

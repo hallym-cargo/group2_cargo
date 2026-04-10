@@ -166,6 +166,13 @@
 
 .detail-stat-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 16px;
+  /* 추가 */
+}
+
+/* 추가 */
+.timeline-section {
+  margin-top: 16px;
 }
 
 .detail-stat-grid>div,
