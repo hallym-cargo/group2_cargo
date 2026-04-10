@@ -35,6 +35,8 @@ public class MoneyTransaction {
 
     private String description;
 
+    private String paymentMethod;
+
     private LocalDateTime createdAt;
 
     @PrePersist

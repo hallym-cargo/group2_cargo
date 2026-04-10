@@ -187,6 +187,7 @@ public class FinanceService {
                 .feeAmount(tx.getFeeAmount())
                 .netAmount(tx.getNetAmount())
                 .description(tx.getDescription())
+                .paymentMethod(tx.getPaymentMethod() != null ? tx.getPaymentMethod() : (tx.getShipment() != null ? tx.getShipment().getPaymentMethod() : null))
                 .createdAt(tx.getCreatedAt())
                 .originAddress(shipment.getOriginAddress())
                 .destinationAddress(shipment.getDestinationAddress())
@@ -223,6 +224,7 @@ public class FinanceService {
 
         shipment.setAgreedPrice(amount);
         shipment.setPaid(true);
+        shipment.setPaymentMethod(paymentMethod);
         shipment.setPaymentCompletedAt(java.time.LocalDateTime.now());
         shipmentRepository.save(shipment);
 
@@ -235,6 +237,7 @@ public class FinanceService {
                     .feeAmount(0)
                     .netAmount(amount)
                     .description("운송 결제 완료")
+                    .paymentMethod(paymentMethod)
                     .build());
         }
 
@@ -267,6 +270,11 @@ public class FinanceService {
                 .feeAmount(tx.getFeeAmount())
                 .netAmount(tx.getNetAmount())
                 .description(tx.getDescription())
+                .paymentMethod(
+                        tx.getPaymentMethod() != null
+                                ? tx.getPaymentMethod()
+                                : (tx.getShipment() != null ? tx.getShipment().getPaymentMethod() : null)
+                )
                 .createdAt(tx.getCreatedAt())
                 .build();
     }

@@ -96,24 +96,7 @@ public class ShipmentService {
     }
 
     public List<ShipmentDtos.ShipmentResponse> listForUser(User user) {
-        List<Shipment> shipments;
-        if (user.getRole() == UserRole.SHIPPER) {
-            shipments = shipmentRepository.findByShipper(user);
-        } else if (user.getRole() == UserRole.DRIVER) {
-            var myOfferShipmentIds = offerRepository.findByDriver(user).stream()
-                    .map(Offer::getShipment)
-                    .map(Shipment::getId)
-                    .collect(Collectors.toSet());
-            shipments = shipmentRepository.findAll().stream()
-                    .filter(shipment -> shipment.getStatus() == ShipmentStatus.BIDDING
-                            || (shipment.getAssignedDriver() != null && shipment.getAssignedDriver().getId().equals(user.getId()))
-                            || myOfferShipmentIds.contains(shipment.getId()))
-                    .collect(Collectors.toList());
-        } else {
-            shipments = shipmentRepository.findAll();
-        }
-
-        return shipments.stream()
+        return shipmentRepository.findAll().stream()
                 .sorted(Comparator.comparing(Shipment::getUpdatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .map(shipment -> toResponse(shipment, user))
                 .collect(Collectors.toList());
@@ -395,11 +378,9 @@ public class ShipmentService {
     }
 
     private void validateReadAccess(Shipment shipment, User user) {
-        if (user.getRole() == UserRole.ADMIN) return;
-        if (user.getRole() == UserRole.SHIPPER && shipment.getShipper().getId().equals(user.getId())) return;
-        if (user.getRole() == UserRole.DRIVER && shipment.getAssignedDriver() != null && shipment.getAssignedDriver().getId().equals(user.getId())) return;
-        if (user.getRole() == UserRole.DRIVER && shipment.getStatus() == ShipmentStatus.BIDDING) return;
-        throw new RuntimeException("조회 권한이 없습니다.");
+        if (user == null) {
+            throw new RuntimeException("조회 권한이 없습니다.");
+        }
     }
 
     private ShipmentDtos.ShipmentResponse toResponse(Shipment shipment, User viewer) {
@@ -410,10 +391,7 @@ public class ShipmentService {
         boolean bookmarked = viewer != null && shipmentBookmarkRepository.findByUserAndShipment(viewer, shipment).isPresent();
         boolean hasMyOffer = viewer != null && viewer.getRole() == UserRole.DRIVER && offers.stream().anyMatch(offer -> offer.getDriver().getId().equals(viewer.getId()));
         boolean assignedToMe = viewer != null && viewer.getRole() == UserRole.DRIVER && shipment.getAssignedDriver() != null && shipment.getAssignedDriver().getId().equals(viewer.getId());
-        boolean canAccessDetail = true;
-        if (viewer != null && viewer.getRole() == UserRole.DRIVER) {
-            canAccessDetail = shipment.getStatus() == ShipmentStatus.BIDDING || hasMyOffer || assignedToMe;
-        }
+        boolean canAccessDetail = viewer != null;
         ShipmentDtos.TrackingResponse trackingResponse = resolveTracking(shipment, latestLocation);
         var shipperProfile = userService.toPublicProfile(shipment.getShipper());
         var assignedDriverProfile = shipment.getAssignedDriver() != null ? userService.toPublicProfile(shipment.getAssignedDriver()) : null;
@@ -461,6 +439,7 @@ public class ShipmentService {
                 .acceptedOfferId(shipment.getAcceptedOfferId())
                 .agreedPrice(shipment.getAgreedPrice())
                 .paid(shipment.isPaid())
+                .paymentMethod(shipment.getPaymentMethod())
                 .paymentCompletedAt(shipment.getPaymentCompletedAt())
                 .bookmarked(bookmarked)
                 .hasMyOffer(hasMyOffer)
