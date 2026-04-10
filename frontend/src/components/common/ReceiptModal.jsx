@@ -1,4 +1,7 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import html2canvas from "html2canvas"
+import { jsPDF } from "jspdf"
+import QRCode from "qrcode"
 import { formatCurrency, formatDate, transactionTypeText } from "../../utils/formatters"
 import "./ReceiptModal.css"
 
@@ -90,7 +93,95 @@ function charKey(text, index) {
   return text[Math.floor(index / 13)] || 'b'
 }
 
+async function exportReceiptPdf(element, fileName) {
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: null,
+    ignoreElements: (node) => Boolean(node?.dataset?.pdfIgnore),
+  })
+
+  const imageData = canvas.toDataURL('image/png')
+  const pdf = new jsPDF('p', 'mm', 'a4')
+  const pageWidth = pdf.internal.pageSize.getWidth()
+  const pageHeight = pdf.internal.pageSize.getHeight()
+  const margin = 10
+  const usableWidth = pageWidth - margin * 2
+  const imageHeight = (canvas.height * usableWidth) / canvas.width
+
+  if (imageHeight <= pageHeight - margin * 2) {
+    pdf.addImage(imageData, 'PNG', margin, margin, usableWidth, imageHeight)
+  } else {
+    let remainingHeight = imageHeight
+    let sourceY = 0
+    const pageCanvas = document.createElement('canvas')
+    const pageContext = pageCanvas.getContext('2d')
+    const pagePixelHeight = Math.floor(((pageHeight - margin * 2) * canvas.width) / usableWidth)
+
+    pageCanvas.width = canvas.width
+    pageCanvas.height = pagePixelHeight
+
+    while (remainingHeight > 0 && pageContext) {
+      pageContext.clearRect(0, 0, pageCanvas.width, pageCanvas.height)
+      pageContext.drawImage(
+        canvas,
+        0,
+        sourceY,
+        canvas.width,
+        pagePixelHeight,
+        0,
+        0,
+        canvas.width,
+        pagePixelHeight,
+      )
+
+      const pageImageData = pageCanvas.toDataURL('image/png')
+      const currentPageHeight = Math.min(pageHeight - margin * 2, remainingHeight)
+      pdf.addImage(pageImageData, 'PNG', margin, margin, usableWidth, currentPageHeight)
+
+      remainingHeight -= pageHeight - margin * 2
+      sourceY += pagePixelHeight
+
+      if (remainingHeight > 0) {
+        pdf.addPage()
+      }
+    }
+  }
+
+  pdf.save(fileName)
+}
+
+function buildReceiptQrUrl(data) {
+  if (typeof window === 'undefined' || !data) return ''
+
+  const receiptPayload = {
+    receiptNumber: data.receiptNumber,
+    createdAt: data.createdAt,
+    shipmentTitle: data.shipmentTitle,
+    transactionType: data.transactionType,
+    originAddress: data.originAddress,
+    destinationAddress: data.destinationAddress,
+    shipperName: data.shipperName,
+    driverName: data.driverName,
+    grossAmount: data.grossAmount,
+    feeAmount: data.feeAmount,
+    netAmount: data.netAmount,
+    description: data.description,
+  }
+
+  const json = JSON.stringify(receiptPayload)
+  const base64 = window.btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+  const url = new URL(window.location.href)
+  url.searchParams.set('receiptPdf', base64)
+  return url.toString()
+}
+
 export default function ReceiptModal({ open, data, isLoading, error, onClose, role = "SHIPPER" }) {
+  const receiptContentRef = useRef(null)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
+  const [qrImage, setQrImage] = useState('')
+
   useEffect(() => {
     if (!open) return undefined
 
@@ -98,7 +189,13 @@ export default function ReceiptModal({ open, data, isLoading, error, onClose, ro
     document.body.style.overflow = 'hidden'
 
     const handleEscape = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        if (qrOpen) {
+          setQrOpen(false)
+        } else {
+          onClose()
+        }
+      }
     }
 
     window.addEventListener('keydown', handleEscape)
@@ -107,7 +204,61 @@ export default function ReceiptModal({ open, data, isLoading, error, onClose, ro
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleEscape)
     }
-  }, [open, onClose])
+  }, [open, onClose, qrOpen])
+
+  useEffect(() => {
+    if (!qrOpen || !data || isLoading || error) return
+
+    let cancelled = false
+
+    const run = async () => {
+      try {
+        const qrUrl = buildReceiptQrUrl(data)
+        const url = await QRCode.toDataURL(qrUrl, {
+          width: 240,
+          margin: 1,
+          color: {
+            dark: '#0f172a',
+            light: '#ffffff',
+          },
+        })
+
+        if (!cancelled) {
+          setQrImage(url)
+        }
+      } catch (qrError) {
+        console.error('영수증 QR 생성 실패', qrError)
+        if (!cancelled) {
+          setQrImage('')
+        }
+      }
+    }
+
+    run()
+
+    return () => {
+      cancelled = true
+    }
+  }, [qrOpen, data, isLoading, error])
+
+  const handleDownloadPdf = async () => {
+    if (!receiptContentRef.current || isLoading || error || isDownloading) return
+
+    try {
+      setIsDownloading(true)
+      await exportReceiptPdf(receiptContentRef.current, `${data?.receiptNumber || 'receipt'}.pdf`)
+    } catch (downloadError) {
+      console.error('영수증 PDF 다운로드 실패', downloadError)
+      window.alert('영수증 PDF 다운로드에 실패했습니다.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const toggleQrPanel = () => {
+    if (isLoading || error) return
+    setQrOpen((prev) => !prev)
+  }
 
   if (!open) return null
 
@@ -120,57 +271,93 @@ export default function ReceiptModal({ open, data, isLoading, error, onClose, ro
         aria-modal="true"
         aria-label="영수증 상세"
       >
-        <button type="button" className="receipt-modal__close" onClick={onClose} aria-label="닫기">
-          ×
-        </button>
+        <div className="receipt-modal__content" ref={receiptContentRef}>
+          <div className="receipt-modal__topbar">
+            <p className="receipt-modal__eyebrow">TRANSACTION RECEIPT</p>
 
-        <div className="receipt-modal__header">
-          <p className="receipt-modal__eyebrow">TRANSACTION RECEIPT</p>
-          <h2>영수증</h2>
-          <p className="receipt-modal__sub">거래 상세 내역을 확인하세요.</p>
-        </div>
+            <div className="receipt-modal__actions" data-pdf-ignore="true">
+              <button
+                type="button"
+                className="receipt-modal__icon-button receipt-modal__icon-button--qr"
+                onClick={toggleQrPanel}
+                aria-label="QR 보기"
+                title="QR 보기"
+                disabled={isLoading || !!error}
+              >
+                QR
+              </button>
+              <button
+                type="button"
+                className="receipt-modal__icon-button"
+                onClick={handleDownloadPdf}
+                aria-label="PDF 다운로드"
+                title="PDF 다운로드"
+                disabled={isLoading || !!error || isDownloading}
+              >
+                ⭳
+              </button>
+              <button type="button" className="receipt-modal__icon-button" onClick={onClose} aria-label="닫기">
+                ×
+              </button>
+            </div>
+          </div>
 
-        {isLoading ? (
-          <div className="receipt-modal__state">
-            <div className="receipt-spinner" />
-            <p>영수증을 불러오는 중입니다...</p>
+          <div className="receipt-modal__header">
+            <h2>영수증</h2>
+            <p className="receipt-modal__sub">거래 상세 내역을 확인하세요.</p>
           </div>
-        ) : error ? (
-          <div className="receipt-modal__state is-error">
-            <p>{error}</p>
-          </div>
-        ) : (
-          <>
-            <div className={`receipt-summary-card receipt-summary-card--${role === 'DRIVER' ? 'driver' : 'shipper'}`}>
-              <div>
-                <span>영수증 번호</span>
-                <strong>{data?.receiptNumber || '-'}</strong>
-              </div>
-              <div>
-                <span>거래 일시</span>
-                <strong>{formatDate(data?.createdAt)}</strong>
+
+          {qrOpen && !isLoading && !error && (
+            <div className="receipt-modal__qr-panel" data-pdf-ignore="true">
+              <div className="receipt-modal__qr-card">
+                {qrImage ? <img src={qrImage} alt="영수증 QR 코드" /> : <div className="receipt-spinner" />}
+                <div>
+                  <strong>QR로 영수증 PDF 받기</strong>
+                  <p>QR을 스캔하면 현재 영수증 PDF 다운로드 페이지가 열립니다.</p>
+                  <span>같은 네트워크 또는 배포된 주소에서 열어야 정상 동작합니다.</span>
+                </div>
               </div>
             </div>
+          )}
 
-            <div className="receipt-grid">
-              <ReceiptField label="화물명" value={data?.shipmentTitle} strong />
-              <ReceiptField label="거래 유형" value={transactionTypeText(data?.transactionType)} />
-              <ReceiptField label="출발지" value={data?.originAddress} />
-              <ReceiptField label="도착지" value={data?.destinationAddress} />
-              <ReceiptField label="화주" value={data?.shipperName} />
-              <ReceiptField label="차주" value={data?.driverName} />
-              <ReceiptField label="거래액" value={formatCurrency(data?.grossAmount)} />
-              <ReceiptField label="수수료" value={formatCurrency(data?.feeAmount)} />
-              <ReceiptField label="최종 반영액" value={formatCurrency(data?.netAmount)} strong />
-              <ReceiptField label="설명" value={data?.description} />
+          {isLoading ? (
+            <div className="receipt-modal__state">
+              <div className="receipt-spinner" />
+              <p>영수증을 불러오는 중입니다...</p>
             </div>
+          ) : error ? (
+            <div className="receipt-modal__state is-error">
+              <p>{error}</p>
+            </div>
+          ) : (
+            <>
+              <div className={`receipt-summary-card receipt-summary-card--${role === 'DRIVER' ? 'driver' : 'shipper'}`}>
+                <div>
+                  <span>영수증 번호</span>
+                  <strong>{data?.receiptNumber || '-'}</strong>
+                </div>
+                <div>
+                  <span>거래 일시</span>
+                  <strong>{formatDate(data?.createdAt)}</strong>
+                </div>
+              </div>
 
-            <SimpleBarcode value={data?.receiptNumber || '000000'} />
-          </>
-        )}
+              <div className="receipt-grid">
+                <ReceiptField label="화물명" value={data?.shipmentTitle} strong />
+                <ReceiptField label="거래 유형" value={transactionTypeText(data?.transactionType)} />
+                <ReceiptField label="출발지" value={data?.originAddress} />
+                <ReceiptField label="도착지" value={data?.destinationAddress} />
+                <ReceiptField label="화주" value={data?.shipperName} />
+                <ReceiptField label="차주" value={data?.driverName} />
+                <ReceiptField label="거래액" value={formatCurrency(data?.grossAmount)} />
+                <ReceiptField label="수수료" value={formatCurrency(data?.feeAmount)} />
+                <ReceiptField label="최종 반영액" value={formatCurrency(data?.netAmount)} strong />
+                <ReceiptField label="설명" value={data?.description} />
+              </div>
 
-        <div className="receipt-modal__footer">
-          <button type="button" className="receipt-modal__button" onClick={onClose}>닫기</button>
+              <SimpleBarcode value={data?.receiptNumber || '000000'} />
+            </>
+          )}
         </div>
       </div>
     </div>
