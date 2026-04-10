@@ -121,7 +121,7 @@ export default function QuoteStepReview({ formData = {} }) {
 
             <div className="quote-review-list">
               <div className="quote-review-row quote-review-row--top">
-                <span className="quote-review-label">차량</span>
+                <span className="quote-review-label">희망 차량</span>
                 <div className="quote-review-value-group">
                   <span className="quote-review-value">{vehicleDisplay}</span>
                   {formData.vehicleNeedConsult && (
@@ -190,7 +190,7 @@ export default function QuoteStepReview({ formData = {} }) {
           <h3 className="quote-review-side-title">핵심 조건 확인</h3>
           <div className="quote-review-summary">
             <div className="quote-review-summary-row">
-              <span>차량</span>
+              <span>희망 차량</span>
               <strong>
                 {formData.vehicleNeedConsult ? "상담 필요" : vehicleDisplay}
               </strong>

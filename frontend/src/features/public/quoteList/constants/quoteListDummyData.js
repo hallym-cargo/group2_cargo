@@ -2,61 +2,117 @@ export const QUOTE_LIST_DUMMY_DATA = [
   {
     id: 1,
     status: "입찰 진행중",
-    createdAt: "2026.04.10",
-    transportDate: "2026.04.17",
-    dday: 7,
-    title: "서울 강남 → 부산 사상 냉장 식품 운송 건",
-    subText: "화주 회사명 · 크기 미정 · 조건 협의 가능",
-    cargoType: "식품",
-    cargoVolume: "건수 / 5 / 협의",
+
+    estimateName: "냉장 식품 운송 건",
+    originAddress: "서울특별시 강남구",
+    originDetailAddress: "역삼동 123-4",
+    destinationAddress: "부산광역시 사상구",
+    destinationDetailAddress: "감전동 22-1",
+    transportDate: "2026-04-15",
+    transportTime: "09:00",
+
     vehicleType: "냉동탑차",
-    origin: "서울 강남 · 제주 제외",
-    destination: "부산 사상",
-    desiredPrice: "제안 받음",
+    vehicleNeedConsult: false,
+
+    cargoType: "식자재",
+    cargoName: "냉장 식품",
+
+    weight: "500",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "파손 주의 / 시간 엄수",
+
+    desiredPrice: "200000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
   },
   {
     id: 2,
     status: "배차 완료",
-    createdAt: "2026.04.05",
-    transportDate: "2026.04.13",
-    dday: 3,
-    title: "경기 김포 → 경기 성남 의약품 운송 건",
-    subText: "의약품 · 온도 유지 필요 · 신속 배송",
-    cargoType: "의약품",
-    cargoVolume: "팔레트 / 50 / 협의",
+
+    estimateName: "성남 의약품 운송",
+    originAddress: "경기도 김포시",
+    originDetailAddress: "고촌읍 물류센터",
+    destinationAddress: "경기도 성남시",
+    destinationDetailAddress: "분당구 병원 물류창고",
+    transportDate: "2026-04-13",
+    transportTime: "13:30",
+
     vehicleType: "윙바디",
-    origin: "경기 김포",
-    destination: "경기 성남",
-    desiredPrice: "협의 완료",
+    vehicleNeedConsult: false,
+
+    cargoType: "기타",
+    cargoName: "의약품",
+
+    weight: "50",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "온도 유지 필요",
+
+    desiredPrice: "300000",
+    priceProposalAllowed: true,
+
+    cargoImages: [],
   },
   {
     id: 3,
-    status: "운송 진행중",
-    createdAt: "2026.04.03",
-    transportDate: "2026.04.12",
-    dday: 1,
-    title: "충북 청주 → 대전 유통 자재 정기 운송 건",
-    subText: "정기 배송 · 파손 주의 · 다회차 가능",
-    cargoType: "건설/자재",
-    cargoVolume: "건수 / 30 / 협의",
+    status: "입찰 진행중",
+
+    estimateName: "서구 건축자재 정기 운송",
+    originAddress: "충청북도 청주시",
+    originDetailAddress: "오창 산업단지",
+    destinationAddress: "대전광역시 서구",
+    destinationDetailAddress: "도안동 공사 현장",
+    transportDate: "2026-04-12",
+    transportTime: "07:00",
+
     vehicleType: "카고트럭",
-    origin: "충북 청주",
-    destination: "대전 서구",
-    desiredPrice: "진행 중",
+    vehicleNeedConsult: false,
+
+    cargoType: "건축자재",
+    cargoName: "목재 및 철근",
+
+    weight: "3",
+    weightUnit: "t",
+    weightNeedConsult: false,
+
+    requestNote: "도착 전 연락 요청",
+
+    desiredPrice: "350000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
   },
   {
     id: 4,
-    status: "운송 완료",
-    createdAt: "2026.03.30",
-    transportDate: "2026.04.02",
-    dday: 0,
-    title: "인천 남동 → 강원 춘천 전자부품 운송 건",
-    subText: "정밀 부품 · 충격 주의 · 오전 상차",
-    cargoType: "전자부품",
-    cargoVolume: "박스 / 20 / 협의",
-    vehicleType: "탑차",
-    origin: "인천 남동",
-    destination: "강원 춘천",
-    desiredPrice: "정산 완료",
+    status: "배차 완료",
+
+    estimateName: "박스류 대량 운송",
+    originAddress: "인천광역시 연수구",
+    originDetailAddress: "송도 물류센터",
+    destinationAddress: "전북특별자치도 전주시",
+    destinationDetailAddress: "덕진구 창고",
+    transportDate: "2026-04-10",
+    transportTime: "10:00",
+
+    vehicleType: "1톤 트럭",
+    vehicleNeedConsult: false,
+
+    cargoType: "박스류",
+    cargoName: "택배 박스",
+
+    weight: "800",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "하차 지원 가능",
+
+    desiredPrice: "180000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
   },
 ];
