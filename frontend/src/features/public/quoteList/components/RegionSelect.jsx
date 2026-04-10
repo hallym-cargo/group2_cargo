@@ -279,11 +279,11 @@ export default function RegionSelect({ value, onChange }) {
   }, []);
 
   const handleSelectCity = (city) => {
-    const nextValue =
-      selectedDo === "전체" || city === "전체"
-        ? "전체"
-        : `${selectedDo} ${city}`;
-
+    const handleSelectCity = (city) => {
+      const nextValue = `${selectedDo} ${city}`;
+      onChange(nextValue);
+      setOpen(false);
+    };
     onChange(nextValue);
     setOpen(false);
   };
@@ -309,7 +309,15 @@ export default function RegionSelect({ value, onChange }) {
                 className={`region-item ${
                   selectedDo === doName ? "active" : ""
                 }`}
-                onClick={() => setSelectedDo(doName)}
+                onClick={() => {
+                  setSelectedDo(doName);
+
+                  // 전체는 바로 반영
+                  if (doName === "전체") {
+                    onChange("전체");
+                    setOpen(false);
+                  }
+                }}
               >
                 {doName}
               </button>
@@ -317,16 +325,17 @@ export default function RegionSelect({ value, onChange }) {
           </div>
 
           <div className="region-select-right">
-            {REGION_DATA[selectedDo].map((city) => (
-              <button
-                type="button"
-                key={city}
-                className="region-item"
-                onClick={() => handleSelectCity(city)}
-              >
-                {city}
-              </button>
-            ))}
+            {selectedDo !== "전체" &&
+              REGION_DATA[selectedDo].map((city) => (
+                <button
+                  type="button"
+                  key={city}
+                  className="region-item"
+                  onClick={() => handleSelectCity(city)}
+                >
+                  {city}
+                </button>
+              ))}
           </div>
         </div>
       )}
