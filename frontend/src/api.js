@@ -20,23 +20,6 @@ api.interceptors.request.use((config) => {
 });
 
 
-const gameRequest = async (requestFn) => {
-  try {
-    const response = await requestFn();
-    return response.data;
-  } catch (error) {
-    const status = error?.response?.status;
-    const message = error?.response?.data?.message;
-
-    if (status === 401 || status === 403) {
-      throw new Error(message || '로그인이 필요합니다. 다시 로그인해 주세요.');
-    }
-
-    throw new Error(message || '게임 요청 처리 중 오류가 발생했습니다.');
-  }
-};
-
-
 export const login = async (payload) =>
   (await api.post('/auth/login', payload)).data;
 
@@ -238,22 +221,47 @@ export const fetchAdminActionLogs = async () =>
 
 export default api;
 export const createQuickDrawRoom = async () =>
-  gameRequest(() => api.post('/api/game/quickdraw/rooms'));
+  (await api.post('/api/game/quickdraw/rooms')).data;
 
 export const joinQuickDrawRoom = async (roomCode) =>
-  gameRequest(() => api.post('/api/game/quickdraw/rooms/join', { roomCode }));
+  (await api.post('/api/game/quickdraw/rooms/join', { roomCode })).data;
 
 export const getQuickDrawRoomState = async (roomCode) =>
-  gameRequest(() => api.get(`/api/game/quickdraw/rooms/${roomCode}`));
+  (await api.get(`/api/game/quickdraw/rooms/${roomCode}`)).data;
 
 export const markQuickDrawReady = async (roomCode) =>
-  gameRequest(() => api.post(`/api/game/quickdraw/rooms/${roomCode}/ready`));
+  (await api.post(`/api/game/quickdraw/rooms/${roomCode}/ready`)).data;
 
 export const shootQuickDraw = async (roomCode) =>
-  gameRequest(() => api.post(`/api/game/quickdraw/rooms/${roomCode}/shoot`));
+  (await api.post(`/api/game/quickdraw/rooms/${roomCode}/shoot`)).data;
 
 export const resetQuickDrawRoom = async (roomCode) =>
-  gameRequest(() => api.post(`/api/game/quickdraw/rooms/${roomCode}/reset`));
+  (await api.post(`/api/game/quickdraw/rooms/${roomCode}/reset`)).data;
 
 export const leaveQuickDrawRoom = async (roomCode) =>
-  gameRequest(() => api.delete(`/api/game/quickdraw/rooms/${roomCode}`));
+  (await api.delete(`/api/game/quickdraw/rooms/${roomCode}`)).data;
+
+
+export const createRoundsLiteRoom = async () =>
+  (await api.post('/api/game/rounds-lite/rooms')).data;
+
+export const joinRoundsLiteRoom = async (roomCode) =>
+  (await api.post('/api/game/rounds-lite/rooms/join', { roomCode })).data;
+
+export const getRoundsLiteState = async (roomCode) =>
+  (await api.get(`/api/game/rounds-lite/rooms/${roomCode}`)).data;
+
+export const readyRoundsLiteRoom = async (roomCode) =>
+  (await api.post(`/api/game/rounds-lite/rooms/${roomCode}/ready`)).data;
+
+export const sendRoundsLiteInput = async (roomCode, payload) =>
+  (await api.post(`/api/game/rounds-lite/rooms/${roomCode}/input`, payload)).data;
+
+export const selectRoundsLiteCard = async (roomCode, cardKey) =>
+  (await api.post(`/api/game/rounds-lite/rooms/${roomCode}/select-card`, { cardKey })).data;
+
+export const resetRoundsLiteRoom = async (roomCode) =>
+  (await api.post(`/api/game/rounds-lite/rooms/${roomCode}/reset`)).data;
+
+export const leaveRoundsLiteRoom = async (roomCode) =>
+  (await api.delete(`/api/game/rounds-lite/rooms/${roomCode}`)).data;

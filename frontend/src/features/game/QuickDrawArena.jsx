@@ -116,15 +116,15 @@ export default function QuickDrawArena({ controller }) {
     try {
       const response = await getQuickDrawRoomState(roomCode)
       setRoom(response)
-      const savedSeat = localStorage.getItem(`${LAST_ROOM_KEY}:seat:${roomCode}`)
-      if (savedSeat === 'P1' || savedSeat === 'P2') {
-        setMySeat(savedSeat)
+      setMySeat(response.mySeat || null)
+      if (response.mySeat) {
+        localStorage.setItem(`${LAST_ROOM_KEY}:seat:${roomCode}`, response.mySeat)
       }
       setError('')
-      setMessage(getStatusText(response, getPlayerSummary(response, savedSeat)))
+      setMessage(getStatusText(response, getPlayerSummary(response, response.mySeat)))
     } catch {
       localStorage.removeItem(LAST_ROOM_KEY)
-      setError('')
+      setMySeat(null)
     }
   }
 
@@ -132,6 +132,10 @@ export default function QuickDrawArena({ controller }) {
     try {
       const response = await getQuickDrawRoomState(roomCode)
       setRoom(response)
+      setMySeat(response.mySeat || null)
+      if (response.mySeat) {
+        localStorage.setItem(`${LAST_ROOM_KEY}:seat:${roomCode}`, response.mySeat)
+      }
       setTick(Date.now())
       if (!options.silent) {
         setError('')
@@ -139,7 +143,7 @@ export default function QuickDrawArena({ controller }) {
       return response
     } catch (fetchError) {
       if (!options.silent) {
-        setError(fetchError.message || '방 정보를 불러오지 못했습니다.')
+        setError(fetchError.response?.data?.message || '방 정보를 불러오지 못했습니다.')
       }
       throw fetchError
     }
@@ -154,10 +158,10 @@ export default function QuickDrawArena({ controller }) {
       setMySeat(response.mySeat)
       setRoomCodeInput(response.roomCode)
       localStorage.setItem(LAST_ROOM_KEY, response.roomCode)
-      localStorage.setItem(`${LAST_ROOM_KEY}:seat:${response.roomCode}`, response.mySeat)
+      localStorage.setItem(`${LAST_ROOM_KEY}:seat:${response.roomCode}`, response.mySeat || '')
       setMessage('방이 만들어졌습니다. 상대에게 방 코드를 보내세요.')
     } catch (createError) {
-      setError(createError.message || '방 생성에 실패했습니다.')
+      setError(createError.response?.data?.message || '방 생성에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -178,10 +182,10 @@ export default function QuickDrawArena({ controller }) {
       setMySeat(response.mySeat)
       setRoomCodeInput(response.roomCode)
       localStorage.setItem(LAST_ROOM_KEY, response.roomCode)
-      localStorage.setItem(`${LAST_ROOM_KEY}:seat:${response.roomCode}`, response.mySeat)
+      localStorage.setItem(`${LAST_ROOM_KEY}:seat:${response.roomCode}`, response.mySeat || '')
       setMessage('방 참가에 성공했습니다. 준비 버튼을 눌러 주세요.')
     } catch (joinError) {
-      setError(joinError.message || '방 참가에 실패했습니다.')
+      setError(joinError.response?.data?.message || '방 참가에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -194,8 +198,9 @@ export default function QuickDrawArena({ controller }) {
     try {
       const response = await markQuickDrawReady(room.roomCode)
       setRoom(response)
+      setMySeat(response.mySeat || null)
     } catch (readyError) {
-      setError(readyError.message || '준비 처리에 실패했습니다.')
+      setError(readyError.response?.data?.message || '준비 처리에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -208,8 +213,9 @@ export default function QuickDrawArena({ controller }) {
     try {
       const response = await shootQuickDraw(room.roomCode)
       setRoom(response)
+      setMySeat(response.mySeat || null)
     } catch (shootError) {
-      setError(shootError.message || '발사 처리에 실패했습니다.')
+      setError(shootError.response?.data?.message || '발사 처리에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -222,9 +228,10 @@ export default function QuickDrawArena({ controller }) {
     try {
       const response = await resetQuickDrawRoom(room.roomCode)
       setRoom(response)
+      setMySeat(response.mySeat || null)
       setMessage('새 매치가 시작되었습니다. 다시 준비해 주세요.')
     } catch (resetError) {
-      setError(resetError.message || '새 게임 시작에 실패했습니다.')
+      setError(resetError.response?.data?.message || '새 게임 시작에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -241,7 +248,7 @@ export default function QuickDrawArena({ controller }) {
     try {
       await leaveQuickDrawRoom(room.roomCode)
     } catch {
-      // leave 실패 시에도 화면은 정리
+      // 방 정리는 백엔드 실패와 관계없이 프론트에서 마무리
     } finally {
       localStorage.removeItem(LAST_ROOM_KEY)
       localStorage.removeItem(`${LAST_ROOM_KEY}:seat:${room.roomCode}`)

@@ -7,7 +7,7 @@ import UserProfileModal from "./components/common/UserProfileModal";
 import AdminConsolePage from "./features/admin/AdminConsolePage";
 import MessagesPage from "./features/chat/MessagesPage";
 import NotificationsPage from "./features/chat/NotificationsPage";
-import QuickDrawArena from "./features/game/QuickDrawArena";
+import RoundsLiteArena from "./features/game/RoundsLiteArena";
 import QuoteListPage from "./features/public/QuoteListPage";
 import QuoteRegisterPage from "./features/public/QuoteRegisterPage";
 import PublicHomePage from "./features/public/PublicHomePage";
@@ -51,7 +51,7 @@ export default function App() {
   } else if (controller.routePage === "notifications") {
     page = <NotificationsPage controller={controller} />;
   } else if (controller.routePage === "game") {
-    page = <QuickDrawArena controller={controller} />;
+    page = <RoundsLiteArena controller={controller} />;
   } else if (controller.routePage === "shippers") {
     page = <PublicUserSearchPage controller={controller} role="SHIPPER" />;
   } else if (controller.routePage === "drivers") {
