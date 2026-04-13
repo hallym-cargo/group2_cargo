@@ -1,46 +1,43 @@
 package com.logistics.app.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class GameDtos {
-    @Data
-    public static class CreateRoomRequest {
-        private String playerName;
-    }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class JoinRoomRequest {
         private String roomCode;
-        private String playerName;
     }
 
     @Data
-    public static class PlayerActionRequest {
-        private String roomCode;
-        private String playerId;
-    }
-
-    @Data
-    public static class RoomPlayer {
-        private String playerId;
-        private String playerName;
+    @Builder
+    public static class QuickDrawPlayerView {
+        private Long userId;
+        private String seat;
+        private String name;
         private boolean ready;
         private int score;
+        private LocalDateTime shotAt;
     }
 
     @Data
-    public static class RoomSnapshot {
+    @Builder
+    public static class QuickDrawRoomResponse {
         private String roomCode;
-        private String playerId;
         private String phase;
-        private int roundNumber;
-        private int maxScore;
-        private String winnerPlayerId;
-        private String winnerPlayerName;
-        private String message;
-        private List<RoomPlayer> players = new ArrayList<>();
+        private String mySeat;
+        private String winnerSeat;
+        private String lastRoundMessage;
+        private int targetScore;
+        private LocalDateTime drawAt;
+        private List<QuickDrawPlayerView> players;
     }
 }

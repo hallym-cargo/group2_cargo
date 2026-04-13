@@ -20,6 +20,23 @@ api.interceptors.request.use((config) => {
 });
 
 
+const gameRequest = async (requestFn) => {
+  try {
+    const response = await requestFn();
+    return response.data;
+  } catch (error) {
+    const status = error?.response?.status;
+    const message = error?.response?.data?.message;
+
+    if (status === 401 || status === 403) {
+      throw new Error(message || '로그인이 필요합니다. 다시 로그인해 주세요.');
+    }
+
+    throw new Error(message || '게임 요청 처리 중 오류가 발생했습니다.');
+  }
+};
+
+
 export const login = async (payload) =>
   (await api.post('/auth/login', payload)).data;
 
@@ -220,3 +237,23 @@ export const fetchAdminActionLogs = async () =>
   (await api.get('/api/admin/action-logs')).data;
 
 export default api;
+export const createQuickDrawRoom = async () =>
+  gameRequest(() => api.post('/api/game/quickdraw/rooms'));
+
+export const joinQuickDrawRoom = async (roomCode) =>
+  gameRequest(() => api.post('/api/game/quickdraw/rooms/join', { roomCode }));
+
+export const getQuickDrawRoomState = async (roomCode) =>
+  gameRequest(() => api.get(`/api/game/quickdraw/rooms/${roomCode}`));
+
+export const markQuickDrawReady = async (roomCode) =>
+  gameRequest(() => api.post(`/api/game/quickdraw/rooms/${roomCode}/ready`));
+
+export const shootQuickDraw = async (roomCode) =>
+  gameRequest(() => api.post(`/api/game/quickdraw/rooms/${roomCode}/shoot`));
+
+export const resetQuickDrawRoom = async (roomCode) =>
+  gameRequest(() => api.post(`/api/game/quickdraw/rooms/${roomCode}/reset`));
+
+export const leaveQuickDrawRoom = async (roomCode) =>
+  gameRequest(() => api.delete(`/api/game/quickdraw/rooms/${roomCode}`));

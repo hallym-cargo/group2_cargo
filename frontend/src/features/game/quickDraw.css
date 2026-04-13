@@ -1,266 +1,353 @@
-.quickdraw-shell {
+.quickdraw-page {
   min-height: 100vh;
+  box-sizing: border-box;
+  padding: 40px 20px 88px;
   background:
-    radial-gradient(circle at top left, rgba(82, 132, 255, 0.18), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(40, 180, 120, 0.16), transparent 28%),
-    linear-gradient(180deg, #f7f9fc 0%, #eef2f8 100%);
-  padding: 48px 24px 72px;
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 26%),
+    linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
-.quickdraw-page {
+.quickdraw-shell {
   width: min(1180px, 100%);
   margin: 0 auto;
 }
 
 .quickdraw-topbar {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 28px;
 }
 
-.quickdraw-eyebrow {
-  margin: 0 0 10px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: #5d6b82;
+.quickdraw-back {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  border-radius: 16px;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
-.quickdraw-topbar h1 {
+.quickdraw-title-wrap {
+  flex: 1;
+}
+
+.quickdraw-eyebrow {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #4f46e5;
+}
+
+.quickdraw-title {
   margin: 0;
-  font-size: clamp(32px, 4vw, 54px);
-  line-height: 1.02;
+  font-size: 44px;
+  line-height: 1.08;
+  color: #0f172a;
 }
 
 .quickdraw-subtitle {
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   font-size: 16px;
-  color: #617187;
+  line-height: 1.7;
+  color: #475569;
 }
 
-.quickdraw-grid {
+.quickdraw-layout {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
-  gap: 22px;
+  grid-template-columns: 400px minmax(0, 1fr);
+  gap: 20px;
 }
 
 .quickdraw-card {
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(140, 154, 180, 0.18);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 28px;
-  box-shadow: 0 22px 50px rgba(27, 39, 66, 0.08);
-  backdrop-filter: blur(14px);
-}
-
-.quickdraw-card--setup {
-  padding: 26px;
-}
-
-.quickdraw-card--arena {
-  padding: 26px;
+  padding: 28px;
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(12px);
 }
 
 .quickdraw-card h2 {
-  margin: 0 0 16px;
-  font-size: 22px;
+  margin: 0 0 18px;
+  font-size: 24px;
+  color: #0f172a;
 }
 
-.quickdraw-card label {
-  display: block;
-  margin-bottom: 14px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #314155;
-}
-
-.quickdraw-card input {
-  width: 100%;
-  margin-top: 8px;
-  border: 1px solid rgba(117, 132, 157, 0.28);
-  border-radius: 16px;
-  padding: 14px 16px;
-  font-size: 15px;
-  background: #fff;
-  box-sizing: border-box;
-}
-
-.quickdraw-actions {
-  display: flex;
-  gap: 10px;
-  margin: 14px 0 18px;
+.quickdraw-roombox {
+  display: grid;
+  gap: 14px;
 }
 
 .quickdraw-primary,
 .quickdraw-secondary,
-.quickdraw-fire,
-.quickdraw-ghost {
-  border: 0;
+.quickdraw-ready,
+.quickdraw-shoot,
+.quickdraw-reset {
+  border: none;
   border-radius: 16px;
-  padding: 13px 18px;
+  padding: 14px 18px;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+.quickdraw-primary:hover,
+.quickdraw-secondary:hover,
+.quickdraw-ready:hover,
+.quickdraw-shoot:hover,
+.quickdraw-reset:hover {
+  transform: translateY(-1px);
+}
+
+.quickdraw-primary:disabled,
+.quickdraw-secondary:disabled,
+.quickdraw-ready:disabled,
+.quickdraw-shoot:disabled,
+.quickdraw-reset:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+  transform: none;
 }
 
 .quickdraw-primary {
-  background: linear-gradient(135deg, #111827, #1f2937);
+  background: #111827;
   color: #fff;
 }
 
 .quickdraw-secondary {
-  background: #e8edf6;
-  color: #1f2b3d;
-}
-
-.quickdraw-fire {
-  min-width: 180px;
-  background: linear-gradient(135deg, #ff6b57, #ff3b2f);
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
   color: #fff;
-  box-shadow: 0 16px 30px rgba(255, 84, 63, 0.28);
 }
 
-.quickdraw-ghost {
-  background: #fff;
-  color: #172131;
-  border: 1px solid rgba(117, 132, 157, 0.22);
+.quickdraw-ready {
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  color: #fff;
 }
 
-.quickdraw-roomline {
+.quickdraw-ready.is-active {
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.18);
+}
+
+.quickdraw-shoot {
+  background: linear-gradient(135deg, #991b1b, #ef4444);
+  color: #fff;
+}
+
+.quickdraw-shoot.is-armed {
+  box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.16);
+}
+
+.quickdraw-reset {
+  background: linear-gradient(135deg, #312e81, #7c3aed);
+  color: #fff;
+}
+
+.quickdraw-join {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  align-items: center;
-  font-size: 14px;
-  color: #5e6f86;
+  gap: 10px;
 }
 
-.quickdraw-roomline strong {
+.quickdraw-join input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 16px;
+  background: #fff;
+  padding: 0 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.quickdraw-statusbox,
+.quickdraw-roundinfo {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.quickdraw-statusbox > div,
+.quickdraw-roundinfo > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.quickdraw-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.quickdraw-statusbox strong,
+.quickdraw-roundinfo strong {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #0f172a;
+  text-align: right;
+}
+
+.quickdraw-message {
+  margin: 20px 0 0;
   font-size: 15px;
-  color: #1a2434;
+  line-height: 1.7;
+  color: #334155;
+}
+
+.quickdraw-error {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(254, 226, 226, 0.88);
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.quickdraw-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 22px;
 }
 
 .quickdraw-scoreboard {
   display: grid;
-  grid-template-columns: 1fr 72px 1fr;
-  align-items: stretch;
-  gap: 14px;
-  margin: 22px 0;
+  grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
 }
 
 .quickdraw-player {
-  border-radius: 24px;
-  padding: 18px;
-  background: #f7f9fc;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 8px;
+  padding: 20px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.96), rgba(226, 232, 240, 0.96));
+  border: 1px solid rgba(148, 163, 184, 0.22);
 }
 
-.quickdraw-player.is-me {
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.97), rgba(46, 62, 90, 0.95));
+.quickdraw-player.is-winner {
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18);
+}
+
+.quickdraw-player__seat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-width: 52px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #111827;
   color: #fff;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .quickdraw-player strong {
-  font-size: 22px;
-}
-
-.quickdraw-player b {
-  font-size: 48px;
-  line-height: 1;
-}
-
-.quickdraw-player small {
-  color: inherit;
-  opacity: 0.82;
-}
-
-.quickdraw-versus {
-  display: grid;
-  place-items: center;
   font-size: 24px;
-  font-weight: 800;
-  color: #7b8797;
+  line-height: 1.2;
+  color: #0f172a;
 }
 
-.quickdraw-stage {
-  min-height: 260px;
-  border-radius: 30px;
+.quickdraw-player em {
+  font-style: normal;
+  font-size: 18px;
+  font-weight: 800;
+  color: #4f46e5;
+}
+
+.quickdraw-player__ready {
+  font-size: 13px;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.quickdraw-player__ready.is-on {
+  color: #0f766e;
+}
+
+.quickdraw-vs {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 900;
+  color: #334155;
+}
+
+.quickdraw-arena {
+  position: relative;
+  min-height: 360px;
+  margin-top: 24px;
+  border-radius: 32px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.96)),
+    radial-gradient(circle at center, rgba(239, 68, 68, 0.12), transparent 45%);
   display: grid;
   place-items: center;
-  text-align: center;
-  background: linear-gradient(180deg, #0f172a, #1f2937);
+}
+
+.quickdraw-arena::before,
+.quickdraw-arena::after {
+  content: '';
+  position: absolute;
+  bottom: 36px;
+  width: 130px;
+  height: 130px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.14), rgba(148, 163, 184, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.quickdraw-arena::before {
+  left: 52px;
+}
+
+.quickdraw-arena::after {
+  right: 52px;
+}
+
+.quickdraw-arena.is-draw {
+  box-shadow: inset 0 0 120px rgba(239, 68, 68, 0.14);
+}
+
+.quickdraw-signal {
+  position: relative;
+  z-index: 1;
+  width: 210px;
+  height: 210px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, rgba(239, 68, 68, 0.95), rgba(153, 27, 27, 0.95));
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.32);
+}
+
+.quickdraw-signal span {
   color: #fff;
-  padding: 20px;
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
 }
 
-.quickdraw-stage.phase-fire {
-  background: linear-gradient(180deg, #ff7b63, #ff3d2f);
-}
-
-.quickdraw-stage.phase-countdown {
-  background: linear-gradient(180deg, #253246, #101825);
-}
-
-.quickdraw-stage.phase-result,
-.quickdraw-stage.phase-finished {
-  background: linear-gradient(180deg, #123c27, #0f6a43);
-}
-
-.quickdraw-stage__round {
-  margin: 0 0 8px;
-  font-size: 13px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  opacity: 0.7;
-}
-
-.quickdraw-stage__inner h2 {
-  margin: 0;
-  font-size: clamp(34px, 5vw, 56px);
-}
-
-.quickdraw-stage__inner p {
-  margin: 12px 0 0;
-  font-size: 16px;
-  opacity: 0.88;
-}
-
-.quickdraw-actions--arena {
-  justify-content: center;
-  margin-top: 24px;
-}
-
-.quickdraw-help,
-.quickdraw-status,
-.quickdraw-error {
-  margin: 10px 0 0;
-  font-size: 14px;
-}
-
-.quickdraw-help,
-.quickdraw-status {
-  color: #5f6d82;
-}
-
-.quickdraw-error {
-  color: #d93025;
-}
-
-.quickdraw-status-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: #f6f8fb;
-  color: #5a687d;
-}
-
-@media (max-width: 920px) {
-  .quickdraw-grid {
+@media (max-width: 980px) {
+  .quickdraw-layout {
     grid-template-columns: 1fr;
   }
 
@@ -268,7 +355,40 @@
     grid-template-columns: 1fr;
   }
 
-  .quickdraw-versus {
+  .quickdraw-vs {
     display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .quickdraw-topbar {
+    flex-direction: column;
+  }
+
+  .quickdraw-title {
+    font-size: 34px;
+  }
+
+  .quickdraw-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .quickdraw-join {
+    flex-direction: column;
+  }
+
+  .quickdraw-arena::before,
+  .quickdraw-arena::after {
+    width: 94px;
+    height: 94px;
+    bottom: 24px;
+  }
+
+  .quickdraw-arena::before {
+    left: 26px;
+  }
+
+  .quickdraw-arena::after {
+    right: 26px;
   }
 }
