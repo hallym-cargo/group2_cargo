@@ -271,13 +271,18 @@
   background: linear-gradient(180deg, #475569, #334155);
 }
 
-.rounds-lite-player {
-  position: absolute;
-  transition: transform 0.06s linear;
-}
 
 .rounds-lite-player.is-left {
   transform: scaleX(-1);
+}
+
+.rounds-lite-player {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .rounds-lite-player-head {
@@ -346,8 +351,12 @@
 
 .rounds-lite-projectile {
   position: absolute;
+  left: 0;
+  top: 0;
   border-radius: 50%;
   box-shadow: 0 0 16px currentColor;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .rounds-lite-projectile.is-mine {

@@ -12,8 +12,9 @@ import {
 import './roundsLite.css'
 
 const LAST_ROOM_KEY = 'roundsLite:lastRoomCode'
-const POLL_INTERVAL = 100
-const INPUT_INTERVAL = 70
+const POLL_INTERVAL = 55
+const INPUT_INTERVAL = 45
+const VISUAL_LERP = 0.28
 const ARENA_WIDTH = 960
 const ARENA_HEIGHT = 540
 
@@ -36,25 +37,89 @@ function getErrorMessage(error, fallback) {
   return error?.response?.data?.message || fallback
 }
 
+function lerp(start, end, t) {
+  return start + (end - start) * t
+}
+
+function blendVisualRoom(current, target) {
+  if (!target) return null
+  if (!current) return target
+
+  const shouldSnap =
+    current.phase !== 'ACTIVE' ||
+    target.phase !== 'ACTIVE' ||
+    current.roundNo !== target.roundNo
+
+  const currentPlayers = new Map((current.players || []).map((player) => [player.seat, player]))
+  const currentProjectiles = new Map((current.projectiles || []).map((projectile) => [projectile.id, projectile]))
+
+  return {
+    ...target,
+    players: (target.players || []).map((player) => {
+      const previous = currentPlayers.get(player.seat)
+      if (!previous || shouldSnap) {
+        return player
+      }
+
+      return {
+        ...player,
+        x: lerp(previous.x ?? player.x, player.x, VISUAL_LERP),
+        y: lerp(previous.y ?? player.y, player.y, VISUAL_LERP),
+      }
+    }),
+    projectiles: (target.projectiles || []).map((projectile) => {
+      const previous = currentProjectiles.get(projectile.id)
+      if (!previous || shouldSnap) {
+        return projectile
+      }
+
+      return {
+        ...projectile,
+        x: lerp(previous.x ?? projectile.x, projectile.x, VISUAL_LERP),
+        y: lerp(previous.y ?? projectile.y, projectile.y, VISUAL_LERP),
+      }
+    }),
+  }
+}
+
 export default function RoundsLiteArena({ controller }) {
   const [roomCodeInput, setRoomCodeInput] = useState('')
   const [room, setRoom] = useState(null)
+  const [displayRoom, setDisplayRoom] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [tick, setTick] = useState(Date.now())
   const [copied, setCopied] = useState(false)
+
   const inputRef = useRef({ left: false, right: false, jump: false, shoot: false })
   const pollRef = useRef(null)
   const inputLoopRef = useRef(null)
+  const animationRef = useRef(null)
   const roomRef = useRef(null)
+  const visualTargetRef = useRef(null)
 
-  const me = useMemo(() => room?.players?.find((player) => player.seat === room?.mySeat) ?? null, [room])
-  const opponent = useMemo(() => room?.players?.find((player) => player.seat !== room?.mySeat) ?? null, [room])
+  const currentRoom = displayRoom || room
+
+  const me = useMemo(
+    () => room?.players?.find((player) => player.seat === room?.mySeat) ?? null,
+    [room]
+  )
+  const opponent = useMemo(
+    () => room?.players?.find((player) => player.seat !== room?.mySeat) ?? null,
+    [room]
+  )
   const isPicker = room?.pickerSeat && room?.pickerSeat === room?.mySeat
-
 
   useEffect(() => {
     roomRef.current = room
+    visualTargetRef.current = room
+
+    if (!room) {
+      setDisplayRoom(null)
+      return
+    }
+
+    setDisplayRoom((previous) => blendVisualRoom(previous, room))
   }, [room])
 
   useEffect(() => {
@@ -81,10 +146,11 @@ export default function RoundsLiteArena({ controller }) {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (!room?.roomCode || room.phase !== 'ACTIVE') return
+      if (!roomRef.current?.roomCode || roomRef.current.phase !== 'ACTIVE') return
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return
 
       const next = { ...inputRef.current }
+
       if (event.key === 'a' || event.key === 'ArrowLeft') next.left = true
       if (event.key === 'd' || event.key === 'ArrowRight') next.right = true
       if (event.key === 'w' || event.key === 'ArrowUp') next.jump = true
@@ -92,46 +158,65 @@ export default function RoundsLiteArena({ controller }) {
         event.preventDefault()
         next.shoot = true
       }
+
       inputRef.current = next
     }
 
     const handleKeyUp = (event) => {
       const next = { ...inputRef.current }
+
       if (event.key === 'a' || event.key === 'ArrowLeft') next.left = false
       if (event.key === 'd' || event.key === 'ArrowRight') next.right = false
       if (event.key === 'w' || event.key === 'ArrowUp') next.jump = false
       if (event.code === 'Space') next.shoot = false
+
       inputRef.current = next
     }
 
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [room?.roomCode, room?.phase])
+  }, [])
 
   function stopLoops() {
     if (pollRef.current) {
       clearInterval(pollRef.current)
       pollRef.current = null
     }
+
     if (inputLoopRef.current) {
       clearInterval(inputLoopRef.current)
       inputLoopRef.current = null
+    }
+
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current)
+      animationRef.current = null
     }
   }
 
   function startLoops(roomCode) {
     stopLoops()
+
     pollRef.current = setInterval(() => {
       fetchState(roomCode, true)
     }, POLL_INTERVAL)
+
     inputLoopRef.current = setInterval(() => {
       if (roomRef.current?.phase !== 'ACTIVE') return
       sendInput(roomCode, true)
     }, INPUT_INTERVAL)
+
+    const animate = () => {
+      setDisplayRoom((previous) => blendVisualRoom(previous, visualTargetRef.current))
+      animationRef.current = requestAnimationFrame(animate)
+    }
+
+    animationRef.current = requestAnimationFrame(animate)
   }
 
   async function fetchState(roomCode, silent = false) {
@@ -142,7 +227,9 @@ export default function RoundsLiteArena({ controller }) {
       if (!silent) setError('')
       return response
     } catch (fetchError) {
-      if (!silent) setError(getErrorMessage(fetchError, '게임 상태를 불러오지 못했습니다.'))
+      if (!silent) {
+        setError(getErrorMessage(fetchError, '게임 상태를 불러오지 못했습니다.'))
+      }
       throw fetchError
     }
   }
@@ -156,7 +243,7 @@ export default function RoundsLiteArena({ controller }) {
       setRoomCodeInput(response.roomCode)
       localStorage.setItem(LAST_ROOM_KEY, response.roomCode)
     } catch (createError) {
-      setError(getErrorMessage(createError, '방 만들기에 실패했습니다. 백엔드를 clean 후 재실행했는지 확인하세요.'))
+      setError(getErrorMessage(createError, '방 만들기에 실패했습니다.'))
     } finally {
       setLoading(false)
     }
@@ -168,8 +255,10 @@ export default function RoundsLiteArena({ controller }) {
       setError('방 코드를 입력하세요.')
       return
     }
+
     setLoading(true)
     setError('')
+
     try {
       const response = await joinRoundsLiteRoom(trimmed)
       setRoom(response)
@@ -184,8 +273,10 @@ export default function RoundsLiteArena({ controller }) {
 
   async function handleReady() {
     if (!room?.roomCode) return
+
     setLoading(true)
     setError('')
+
     try {
       const response = await readyRoundsLiteRoom(room.roomCode)
       setRoom(response)
@@ -201,14 +292,18 @@ export default function RoundsLiteArena({ controller }) {
       const response = await sendRoundsLiteInput(roomCode, inputRef.current)
       setRoom(response)
     } catch (inputError) {
-      if (!silent) setError(getErrorMessage(inputError, '입력 전송에 실패했습니다.'))
+      if (!silent) {
+        setError(getErrorMessage(inputError, '입력 전송에 실패했습니다.'))
+      }
     }
   }
 
   async function handleSelectCard(cardKey) {
     if (!room?.roomCode) return
+
     setLoading(true)
     setError('')
+
     try {
       const response = await selectRoundsLiteCard(room.roomCode, cardKey)
       setRoom(response)
@@ -221,8 +316,10 @@ export default function RoundsLiteArena({ controller }) {
 
   async function handleReset() {
     if (!room?.roomCode) return
+
     setLoading(true)
     setError('')
+
     try {
       const response = await resetRoundsLiteRoom(room.roomCode)
       setRoom(response)
@@ -238,19 +335,23 @@ export default function RoundsLiteArena({ controller }) {
       controller.setRoutePage('main')
       return
     }
+
     try {
       await leaveRoundsLiteRoom(room.roomCode)
     } catch {
-      // 화면은 정리
+      // ignore
     }
+
     stopLoops()
     localStorage.removeItem(LAST_ROOM_KEY)
     setRoom(null)
+    setDisplayRoom(null)
     controller.setRoutePage('main')
   }
 
   async function handleCopyRoomCode() {
     if (!room?.roomCode) return
+
     try {
       await navigator.clipboard.writeText(room.roomCode)
       setCopied(true)
@@ -260,7 +361,9 @@ export default function RoundsLiteArena({ controller }) {
     }
   }
 
-  const countdownMs = room?.countdownEndsAt ? Math.max(new Date(room.countdownEndsAt).getTime() - tick, 0) : 0
+  const countdownMs = room?.countdownEndsAt
+    ? Math.max(new Date(room.countdownEndsAt).getTime() - tick, 0)
+    : 0
   const countdown = Math.max(1, Math.ceil(countdownMs / 1000))
 
   return (
@@ -274,6 +377,7 @@ export default function RoundsLiteArena({ controller }) {
               2인 대전, 이동, 점프, 발사, 체력, 라운드 승리, 카드 선택까지 넣은 웹용 Lite 버전이야.
             </p>
           </div>
+
           <div className="rounds-lite-hero-actions">
             <button type="button" className="rounds-lite-ghost" onClick={() => controller.setRoutePage('main')}>
               메인으로
@@ -288,10 +392,12 @@ export default function RoundsLiteArena({ controller }) {
           <aside className="rounds-lite-sidebar">
             <section className="rounds-lite-card">
               <h2>방 설정</h2>
+
               <div className="rounds-lite-room-actions">
                 <button type="button" className="rounds-lite-primary" onClick={handleCreateRoom} disabled={loading}>
                   방 만들기
                 </button>
+
                 <div className="rounds-lite-join-row">
                   <input
                     type="text"
@@ -305,6 +411,7 @@ export default function RoundsLiteArena({ controller }) {
                   </button>
                 </div>
               </div>
+
               <div className="rounds-lite-room-meta">
                 <div>
                   <span>방 코드</span>
@@ -314,6 +421,7 @@ export default function RoundsLiteArena({ controller }) {
                   {copied ? '복사됨' : '코드 복사'}
                 </button>
               </div>
+
               <div className="rounds-lite-room-meta rounds-lite-room-meta--stack">
                 <div>
                   <span>상태</span>
@@ -324,11 +432,19 @@ export default function RoundsLiteArena({ controller }) {
                   <strong>{room ? `${room.roundNo} / 목표 ${room.targetWins}승` : '-'}</strong>
                 </div>
               </div>
-              <p className="rounds-lite-message">{error || room?.message || '방을 만들거나 참가해 시작하세요.'}</p>
+
+              <p className="rounds-lite-message">{error || room?.message || '방을 만들거나 참가한 뒤 시작하세요.'}</p>
+
               <div className="rounds-lite-controls">
-                <button type="button" className="rounds-lite-primary" onClick={handleReady} disabled={!room || loading || room.phase === 'ACTIVE' || room.phase === 'COUNTDOWN' || room.phase === 'CARD_PICK'}>
+                <button
+                  type="button"
+                  className="rounds-lite-primary"
+                  onClick={handleReady}
+                  disabled={!room || loading || room.phase === 'ACTIVE' || room.phase === 'COUNTDOWN' || room.phase === 'CARD_PICK'}
+                >
                   준비
                 </button>
+
                 <button type="button" className="rounds-lite-secondary" onClick={handleReset} disabled={!room || loading}>
                   매치 초기화
                 </button>
@@ -349,16 +465,21 @@ export default function RoundsLiteArena({ controller }) {
               <h2>플레이어</h2>
               <div className="rounds-lite-player-list">
                 {room?.players?.map((player) => (
-                  <div key={player.seat} className={`rounds-lite-player-item ${player.seat === room?.mySeat ? 'is-me' : ''}`}>
+                  <div
+                    key={player.seat}
+                    className={`rounds-lite-player-item ${player.seat === room?.mySeat ? 'is-me' : ''}`}
+                  >
                     <div>
                       <strong>{player.name}</strong>
                       <span>{player.seat === room?.mySeat ? '나' : '상대'}</span>
                     </div>
+
                     <div className="rounds-lite-player-stats">
                       <span>{player.hp}/{player.maxHp} HP</span>
                       <span>{player.wins}승</span>
                       <span>{player.ready ? '준비 완료' : '대기'}</span>
                     </div>
+
                     {!!player.selectedCards?.length && (
                       <div className="rounds-lite-card-tags">
                         {player.selectedCards.map((card) => (
@@ -419,24 +540,27 @@ export default function RoundsLiteArena({ controller }) {
                     />
                   ))}
 
-                  {room?.projectiles?.map((projectile) => (
+                  {currentRoom?.projectiles?.map((projectile) => (
                     <div
                       key={projectile.id}
-                      className={`rounds-lite-projectile ${projectile.ownerSeat === room.mySeat ? 'is-mine' : 'is-opponent'}`}
+                      className={`rounds-lite-projectile ${projectile.ownerSeat === room?.mySeat ? 'is-mine' : 'is-opponent'}`}
                       style={{
-                        left: projectile.x - projectile.radius,
-                        top: projectile.y - projectile.radius,
                         width: projectile.radius * 2,
                         height: projectile.radius * 2,
+                        transform: `translate3d(${projectile.x - projectile.radius}px, ${projectile.y - projectile.radius}px, 0)`,
                       }}
                     />
                   ))}
 
-                  {room?.players?.map((player) => (
+                  {currentRoom?.players?.map((player) => (
                     <div
                       key={player.seat}
-                      className={`rounds-lite-player ${player.seat === room.mySeat ? 'is-me' : 'is-opponent'} ${player.facingRight ? 'is-right' : 'is-left'}`}
-                      style={{ left: player.x, top: player.y, width: player.width, height: player.height }}
+                      className={`rounds-lite-player ${player.seat === room?.mySeat ? 'is-me' : 'is-opponent'}`}
+                      style={{
+                        width: player.width,
+                        height: player.height,
+                        transform: `translate3d(${player.x}px, ${player.y}px, 0) scaleX(${player.facingRight ? 1 : -1})`,
+                      }}
                     >
                       <div className="rounds-lite-player-head" />
                       <div className="rounds-lite-player-body" />
