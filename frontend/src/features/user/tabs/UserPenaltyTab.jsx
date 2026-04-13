@@ -124,14 +124,21 @@ export default function UserPenaltyTab({ controller }) {
         />
 
         <div className="list-stack">
-          {PENALTY_ACTIONS.map(([title, desc]) => (
+          {/* {PENALTY_ACTIONS.map(([title, desc]) => (
             <div key={title} className="bookmark-item" as="div">
+              <strong>{title}</strong><br />
+              <small>{desc}</small>
+            </div>
+          ))} */}
+
+          {PENALTY_ACTIONS.map(([title, desc], idx) => (
+            <div key={title} className={`bookmark-item penalty-item stage-${idx + 1}`}>
               <strong>{title}</strong><br />
               <small>{desc}</small>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </div >
   )
 }

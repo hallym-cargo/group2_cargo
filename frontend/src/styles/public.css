@@ -154,6 +154,26 @@
   gap: 16px;
 }
 
+/* 추가 */
+.side-form .surface-sub {
+  margin: 0;
+}
+
+/* 추가 */
+.side-form .list-stack {
+  margin: 0;
+}
+
+/* 추가 */
+.side-form .section-title {
+  margin-bottom: 4px;
+}
+
+/* 추가 */
+.side-form .surface-sub .section-desc {
+  margin-bottom: 8px;
+}
+
 .detail-stat-grid,
 .hero-kpis,
 .kpi-grid,
@@ -270,10 +290,40 @@
   margin-top: 16px;
 }
 
+/* 추가 */
+.finance-table-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* 추가 */
+.finance-table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 .kpi-card p {
   margin-top: 4px;
   color: var(--text-sub);
   font-size: 13px;
+}
+
+.mypage-kpi .kpi-card {
+  padding: 22px;
+}
+
+.mypage-kpi .kpi-card span {
+  font-size: 13px;
+}
+
+.mypage-kpi .kpi-card strong {
+  font-size: 24px;
+}
+
+/* 추가 */
+.mypage-kpi {
+  margin-top: 3px;
 }
 
 .role-chip {

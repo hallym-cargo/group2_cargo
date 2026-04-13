@@ -451,6 +451,13 @@ body.theme-admin .app-logo__image {
   box-shadow: 0 20px 48px rgba(15, 23, 42, 0.06);
 }
 
+/* 추가 */
+.profile-edit-surface .landing-infoPanel {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
 .landing-hero__summary div {
   padding: 18px 20px;
   border-radius: 24px;
@@ -633,6 +640,22 @@ body.theme-admin .app-logo__image {
   padding-bottom: 18px;
 }
 
+
+
+
+
+.landing-info .landing-infoPanel:first-child {
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.72),
+      rgba(240, 246, 255, 0.82)) !important;
+}
+
+
+
+
+
+
+
 .landing-accessBand {
   padding-bottom: 100px;
 }
@@ -796,10 +819,10 @@ body.theme-admin .app-logo__image {
   padding-right: 0;
 }
 
-.landing-board__inner > .landing-sectionHead,
-.landing-board__inner > .landing-filterRow,
-.landing-info__inner > .landing-sectionHead,
-.landing-solution > .landing-sectionHead,
+.landing-board__inner>.landing-sectionHead,
+.landing-board__inner>.landing-filterRow,
+.landing-info__inner>.landing-sectionHead,
+.landing-solution>.landing-sectionHead,
 .landing-infoGrid,
 .landing-boardGrid,
 .landing-stats__inner,
@@ -1002,6 +1025,7 @@ body.theme-admin .app-logo__image {
 }
 
 @media (max-width: 1200px) {
+
   .landing-hero__inner,
   .landing-accessBand__inner,
   .landing-boardGrid,
@@ -1191,7 +1215,7 @@ body.theme-admin .app-logo__image {
     inset 0 1px 0 rgba(255, 255, 255, 0.76);
 }
 
-.public-directory-card > * {
+.public-directory-card>* {
   position: relative;
   z-index: 1;
 }
@@ -1319,12 +1343,12 @@ body.theme-admin .app-logo__image {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
 }
 
-.public-directory-card__summaryStats > div {
+.public-directory-card__summaryStats>div {
   padding: 14px 10px 13px;
   text-align: center;
 }
 
-.public-directory-card__summaryStats > div + div {
+.public-directory-card__summaryStats>div+div {
   border-left: 1px solid rgba(186, 201, 224, 0.32);
 }
 
@@ -1384,7 +1408,7 @@ body.theme-admin .app-logo__image {
     font-size: 12px;
   }
 
-  .public-directory-card__summaryStats > div {
+  .public-directory-card__summaryStats>div {
     padding: 12px 8px;
   }
 
@@ -1483,6 +1507,7 @@ body.theme-admin .app-logo__image {
 }
 
 @media (max-width: 820px) {
+
   .public-directory-search__controls,
   .public-directory-grid,
   .public-directory-card__stats {
@@ -1493,7 +1518,7 @@ body.theme-admin .app-logo__image {
     grid-template-columns: 1fr;
   }
 
-  .public-directory-card__summaryStats > div + div {
+  .public-directory-card__summaryStats>div+div {
     border-left: 0;
     border-top: 1px solid rgba(226, 232, 240, 0.9);
   }

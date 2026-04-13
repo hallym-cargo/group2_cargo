@@ -83,6 +83,37 @@
   gap: 10px;
 }
 
+/* 추가 */
+.penalty-item {
+  padding: 12px;
+  border-radius: 10px;
+}
+
+/* 추가 */
+.penalty-item.stage-1 {
+  background: #f8fafc;
+}
+
+.penalty-item.stage-2 {
+  background: #f1f5ff;
+}
+
+.penalty-item.stage-3 {
+  background: #eef2ff;
+}
+
+.penalty-item.stage-4 {
+  background: #e0e7ff;
+}
+
+.penalty-item.stage-5 {
+  background: #c7d2fe;
+}
+
+.penalty-item.stage-6 {
+  background: #a5b4fc;
+}
+
 .list-row {
   background: var(--surface-2);
   border: 1px solid var(--line);

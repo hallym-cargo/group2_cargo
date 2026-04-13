@@ -217,6 +217,15 @@ textarea {
 /* 추가 */
 .bookmark-table-wrap {
   margin-top: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* 추가 */
+.bookmark-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .bookmark-title {

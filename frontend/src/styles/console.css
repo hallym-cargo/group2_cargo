@@ -89,6 +89,19 @@
   gap: 18px;
 }
 
+/* 추가 */
+.table-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* 추가 */
+.board-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 .toolbar-search {
   min-width: 300px;
 }
@@ -107,6 +120,11 @@
 
 .surface-sub {
   padding: 16px;
+}
+
+/* 추가 */
+.map-section {
+  margin-top: 16px;
 }
 
 .offer-card p {
@@ -340,6 +358,21 @@
   margin-top: 6px;
   color: var(--text-sub);
   font-size: 12px;
+}
+
+/* 추가 */
+.content-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* 추가 */
+.content-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .role-side-guide strong {

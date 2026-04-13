@@ -61,90 +61,92 @@ export default function UserBoardTab({ controller }) {
         <div className="table-head">
           <SectionTitle title="배차 보드" desc="행을 클릭하면 상세와 지도, 역할별 액션이 함께 열립니다." />
         </div>
-        <table className="board-table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>상태</th>
-              <th>배차명</th>
-              <th>태그</th>
-              <th>구간</th>
-              <th>입찰</th>
-              <th>차주</th>
-              <th>예상</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredShipments.map((item) => (
-              <tr
-                key={item.id}
-                className={selectedId === item.id ? 'is-selected' : ''}
-                onClick={() => {
-                  setSelectedId(item.id)
-                }}
-              >
-                <td>
-                  <button
-                    className={item.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleToggleBookmark(item.id)
-                    }}
-                    aria-label={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-                    title={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-                  >
-                    ★
-                  </button>
-                </td>
-
-                <td>
-                  <span className={`badge badge-${item.status.toLowerCase()}`}>
-                    {statusText(item.status)}
-                  </span>
-                </td>
-
-                <td>
-                  <strong>{item.title}</strong>
-                  <small>{item.cargoType}</small>
-                </td>
-
-                <td>
-                  {auth.role === 'DRIVER' ? (
-                    <div className="chip-group">
-                      {item.assignedToMe && <span className="tag tag-dark">내 배차</span>}
-                      {!item.assignedToMe && item.hasMyOffer && <span className="tag">내 입찰</span>}
-                      {!item.assignedToMe && !item.hasMyOffer && item.status === 'BIDDING' && (
-                        <span className="tag">입찰 가능</span>
-                      )}
-                      {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
-                    </div>
-                  ) : (
-                    <div className="chip-group">
-                      <span className="tag">{roleText(auth.role)}</span>
-                      {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
-                    </div>
-                  )}
-                </td>
-
-                <td>
-                  {item.originAddress} → {item.destinationAddress}
-                </td>
-
-                <td>
-                  {item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}
-                </td>
-
-                <td>{item.assignedDriverName || '-'}</td>
-
-                {/* <td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td> */}
-                <td>
-                  {formatMinutesToHour(item.tracking?.remainingMinutes ?? item.estimatedMinutes)}
-                </td>
+        <div className="table-scroll">
+          <table className="board-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>상태</th>
+                <th>배차명</th>
+                <th>태그</th>
+                <th>구간</th>
+                <th>입찰</th>
+                <th>차주</th>
+                <th>예상</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {filteredShipments.map((item) => (
+                <tr
+                  key={item.id}
+                  className={selectedId === item.id ? 'is-selected' : ''}
+                  onClick={() => {
+                    setSelectedId(item.id)
+                  }}
+                >
+                  <td>
+                    <button
+                      className={item.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleBookmark(item.id)
+                      }}
+                      aria-label={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                      title={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                    >
+                      ★
+                    </button>
+                  </td>
+
+                  <td>
+                    <span className={`badge badge-${item.status.toLowerCase()}`}>
+                      {statusText(item.status)}
+                    </span>
+                  </td>
+
+                  <td>
+                    <strong>{item.title}</strong>
+                    <small>{item.cargoType}</small>
+                  </td>
+
+                  <td>
+                    {auth.role === 'DRIVER' ? (
+                      <div className="chip-group">
+                        {item.assignedToMe && <span className="tag tag-dark">내 배차</span>}
+                        {!item.assignedToMe && item.hasMyOffer && <span className="tag">내 입찰</span>}
+                        {!item.assignedToMe && !item.hasMyOffer && item.status === 'BIDDING' && (
+                          <span className="tag">입찰 가능</span>
+                        )}
+                        {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
+                      </div>
+                    ) : (
+                      <div className="chip-group">
+                        <span className="tag">{roleText(auth.role)}</span>
+                        {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
+                      </div>
+                    )}
+                  </td>
+
+                  <td>
+                    {item.originAddress} → {item.destinationAddress}
+                  </td>
+
+                  <td>
+                    {item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}
+                  </td>
+
+                  <td>{item.assignedDriverName || '-'}</td>
+
+                  {/* <td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td> */}
+                  <td>
+                    {formatMinutesToHour(item.tracking?.remainingMinutes ?? item.estimatedMinutes)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
@@ -270,9 +272,9 @@ export default function UserBoardTab({ controller }) {
                       : null
                 }
               />
-
-              <KakaoMapView shipment={selected} />
-
+              <div className="map-section">
+                <KakaoMapView shipment={selected} />
+              </div>
               <div className="surface-sub timeline-section">
                 <SectionTitle title="상태 타임라인" />
                 <div className="list-stack">
