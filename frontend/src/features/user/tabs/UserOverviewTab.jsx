@@ -283,7 +283,7 @@ export default function UserOverviewTab({ controller }) {
         </div>
       </div>
 
-      <div className="kpi-grid">
+      <div className="kpi-grid mypage-kpi">
         <div className="kpi-card"><span>전체 배차</span><strong>{summary.total}</strong></div>
         <div className="kpi-card"><span>입찰중</span><strong>{summary.bidding}</strong></div>
         <div className="kpi-card"><span>운행중</span><strong>{summary.live}</strong></div>

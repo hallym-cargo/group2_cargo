@@ -78,44 +78,45 @@ export default function UserFinanceTab({ controller }) {
             ? '화주는 확정된 운임 총액만 결제하며, 플랫폼 수수료는 차주 정산 금액에서만 차감됩니다. 행을 클릭하면 영수증을 확인할 수 있습니다.'
             : '차주는 거래 원금, 수수료, 실제 정산 금액을 한 번에 확인합니다. 행을 클릭하면 영수증을 확인할 수 있습니다.'}
         />
-
-        <table className="board-table compact">
-          <thead>
-            <tr>
-              <th>유형</th>
-              <th>화물</th>
-              <th>거래액</th>
-              <th>수수료</th>
-              <th>최종 반영액</th>
-              <th>일시</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {financeTransactions.map(item => (
-              <tr
-                key={item.id}
-                className={item.shipmentId ? 'receipt-row' : ''}
-                onClick={() => handleRowClick(item.shipmentId)}
-                style={{ cursor: item.shipmentId ? 'pointer' : 'default' }}
-                title={item.shipmentId ? '클릭하여 영수증 보기' : ''}
-              >
-                <td>{transactionTypeText(item.type)}</td>
-                <td>
-                  {item.shipmentTitle || '-'}
-                  <small>
-                    #{item.shipmentId || '-'}
-                    {item.shipmentId ? ' · 영수증 보기' : ''}
-                  </small>
-                </td>
-                <td>{formatCurrency(item.grossAmount)}</td>
-                <td>{formatCurrency(item.feeAmount)}</td>
-                <td>{formatCurrency(item.netAmount)}</td>
-                <td>{formatDate(item.createdAt)}</td>
+        <div className="finance-table-scroll">
+          <table className="board-table compact">
+            <thead>
+              <tr>
+                <th>유형</th>
+                <th>화물</th>
+                <th>거래액</th>
+                <th>수수료</th>
+                <th>최종 반영액</th>
+                <th>일시</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {financeTransactions.map(item => (
+                <tr
+                  key={item.id}
+                  className={item.shipmentId ? 'receipt-row' : ''}
+                  onClick={() => handleRowClick(item.shipmentId)}
+                  style={{ cursor: item.shipmentId ? 'pointer' : 'default' }}
+                  title={item.shipmentId ? '클릭하여 영수증 보기' : ''}
+                >
+                  <td>{transactionTypeText(item.type)}</td>
+                  <td>
+                    {item.shipmentTitle || '-'}
+                    <small>
+                      #{item.shipmentId || '-'}
+                      {item.shipmentId ? ' · 영수증 보기' : ''}
+                    </small>
+                  </td>
+                  <td>{formatCurrency(item.grossAmount)}</td>
+                  <td>{formatCurrency(item.feeAmount)}</td>
+                  <td>{formatCurrency(item.netAmount)}</td>
+                  <td>{formatDate(item.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <ReceiptModal
