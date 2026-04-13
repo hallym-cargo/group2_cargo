@@ -67,6 +67,14 @@ export default function ShipperHeader({ controller }) {
                     >
                         차주 찾기
                     </button>
+
+                    <button
+                        type="button"
+                        className={navButtonClass(currentRoute === 'game')}
+                        onClick={() => controller.setRoutePage('game')}
+                    >
+                        미니게임
+                    </button>
                 </nav>
 
                 {/* 오른쪽 버튼 */}

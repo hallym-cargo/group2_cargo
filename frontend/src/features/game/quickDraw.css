@@ -1,0 +1,274 @@
+.quickdraw-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(82, 132, 255, 0.18), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(40, 180, 120, 0.16), transparent 28%),
+    linear-gradient(180deg, #f7f9fc 0%, #eef2f8 100%);
+  padding: 48px 24px 72px;
+}
+
+.quickdraw-page {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.quickdraw-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.quickdraw-eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #5d6b82;
+}
+
+.quickdraw-topbar h1 {
+  margin: 0;
+  font-size: clamp(32px, 4vw, 54px);
+  line-height: 1.02;
+}
+
+.quickdraw-subtitle {
+  margin: 12px 0 0;
+  font-size: 16px;
+  color: #617187;
+}
+
+.quickdraw-grid {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 22px;
+}
+
+.quickdraw-card {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(140, 154, 180, 0.18);
+  border-radius: 28px;
+  box-shadow: 0 22px 50px rgba(27, 39, 66, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.quickdraw-card--setup {
+  padding: 26px;
+}
+
+.quickdraw-card--arena {
+  padding: 26px;
+}
+
+.quickdraw-card h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+.quickdraw-card label {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #314155;
+}
+
+.quickdraw-card input {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid rgba(117, 132, 157, 0.28);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 15px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.quickdraw-actions {
+  display: flex;
+  gap: 10px;
+  margin: 14px 0 18px;
+}
+
+.quickdraw-primary,
+.quickdraw-secondary,
+.quickdraw-fire,
+.quickdraw-ghost {
+  border: 0;
+  border-radius: 16px;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quickdraw-primary {
+  background: linear-gradient(135deg, #111827, #1f2937);
+  color: #fff;
+}
+
+.quickdraw-secondary {
+  background: #e8edf6;
+  color: #1f2b3d;
+}
+
+.quickdraw-fire {
+  min-width: 180px;
+  background: linear-gradient(135deg, #ff6b57, #ff3b2f);
+  color: #fff;
+  box-shadow: 0 16px 30px rgba(255, 84, 63, 0.28);
+}
+
+.quickdraw-ghost {
+  background: #fff;
+  color: #172131;
+  border: 1px solid rgba(117, 132, 157, 0.22);
+}
+
+.quickdraw-roomline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  font-size: 14px;
+  color: #5e6f86;
+}
+
+.quickdraw-roomline strong {
+  font-size: 15px;
+  color: #1a2434;
+}
+
+.quickdraw-scoreboard {
+  display: grid;
+  grid-template-columns: 1fr 72px 1fr;
+  align-items: stretch;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.quickdraw-player {
+  border-radius: 24px;
+  padding: 18px;
+  background: #f7f9fc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quickdraw-player.is-me {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.97), rgba(46, 62, 90, 0.95));
+  color: #fff;
+}
+
+.quickdraw-player strong {
+  font-size: 22px;
+}
+
+.quickdraw-player b {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.quickdraw-player small {
+  color: inherit;
+  opacity: 0.82;
+}
+
+.quickdraw-versus {
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 800;
+  color: #7b8797;
+}
+
+.quickdraw-stage {
+  min-height: 260px;
+  border-radius: 30px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: linear-gradient(180deg, #0f172a, #1f2937);
+  color: #fff;
+  padding: 20px;
+}
+
+.quickdraw-stage.phase-fire {
+  background: linear-gradient(180deg, #ff7b63, #ff3d2f);
+}
+
+.quickdraw-stage.phase-countdown {
+  background: linear-gradient(180deg, #253246, #101825);
+}
+
+.quickdraw-stage.phase-result,
+.quickdraw-stage.phase-finished {
+  background: linear-gradient(180deg, #123c27, #0f6a43);
+}
+
+.quickdraw-stage__round {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.quickdraw-stage__inner h2 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 56px);
+}
+
+.quickdraw-stage__inner p {
+  margin: 12px 0 0;
+  font-size: 16px;
+  opacity: 0.88;
+}
+
+.quickdraw-actions--arena {
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.quickdraw-help,
+.quickdraw-status,
+.quickdraw-error {
+  margin: 10px 0 0;
+  font-size: 14px;
+}
+
+.quickdraw-help,
+.quickdraw-status {
+  color: #5f6d82;
+}
+
+.quickdraw-error {
+  color: #d93025;
+}
+
+.quickdraw-status-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f6f8fb;
+  color: #5a687d;
+}
+
+@media (max-width: 920px) {
+  .quickdraw-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quickdraw-scoreboard {
+    grid-template-columns: 1fr;
+  }
+
+  .quickdraw-versus {
+    display: none;
+  }
+}
