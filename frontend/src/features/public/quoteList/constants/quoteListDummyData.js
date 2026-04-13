@@ -115,4 +115,207 @@ export const QUOTE_LIST_DUMMY_DATA = [
 
     cargoImages: [],
   },
+  {
+    id: 5,
+    status: "배차 완료",
+
+    estimateName: "박스류 대량 운송",
+    originAddress: "인천광역시 연수구",
+    originDetailAddress: "송도 물류센터",
+    destinationAddress: "전북특별자치도 전주시",
+    destinationDetailAddress: "덕진구 창고",
+    transportDate: "2026-04-10",
+    transportTime: "10:00",
+
+    vehicleType: "1톤 트럭",
+    vehicleNeedConsult: false,
+
+    cargoType: "박스류",
+    cargoName: "택배 박스",
+
+    weight: "800",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "하차 지원 가능",
+
+    desiredPrice: "180000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
+  },
+  {
+    id: 6,
+    status: "배차 완료",
+
+    estimateName: "박스류 대량 운송",
+    originAddress: "인천광역시 연수구",
+    originDetailAddress: "송도 물류센터",
+    destinationAddress: "전북특별자치도 전주시",
+    destinationDetailAddress: "덕진구 창고",
+    transportDate: "2026-04-10",
+    transportTime: "10:00",
+
+    vehicleType: "1톤 트럭",
+    vehicleNeedConsult: false,
+
+    cargoType: "박스류",
+    cargoName: "택배 박스",
+
+    weight: "800",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "하차 지원 가능",
+
+    desiredPrice: "180000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
+  },
+  {
+    id: 7,
+    status: "배차 완료",
+
+    estimateName: "박스류 대량 운송",
+    originAddress: "인천광역시 연수구",
+    originDetailAddress: "송도 물류센터",
+    destinationAddress: "전북특별자치도 전주시",
+    destinationDetailAddress: "덕진구 창고",
+    transportDate: "2026-04-10",
+    transportTime: "10:00",
+
+    vehicleType: "1톤 트럭",
+    vehicleNeedConsult: false,
+
+    cargoType: "박스류",
+    cargoName: "택배 박스",
+
+    weight: "800",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "하차 지원 가능",
+
+    desiredPrice: "180000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
+  },
+  {
+    id: 8,
+    status: "배차 완료",
+
+    estimateName: "박스류 대량 운송",
+    originAddress: "인천광역시 연수구",
+    originDetailAddress: "송도 물류센터",
+    destinationAddress: "전북특별자치도 전주시",
+    destinationDetailAddress: "덕진구 창고",
+    transportDate: "2026-04-10",
+    transportTime: "10:00",
+
+    vehicleType: "1톤 트럭",
+    vehicleNeedConsult: false,
+
+    cargoType: "박스류",
+    cargoName: "택배 박스",
+
+    weight: "800",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "하차 지원 가능",
+
+    desiredPrice: "180000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
+  },
+  {
+    id: 9,
+    status: "배차 완료",
+
+    estimateName: "박스류 대량 운송",
+    originAddress: "인천광역시 연수구",
+    originDetailAddress: "송도 물류센터",
+    destinationAddress: "전북특별자치도 전주시",
+    destinationDetailAddress: "덕진구 창고",
+    transportDate: "2026-04-10",
+    transportTime: "10:00",
+
+    vehicleType: "1톤 트럭",
+    vehicleNeedConsult: false,
+
+    cargoType: "박스류",
+    cargoName: "택배 박스",
+
+    weight: "800",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "하차 지원 가능",
+
+    desiredPrice: "180000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
+  },
+  {
+    id: 10,
+    status: "배차 완료",
+
+    estimateName: "박스류 대량 운송",
+    originAddress: "인천광역시 연수구",
+    originDetailAddress: "송도 물류센터",
+    destinationAddress: "전북특별자치도 전주시",
+    destinationDetailAddress: "덕진구 창고",
+    transportDate: "2026-04-10",
+    transportTime: "10:00",
+
+    vehicleType: "1톤 트럭",
+    vehicleNeedConsult: false,
+
+    cargoType: "박스류",
+    cargoName: "택배 박스",
+
+    weight: "800",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "하차 지원 가능",
+
+    desiredPrice: "180000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
+  },
+  {
+    id: 11,
+    status: "배차 완료",
+
+    estimateName: "박스류 대량 운송",
+    originAddress: "인천광역시 연수구",
+    originDetailAddress: "송도 물류센터",
+    destinationAddress: "전북특별자치도 전주시",
+    destinationDetailAddress: "덕진구 창고",
+    transportDate: "2026-04-10",
+    transportTime: "10:00",
+
+    vehicleType: "1톤 트럭",
+    vehicleNeedConsult: false,
+
+    cargoType: "박스류",
+    cargoName: "택배 박스",
+
+    weight: "800",
+    weightUnit: "kg",
+    weightNeedConsult: false,
+
+    requestNote: "하차 지원 가능",
+
+    desiredPrice: "180000",
+    priceProposalAllowed: false,
+
+    cargoImages: [],
+  },
 ];

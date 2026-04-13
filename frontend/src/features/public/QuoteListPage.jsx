@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ShipperHeader from "./components/ShipperHeader";
 import "./quoteList/quoteList.css";
 import QuoteListFilterBar from "./quoteList/components/QuoteListFilterBar";
@@ -11,6 +11,9 @@ export default function QuoteListPage({ controller }) {
   const [status, setStatus] = useState("전체");
   const [origin, setOrigin] = useState("전체");
   const [destination, setDestination] = useState("전체");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 10;
 
   const filteredQuotes = useMemo(() => {
     return QUOTE_LIST_DUMMY_DATA.filter((quote) => {
@@ -26,6 +29,25 @@ export default function QuoteListPage({ controller }) {
       return matchStatus && matchOrigin && matchDestination;
     });
   }, [status, origin, destination]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [status, origin, destination]);
+
+  const totalCount = filteredQuotes.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const paginatedQuotes = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredQuotes.slice(startIndex, endIndex);
+  }, [filteredQuotes, currentPage]);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   return (
     <div className="public-shell">
@@ -50,17 +72,32 @@ export default function QuoteListPage({ controller }) {
         />
 
         <QuoteListSummaryBar
-          totalCount={filteredQuotes.length}
+          totalCount={totalCount}
           onMoveToRegister={() => controller.setRoutePage("register")}
         />
 
         <section className="quote-list-card-section">
-          {filteredQuotes.map((quote) => (
-            <QuoteCard key={quote.id} quote={quote} />
-          ))}
+          {paginatedQuotes.length > 0 ? (
+            paginatedQuotes.map((quote) => (
+              <QuoteCard
+                key={quote.id}
+                quote={quote}
+                onClickDetail={(quoteId) =>
+                  controller.setRoutePage("detail", { quoteId })
+                }
+              />
+            ))
+          ) : (
+            <p className="quote-list-empty">조건에 맞는 견적이 없습니다.</p>
+          )}
         </section>
 
-        <QuoteListPagination />
+        <QuoteListPagination
+          totalCount={totalCount}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );

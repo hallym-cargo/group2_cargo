@@ -21,9 +21,12 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ReceiptPdfBridge from "./components/common/ReceiptPdfBridge";
+import QuoteDetailPage from "./features/public/QuoteDetailPage";
 
 export default function App() {
-  const hasReceiptPdfQuery = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("receiptPdf");
+  const hasReceiptPdfQuery =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("receiptPdf");
 
   if (hasReceiptPdfQuery) {
     return <ReceiptPdfBridge />;
@@ -37,6 +40,13 @@ export default function App() {
     page = <PaymentPage controller={controller} />;
   } else if (controller.routePage === "quotes") {
     page = <QuoteListPage controller={controller} />;
+  } else if (controller.routePage === "detail") {
+    page = (
+      <QuoteDetailPage
+        controller={controller}
+        routeParams={controller.routeParams}
+      />
+    );
   } else if (controller.routePage === "register") {
     page = <QuoteRegisterPage controller={controller} />;
   } else if (controller.routePage === "quoteRegister") {
@@ -98,9 +108,7 @@ export default function App() {
           isSending={controller.chatSending}
         />
       )}
-      {controller.paymentModalOpen && (
-        <PaymentModal controller={controller} />
-      )}
+      {controller.paymentModalOpen && <PaymentModal controller={controller} />}
       {controller.isLoggedIn && !controller.isAdmin && (
         <>
           <ChatFloatingButton

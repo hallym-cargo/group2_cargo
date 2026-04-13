@@ -69,8 +69,7 @@ function formatDDay(targetDate) {
   return "마감";
 }
 
-function formatPrice(desiredPrice, priceProposalAllowed) {
-  if (priceProposalAllowed) return "제안 받음";
+function formatPrice(desiredPrice) {
   if (!desiredPrice && desiredPrice !== 0) return "희망 운임 미정";
 
   const numericPrice = Number(desiredPrice);
@@ -79,7 +78,7 @@ function formatPrice(desiredPrice, priceProposalAllowed) {
   return `${numericPrice.toLocaleString()}원`;
 }
 
-export default function QuoteQuoteCard({ quote }) {
+export default function QuoteCard({ quote, onClickDetail }) {
   const {
     estimateName,
     originAddress,
@@ -98,7 +97,7 @@ export default function QuoteQuoteCard({ quote }) {
   const originSido = getRegionLabel(originAddress);
   const destinationSido = getRegionLabel(destinationAddress);
   const dDayText = formatDDay(transportDate);
-  const priceText = formatPrice(desiredPrice, priceProposalAllowed);
+  const priceText = formatPrice(desiredPrice);
 
   return (
     <article className="quote-card">
@@ -108,6 +107,9 @@ export default function QuoteQuoteCard({ quote }) {
             <span className={`quote-card__status-badge ${statusClass}`}>
               {statusText}
             </span>
+            {priceProposalAllowed && (
+              <span className="quote-card__price-badge">가격 상담 가능</span>
+            )}
           </div>
 
           <h3 className="quote-card__title">{estimateName || "견적명"}</h3>
@@ -139,13 +141,16 @@ export default function QuoteQuoteCard({ quote }) {
           <div className="quote-card__info-column">
             <div className="quote-card__cargo">
               <span className="quote-card__info-label">화물 / 차량</span>
-              <strong className="quote-card__cargo-value">
-                {cargoType || "-"} · {vehicleType || "-"}
-              </strong>
+
+              <div className="quote-card__cargo-row">
+                <strong className="quote-card__cargo-value">
+                  {cargoType || "-"} · {vehicleType || "-"}
+                </strong>
+              </div>
             </div>
 
             <div className="quote-card__price-wrap">
-              <span className="quote-card__info-label">희망 운임</span>
+              <span className="quote-card__info-label">희망 운임 </span>
               <strong className="quote-card__price">{priceText}</strong>
             </div>
           </div>
@@ -166,7 +171,11 @@ export default function QuoteQuoteCard({ quote }) {
         </div>
 
         <div className="quote-card__side-bottom">
-          <button type="button" className="quote-card__detail-button">
+          <button
+            type="button"
+            className="quote-card__detail-button"
+            onClick={() => onClickDetail?.(quote.id)}
+          >
             상세보기 &gt;
           </button>
         </div>
