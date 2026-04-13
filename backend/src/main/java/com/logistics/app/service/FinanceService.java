@@ -173,22 +173,56 @@ public class FinanceService {
         }
 
         MoneyTransaction tx = user.getRole() == UserRole.ADMIN
-                ? moneyTransactionRepository.findFirstByShipmentIdOrderByCreatedAtDesc(shipmentId)
-                .orElseThrow(() -> new RuntimeException("영수증이 없습니다."))
-                : moneyTransactionRepository.findFirstByUserAndShipmentIdOrderByCreatedAtDesc(user, shipmentId)
-                .orElseThrow(() -> new RuntimeException("영수증이 없습니다."));
+                ? moneyTransactionRepository.findFirstByShipmentIdOrderByCreatedAtDesc(shipmentId).orElse(null)
+                : moneyTransactionRepository.findFirstByUserAndShipmentIdOrderByCreatedAtDesc(user, shipmentId).orElse(null);
+
+        Integer fallbackGross = shipment.getAgreedPrice();
+        if (fallbackGross == null && shipment.getAcceptedOfferId() != null) {
+            fallbackGross = offerRepository.findById(shipment.getAcceptedOfferId())
+                    .map(Offer::getPrice)
+                    .orElse(null);
+        }
+        int grossAmount = tx != null ? nvl(tx.getGrossAmount()) : nvl(fallbackGross);
+        int feeAmount;
+        int netAmount;
+        TransactionType transactionType;
+        String description;
+        String paymentMethod;
+        java.time.LocalDateTime createdAt;
+        String receiptNumber;
+
+        if (tx != null) {
+            feeAmount = nvl(tx.getFeeAmount());
+            netAmount = nvl(tx.getNetAmount());
+            transactionType = tx.getType();
+            description = tx.getDescription();
+            paymentMethod = tx.getPaymentMethod() != null ? tx.getPaymentMethod() : (tx.getShipment() != null ? tx.getShipment().getPaymentMethod() : null);
+            createdAt = tx.getCreatedAt();
+            receiptNumber = "RCPT-" + shipmentId + "-" + tx.getId();
+        } else {
+            feeAmount = user.getRole() == UserRole.DRIVER ? (int) Math.floor(grossAmount * (SERVICE_FEE_RATE / 100.0)) : 0;
+            netAmount = Math.max(grossAmount - feeAmount, 0);
+            transactionType = user.getRole() == UserRole.DRIVER ? TransactionType.EARN : TransactionType.SPEND;
+            description = shipment.isPaid() ? "운송 결제 내역" : "거래 예상 영수증";
+            paymentMethod = shipment.getPaymentMethod();
+            createdAt = shipment.getPaymentCompletedAt() != null ? shipment.getPaymentCompletedAt() : shipment.getUpdatedAt();
+            if (createdAt == null) {
+                createdAt = shipment.getCreatedAt();
+            }
+            receiptNumber = "RCPT-" + shipmentId + "-PREVIEW";
+        }
 
         return FinanceDtos.ReceiptResponse.builder()
-                .receiptNumber("RCPT-" + shipmentId + "-" + tx.getId())
+                .receiptNumber(receiptNumber)
                 .shipmentId(shipment.getId())
                 .shipmentTitle(shipment.getTitle())
-                .transactionType(tx.getType())
-                .grossAmount(tx.getGrossAmount())
-                .feeAmount(tx.getFeeAmount())
-                .netAmount(tx.getNetAmount())
-                .description(tx.getDescription())
-                .paymentMethod(tx.getPaymentMethod() != null ? tx.getPaymentMethod() : (tx.getShipment() != null ? tx.getShipment().getPaymentMethod() : null))
-                .createdAt(tx.getCreatedAt())
+                .transactionType(transactionType)
+                .grossAmount(grossAmount)
+                .feeAmount(feeAmount)
+                .netAmount(netAmount)
+                .description(description)
+                .paymentMethod(paymentMethod)
+                .createdAt(createdAt)
                 .originAddress(shipment.getOriginAddress())
                 .destinationAddress(shipment.getDestinationAddress())
                 .shipperName(shipment.getShipper() != null ? shipment.getShipper().getName() : null)

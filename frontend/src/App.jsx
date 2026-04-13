@@ -20,8 +20,15 @@ import PaymentPage from "./pages/PaymentPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ReceiptPdfBridge from "./components/common/ReceiptPdfBridge";
 
 export default function App() {
+  const hasReceiptPdfQuery = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("receiptPdf");
+
+  if (hasReceiptPdfQuery) {
+    return <ReceiptPdfBridge />;
+  }
+
   const controller = useLogisticsController();
 
   let page = null;
