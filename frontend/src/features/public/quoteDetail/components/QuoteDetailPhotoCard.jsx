@@ -1,13 +1,29 @@
-export default function QuoteDetailPhotoCard({ quote }) {
+export default function QuoteDetailPhotoCard({
+  quote,
+  isShipper,
+  onClickEdit,
+}) {
   const images = quote.cargoImages || [];
 
   return (
     <section className="quote-detail-card quote-detail-photo-card">
       <div className="quote-detail-card__title-row">
-        <h2 className="quote-detail-card__title">첨부 사진</h2>
-        <span className="quote-detail-photo-card__count">
-          {images.length}장
-        </span>
+        <div className="quote-detail-photo-card__title-group">
+          <h2 className="quote-detail-card__title">첨부 사진</h2>
+          <span className="quote-detail-photo-card__count">
+            {images.length}장
+          </span>
+        </div>
+
+        {isShipper && (
+          <button
+            type="button"
+            className="quote-detail-section-edit-btn"
+            onClick={onClickEdit}
+          >
+            수정
+          </button>
+        )}
       </div>
 
       {images.length > 0 ? (

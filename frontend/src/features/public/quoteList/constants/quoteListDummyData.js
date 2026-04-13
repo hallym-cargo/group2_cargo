@@ -26,6 +26,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "200000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 325.4,
+    estimatedMinutes: 280,
+    estimatedArrivalAt: "2026-04-15 13:40",
+    tracking: {
+      remainingDistanceKm: 325.4,
+      remainingMinutes: 280,
+      eta: "2026-04-15 13:40",
+      roughLocation: "서울 출발 전",
+      progressPercent: 0,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -55,6 +66,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "300000",
     priceProposalAllowed: true,
 
+    estimatedDistanceKm: 58.2,
+    estimatedMinutes: 85,
+    estimatedArrivalAt: "2026-04-13 14:55",
+    tracking: {
+      remainingDistanceKm: 58.2,
+      remainingMinutes: 85,
+      eta: "2026-04-13 14:55",
+      roughLocation: "출발 대기",
+      progressPercent: 0,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -84,6 +106,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "350000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 57.8,
+    estimatedMinutes: 78,
+    estimatedArrivalAt: "2026-04-12 08:18",
+    tracking: {
+      remainingDistanceKm: 57.8,
+      remainingMinutes: 78,
+      eta: "2026-04-12 08:18",
+      roughLocation: "청주 인근",
+      progressPercent: 0,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -113,6 +146,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "180000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 210.6,
+    estimatedMinutes: 185,
+    estimatedArrivalAt: "2026-04-10 13:05",
+    tracking: {
+      remainingDistanceKm: 210.6,
+      remainingMinutes: 185,
+      eta: "2026-04-10 13:05",
+      roughLocation: "송도 물류센터",
+      progressPercent: 0,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -142,6 +186,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "180000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 210.6,
+    estimatedMinutes: 185,
+    estimatedArrivalAt: "2026-04-10 13:05",
+    tracking: {
+      remainingDistanceKm: 168.4,
+      remainingMinutes: 145,
+      eta: "2026-04-10 12:25",
+      roughLocation: "평택 인근",
+      progressPercent: 22,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -171,6 +226,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "180000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 210.6,
+    estimatedMinutes: 185,
+    estimatedArrivalAt: "2026-04-10 13:05",
+    tracking: {
+      remainingDistanceKm: 122.1,
+      remainingMinutes: 110,
+      eta: "2026-04-10 11:50",
+      roughLocation: "천안 인근",
+      progressPercent: 42,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -200,6 +266,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "180000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 210.6,
+    estimatedMinutes: 185,
+    estimatedArrivalAt: "2026-04-10 13:05",
+    tracking: {
+      remainingDistanceKm: 84.5,
+      remainingMinutes: 72,
+      eta: "2026-04-10 11:12",
+      roughLocation: "대전 인근",
+      progressPercent: 60,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -229,6 +306,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "180000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 210.6,
+    estimatedMinutes: 185,
+    estimatedArrivalAt: "2026-04-10 13:05",
+    tracking: {
+      remainingDistanceKm: 48.3,
+      remainingMinutes: 39,
+      eta: "2026-04-10 10:39",
+      roughLocation: "익산 인근",
+      progressPercent: 77,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -258,6 +346,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "180000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 210.6,
+    estimatedMinutes: 185,
+    estimatedArrivalAt: "2026-04-10 13:05",
+    tracking: {
+      remainingDistanceKm: 21.7,
+      remainingMinutes: 18,
+      eta: "2026-04-10 10:18",
+      roughLocation: "전주 진입",
+      progressPercent: 90,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -287,6 +386,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "180000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 210.6,
+    estimatedMinutes: 185,
+    estimatedArrivalAt: "2026-04-10 13:05",
+    tracking: {
+      remainingDistanceKm: 5.8,
+      remainingMinutes: 6,
+      eta: "2026-04-10 10:06",
+      roughLocation: "덕진구 인근",
+      progressPercent: 97,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
   {
@@ -316,6 +426,17 @@ export const QUOTE_LIST_DUMMY_DATA = [
     desiredPrice: "180000",
     priceProposalAllowed: false,
 
+    estimatedDistanceKm: 210.6,
+    estimatedMinutes: 185,
+    estimatedArrivalAt: "2026-04-10 13:05",
+    tracking: {
+      remainingDistanceKm: 0,
+      remainingMinutes: 0,
+      eta: "2026-04-10 10:00",
+      roughLocation: "도착 완료",
+      progressPercent: 100,
+    },
+    bookmarked: false,
     cargoImages: [],
   },
 ];
