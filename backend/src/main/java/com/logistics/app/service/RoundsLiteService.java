@@ -158,6 +158,9 @@ public class RoundsLiteService {
         if (!Objects.equals(room.getPickerSeat(), me.getSeat())) {
             throw new RuntimeException("이번 라운드 승리자만 카드를 선택할 수 있습니다.");
         }
+        if (room.getCardOptionsJson() == null || room.getCardOptionsJson().isBlank() || "[]".equals(room.getCardOptionsJson().trim())) {
+            throw new RuntimeException("이미 카드 선택이 완료되었습니다.");
+        }
 
         List<CardOption> options = readCards(room.getCardOptionsJson());
         CardOption selected = options.stream()
@@ -170,7 +173,6 @@ public class RoundsLiteService {
 
         room.setCardOptionsJson("[]");
         room.setPickerSeat(null);
-        room.setRoundNo(room.getRoundNo() + 1);
         room.setRoundWinnerSeat(null);
 
         if (room.getPlayers().stream().anyMatch(player -> player.getWins() >= room.getTargetWins())) {
@@ -178,8 +180,9 @@ public class RoundsLiteService {
             room.setMatchWinnerSeat(me.getSeat());
             room.setMessage(me.getName() + " 님이 매치에서 승리했습니다.");
         } else {
+            room.setRoundNo(room.getRoundNo() + 1);
             prepareRound(room);
-            room.setMessage(selected.getTitle() + " 카드를 적용했습니다. 다음 라운드를 준비합니다.");
+            room.setMessage(selected.getTitle() + " 카드가 적용되었습니다.");
         }
 
         roomRepository.saveAndFlush(room);
@@ -750,8 +753,8 @@ public class RoundsLiteService {
     }
 
     private GeneratedMap generateCenterGapMap() {
-        double leftFloorWidth = randomBetween(250d, 310d);
-        double rightFloorWidth = randomBetween(250d, 310d);
+        double leftFloorWidth = randomBetween(330d, 380d);
+        double rightFloorWidth = randomBetween(330d, 380d);
         double gapStart = leftFloorWidth;
         double gapEnd = ARENA_WIDTH - rightFloorWidth;
         double gapCenter = (gapStart + gapEnd) / 2d;
@@ -760,8 +763,8 @@ public class RoundsLiteService {
         platforms.add(new Platform(0d, 500d, leftFloorWidth, 40d, "floor"));
         platforms.add(new Platform(gapEnd, 500d, ARENA_WIDTH - gapEnd, 40d, "floor"));
         platforms.add(new Platform(gapCenter - 110d, randomBetween(396d, 426d), 220d, 18d, "platform"));
-        platforms.add(new Platform(randomBetween(128d, 205d), randomBetween(320d, 365d), 160d, 18d, "platform"));
-        platforms.add(new Platform(randomBetween(650d, 728d), randomBetween(320d, 365d), 160d, 18d, "platform"));
+        platforms.add(new Platform(randomBetween(150d, 225d), randomBetween(320d, 365d), 160d, 18d, "platform"));
+        platforms.add(new Platform(randomBetween(610d, 685d), randomBetween(320d, 365d), 160d, 18d, "platform"));
         platforms.add(new Platform(gapCenter - 65d, randomBetween(250d, 292d), 130d, 18d, "platform"));
 
         return new GeneratedMap(

@@ -300,16 +300,28 @@ export default function RoundsLiteArena({ controller }) {
   }
 
   async function handleSelectCard(cardKey) {
-    if (!room?.roomCode) return
+    if (!room?.roomCode || loading) return
 
     setLoading(true)
     setError('')
+
+    setRoom((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        phase: 'COUNTDOWN',
+        pickerSeat: null,
+        cardOptions: [],
+        message: '카드를 선택했습니다. 다음 라운드를 준비 중입니다.',
+      }
+    })
 
     try {
       const response = await selectRoundsLiteCard(room.roomCode, cardKey)
       setRoom(response)
     } catch (cardError) {
       setError(getErrorMessage(cardError, '카드 선택에 실패했습니다.'))
+      await fetchState(room.roomCode, true)
     } finally {
       setLoading(false)
     }
