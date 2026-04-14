@@ -4,6 +4,8 @@ import NotificationPanel from "./components/common/NotificationPanel";
 import PaymentModal from "./components/common/PaymentModal";
 import ChatWindowModal from "./components/common/ChatWindowModal";
 import UserProfileModal from "./components/common/UserProfileModal";
+import AssistantWindowModal from "./components/common/AssistantWindowModal";
+import ScrollTopFloatingButton from "./components/common/ScrollTopFloatingButton";
 import AdminConsolePage from "./features/admin/AdminConsolePage";
 import MessagesPage from "./features/chat/MessagesPage";
 import NotificationsPage from "./features/chat/NotificationsPage";
@@ -109,10 +111,16 @@ export default function App() {
       {controller.paymentModalOpen && <PaymentModal controller={controller} />}
 
       {controller.isLoggedIn && !controller.isAdmin && (
+      {controller.paymentModalOpen && (
+        <PaymentModal controller={controller} />
+      )}
+      {controller.isLoggedIn && !controller.isAdmin ? (
         <>
+          <ScrollTopFloatingButton />
           <ChatFloatingButton
             unreadCount={controller.unreadChatCount}
             notificationUnreadCount={controller.notificationUnreadCount}
+            onAssistantClick={controller.openAssistant}
             onChatClick={controller.openChatInbox}
             onNotificationClick={controller.openNotificationPanel}
             onGameClick={() => {
@@ -123,6 +131,18 @@ export default function App() {
             }}
           />
 
+          <AssistantWindowModal
+            open={controller.assistantOpen}
+            messages={controller.assistantMessages}
+            draft={controller.assistantDraft}
+            setDraft={controller.setAssistantDraft}
+            onSend={controller.handleAssistantSend}
+            onClose={controller.closeAssistant}
+            isSending={controller.assistantSending}
+            quickActions={controller.assistantQuickActions}
+            onQuickAction={controller.handleAssistantQuickAction}
+            onNavigate={controller.handleAssistantNavigate}
+          />
           <ChatInboxPanel
             open={controller.chatInboxOpen}
             rooms={controller.chatRooms}
@@ -144,6 +164,8 @@ export default function App() {
             onOpenNotificationsPage={controller.openNotificationsPage}
           />
         </>
+      ) : (
+        <ScrollTopFloatingButton compact />
       )}
     </>
   );

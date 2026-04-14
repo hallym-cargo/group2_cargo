@@ -106,6 +106,42 @@ public class AdminController {
         return adminService.resolveDispute(disputeId, request, currentUser(authentication));
     }
 
+    @GetMapping("/assistant/logs")
+    public List<AdminDtos.AssistantLogRow> assistantLogs() { return adminService.getAssistantLogs(); }
+
+    @PatchMapping("/assistant/logs/{logId}")
+    public AdminDtos.AssistantLogRow reviewAssistantLog(@PathVariable Long logId,
+                                                        @Valid @RequestBody AdminDtos.AssistantLogReviewRequest request,
+                                                        Authentication authentication) {
+        return adminService.reviewAssistantLog(logId, request, currentUser(authentication));
+    }
+
+    @DeleteMapping("/assistant/logs/{logId}")
+    public void deleteAssistantLog(@PathVariable Long logId, Authentication authentication) {
+        adminService.deleteAssistantLog(logId, currentUser(authentication));
+    }
+
+    @GetMapping("/assistant/guidelines")
+    public List<AdminDtos.AssistantGuidelineRow> assistantGuidelines() { return adminService.getAssistantGuidelines(); }
+
+    @PostMapping("/assistant/guidelines")
+    public AdminDtos.AssistantGuidelineRow createAssistantGuideline(@Valid @RequestBody AdminDtos.AssistantGuidelineUpsertRequest request,
+                                                                    Authentication authentication) {
+        return adminService.createAssistantGuideline(request, currentUser(authentication));
+    }
+
+    @PutMapping("/assistant/guidelines/{guidelineId}")
+    public AdminDtos.AssistantGuidelineRow updateAssistantGuideline(@PathVariable Long guidelineId,
+                                                                    @Valid @RequestBody AdminDtos.AssistantGuidelineUpsertRequest request,
+                                                                    Authentication authentication) {
+        return adminService.updateAssistantGuideline(guidelineId, request, currentUser(authentication));
+    }
+
+    @DeleteMapping("/assistant/guidelines/{guidelineId}")
+    public void deleteAssistantGuideline(@PathVariable Long guidelineId, Authentication authentication) {
+        adminService.deleteAssistantGuideline(guidelineId, currentUser(authentication));
+    }
+
     @GetMapping("/action-logs")
     public List<AdminDtos.ActionLogRow> actionLogs() { return adminService.getActionLogs(); }
 

@@ -8,6 +8,7 @@ export default function ChatFloatingButton({
   onPlaceholderClick,
   onGameClick,
 }) {
+export default function ChatFloatingButton({ unreadCount, notificationUnreadCount, onAssistantClick, onChatClick, onNotificationClick }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
 
@@ -39,6 +40,8 @@ export default function ChatFloatingButton({
           aria-label="추가 메뉴 1"
         >
           <span className="floating-quick-menu__action-label">준비중</span>
+        <button className="floating-quick-menu__action floating-quick-menu__action--assistant" type="button" onClick={() => handleAction(onAssistantClick, 'assistant')} aria-label="AI 비서 열기">
+          <span className="floating-quick-menu__action-label">AI</span>
         </button>
 
         <button

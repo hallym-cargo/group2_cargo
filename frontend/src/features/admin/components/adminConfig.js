@@ -8,6 +8,7 @@ export const ADMIN_NAV_ITEMS = [
   ['faqs', 'FAQ 관리'],
   ['inquiries', '문의 관리'],
   ['issues', '신고 / 분쟁'],
+  ['assistant', 'AI 비서 관리'],
 ]
 
 export const ADMIN_TITLES = {
@@ -20,4 +21,5 @@ export const ADMIN_TITLES = {
   faqs: 'FAQ 관리',
   inquiries: '문의 관리',
   issues: '신고 / 분쟁',
+  assistant: 'AI 비서 관리',
 }
