@@ -220,3 +220,26 @@ export const fetchAdminActionLogs = async () =>
   (await api.get('/api/admin/action-logs')).data;
 
 export default api;
+export const askAssistant = async (payload) =>
+  (await api.post('/api/assistant/chat', payload)).data;
+
+export const fetchAdminAssistantLogs = async () =>
+  (await api.get('/api/admin/assistant/logs')).data;
+
+export const updateAdminAssistantLog = async (id, payload) =>
+  (await api.patch(`/api/admin/assistant/logs/${id}`, payload)).data;
+
+export const deleteAdminAssistantLog = async (id) =>
+  (await api.delete(`/api/admin/assistant/logs/${id}`)).data;
+
+export const fetchAdminAssistantGuidelines = async () =>
+  (await api.get('/api/admin/assistant/guidelines')).data;
+
+export const createAdminAssistantGuideline = async (payload) =>
+  (await api.post('/api/admin/assistant/guidelines', payload)).data;
+
+export const updateAdminAssistantGuideline = async (id, payload) =>
+  (await api.put(`/api/admin/assistant/guidelines/${id}`, payload)).data;
+
+export const deleteAdminAssistantGuideline = async (id) =>
+  (await api.delete(`/api/admin/assistant/guidelines/${id}`)).data;

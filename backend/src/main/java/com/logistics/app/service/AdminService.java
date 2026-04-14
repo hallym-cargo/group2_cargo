@@ -29,13 +29,16 @@ public class AdminService {
     private final ShipmentRealtimePublisher realtimePublisher;
     private final PublicService publicService;
     private final RatingRepository ratingRepository;
+    private final AssistantChatLogRepository assistantChatLogRepository;
+    private final AssistantGuidelineRepository assistantGuidelineRepository;
 
     public AdminService(UserRepository userRepository, ShipmentRepository shipmentRepository, OfferRepository offerRepository,
                         NoticeRepository noticeRepository, FaqRepository faqRepository,
                         CustomerInquiryRepository customerInquiryRepository, InquiryAnswerRepository inquiryAnswerRepository,
                         ReportRepository reportRepository, DisputeRepository disputeRepository,
                         AdminActionLogRepository adminActionLogRepository, StatusHistoryRepository statusHistoryRepository,
-                        ShipmentRealtimePublisher realtimePublisher, PublicService publicService, RatingRepository ratingRepository) {
+                        ShipmentRealtimePublisher realtimePublisher, PublicService publicService, RatingRepository ratingRepository,
+                        AssistantChatLogRepository assistantChatLogRepository, AssistantGuidelineRepository assistantGuidelineRepository) {
         this.userRepository = userRepository;
         this.shipmentRepository = shipmentRepository;
         this.offerRepository = offerRepository;
@@ -50,6 +53,8 @@ public class AdminService {
         this.realtimePublisher = realtimePublisher;
         this.publicService = publicService;
         this.ratingRepository = ratingRepository;
+        this.assistantChatLogRepository = assistantChatLogRepository;
+        this.assistantGuidelineRepository = assistantGuidelineRepository;
     }
 
     @Transactional(readOnly = true)
@@ -232,6 +237,65 @@ public class AdminService {
         return toDisputeRow(dispute);
     }
 
+
+
+    @Transactional(readOnly = true)
+    public List<AdminDtos.AssistantLogRow> getAssistantLogs() {
+        return assistantChatLogRepository.findTop200ByOrderByCreatedAtDesc().stream().map(this::toAssistantLogRow).toList();
+    }
+
+    public AdminDtos.AssistantLogRow reviewAssistantLog(Long logId, AdminDtos.AssistantLogReviewRequest request, User admin) {
+        AssistantChatLog log = assistantChatLogRepository.findById(logId)
+                .orElseThrow(() -> new RuntimeException("AI 대화 기록을 찾을 수 없습니다."));
+        log.setReviewStatus(request.getReviewStatus());
+        log.setAdminMemo(request.getAdminMemo());
+        log.setRecommendedAnswer(request.getRecommendedAnswer());
+        AssistantChatLog saved = assistantChatLogRepository.saveAndFlush(log);
+        log(admin, "ASSISTANT_LOG", saved.getId(), "REVIEW", request.getReviewStatus());
+        return toAssistantLogRow(saved);
+    }
+
+    public void deleteAssistantLog(Long logId, User admin) {
+        AssistantChatLog log = assistantChatLogRepository.findById(logId)
+                .orElseThrow(() -> new RuntimeException("AI 대화 기록을 찾을 수 없습니다."));
+        assistantChatLogRepository.delete(log);
+        assistantChatLogRepository.flush();
+        log(admin, "ASSISTANT_LOG", logId, "DELETE", "AI 대화 기록 삭제");
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminDtos.AssistantGuidelineRow> getAssistantGuidelines() {
+        return assistantGuidelineRepository.findAllByOrderBySortOrderAscIdAsc().stream().map(this::toAssistantGuidelineRow).toList();
+    }
+
+    public AdminDtos.AssistantGuidelineRow createAssistantGuideline(AdminDtos.AssistantGuidelineUpsertRequest request, User admin) {
+        AssistantGuideline guideline = assistantGuidelineRepository.save(AssistantGuideline.builder()
+                .title(request.getTitle())
+                .instruction(request.getInstruction())
+                .active(request.isActive())
+                .sortOrder(request.getSortOrder())
+                .build());
+        log(admin, "ASSISTANT_GUIDELINE", guideline.getId(), "CREATE", guideline.getTitle());
+        return toAssistantGuidelineRow(guideline);
+    }
+
+    public AdminDtos.AssistantGuidelineRow updateAssistantGuideline(Long guidelineId, AdminDtos.AssistantGuidelineUpsertRequest request, User admin) {
+        AssistantGuideline guideline = assistantGuidelineRepository.findById(guidelineId)
+                .orElseThrow(() -> new RuntimeException("AI 운영 가이드를 찾을 수 없습니다."));
+        guideline.setTitle(request.getTitle());
+        guideline.setInstruction(request.getInstruction());
+        guideline.setActive(request.isActive());
+        guideline.setSortOrder(request.getSortOrder());
+        log(admin, "ASSISTANT_GUIDELINE", guideline.getId(), "UPDATE", guideline.getTitle());
+        return toAssistantGuidelineRow(guideline);
+    }
+
+    public void deleteAssistantGuideline(Long guidelineId, User admin) {
+        assistantGuidelineRepository.deleteById(guidelineId);
+        log(admin, "ASSISTANT_GUIDELINE", guidelineId, "DELETE", "AI 운영 가이드 삭제");
+    }
+
+
     @Transactional(readOnly = true)
     public List<AdminDtos.ActionLogRow> getActionLogs() {
         return adminActionLogRepository.findTop20ByOrderByCreatedAtDesc().stream().map(this::toActionRow).toList();
@@ -283,5 +347,38 @@ public class AdminService {
 
     private AdminDtos.ActionLogRow toActionRow(AdminActionLog log) {
         return AdminDtos.ActionLogRow.builder().id(log.getId()).adminName(log.getAdmin().getName()).targetType(log.getTargetType()).targetId(log.getTargetId()).actionType(log.getActionType()).description(log.getDescription()).createdAt(log.getCreatedAt()).build();
+    }
+
+    private AdminDtos.AssistantLogRow toAssistantLogRow(AssistantChatLog log) {
+        User user = log.getUser();
+        return AdminDtos.AssistantLogRow.builder()
+                .id(log.getId())
+                .userId(user != null ? user.getId() : null)
+                .userName(user != null ? user.getName() : null)
+                .userEmail(user != null ? user.getEmail() : null)
+                .userRole(user != null && user.getRole() != null ? user.getRole().name() : null)
+                .question(log.getQuestion())
+                .answer(log.getAnswer())
+                .mode(log.getMode())
+                .usedAi(log.isUsedAi())
+                .matchedKnowledge(log.getMatchedKnowledge())
+                .reviewStatus(log.getReviewStatus())
+                .adminMemo(log.getAdminMemo())
+                .recommendedAnswer(log.getRecommendedAnswer())
+                .createdAt(log.getCreatedAt())
+                .updatedAt(log.getUpdatedAt())
+                .build();
+    }
+
+    private AdminDtos.AssistantGuidelineRow toAssistantGuidelineRow(AssistantGuideline guideline) {
+        return AdminDtos.AssistantGuidelineRow.builder()
+                .id(guideline.getId())
+                .title(guideline.getTitle())
+                .instruction(guideline.getInstruction())
+                .active(guideline.isActive())
+                .sortOrder(guideline.getSortOrder())
+                .createdAt(guideline.getCreatedAt())
+                .updatedAt(guideline.getUpdatedAt())
+                .build();
     }
 }

@@ -9,6 +9,7 @@ import AdminIssuesTab from './tabs/AdminIssuesTab'
 import AdminMembersTab from './tabs/AdminMembersTab'
 import AdminNoticesTab from './tabs/AdminNoticesTab'
 import AdminOverviewTab from './tabs/AdminOverviewTab'
+import AdminAssistantTab from './tabs/AdminAssistantTab'
 import AdminRatingsTab from './tabs/AdminRatingsTab'
 import AdminShipmentsTab from './tabs/AdminShipmentsTab'
 
@@ -22,6 +23,7 @@ const TAB_COMPONENTS = {
   faqs: AdminFaqsTab,
   inquiries: AdminInquiriesTab,
   issues: AdminIssuesTab,
+  assistant: AdminAssistantTab,
 }
 
 export default function AdminConsolePage({ controller }) {
