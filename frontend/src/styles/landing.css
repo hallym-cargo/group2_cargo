@@ -640,21 +640,16 @@ body.theme-admin .app-logo__image {
   padding-bottom: 18px;
 }
 
-
-
-
-
 .landing-info .landing-infoPanel:first-child {
   background: linear-gradient(180deg,
       rgba(255, 255, 255, 0.72),
       rgba(240, 246, 255, 0.82)) !important;
 }
 
-
-
-
-
-
+/* 추가 */
+.landing-infoPanel--faq .landing-infoPanel__top {
+  margin-bottom: 16px;
+}
 
 .landing-accessBand {
   padding-bottom: 100px;

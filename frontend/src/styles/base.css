@@ -215,6 +215,59 @@ textarea {
 }
 
 /* 추가 */
+.table-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+/* 추가 */
+.board-filter {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-right: 8px;
+}
+
+/* 추가 */
+.board-filter button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+/* 추가 */
+/* 활성 상태 (기본은 role에 의해 override됨) */
+.board-filter button.active {
+  color: #fff;
+}
+
+/* 추가 */
+.board-filter.shipper button.active {
+  background: #153775;
+}
+
+/* 추가 */
+.board-filter.shipper button:hover {
+  border-color: #9fb2d6;
+}
+
+/* 추가 */
+.board-filter.driver button.active {
+  background: #115e50;
+}
+
+/* 추가 */
+.board-filter.driver button:hover {
+  border-color: #9cc3bc;
+}
+
+/* 추가 */
 .bookmark-table-wrap {
   margin-top: 16px;
   max-height: 400px;

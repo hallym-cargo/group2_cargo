@@ -5,7 +5,7 @@ export default function UserBookmarksTab({ controller }) {
   const { bookmarks, setSelectedId, setDashboardTab } = controller
   return (
     <div className="surface table-surface">
-      <SectionTitle title="즐겨찾기" />
+      <SectionTitle title="관심 화물 목록" />
       <div className="bookmark-table-wrap">
         <table className="board-table">
           <thead>

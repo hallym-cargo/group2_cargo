@@ -38,7 +38,9 @@ const PENALTY_ACTIONS = [
 ]
 
 export default function UserPenaltyTab({ controller }) {
-  const { profile } = controller
+  // const { profile } = controller
+  const { profile, auth } = controller;
+  const role = auth?.role;  // 추가
 
   const penaltyScore = Number(profile?.penaltyScore30d || 0)
   const cancelRate = Number(profile?.cancelRate || 0)
@@ -46,29 +48,32 @@ export default function UserPenaltyTab({ controller }) {
   const penaltyStage = resolvePenaltyStage(penaltyScore)
 
   return (
-    <div className="page-stack">
+    // <div className="page-stack">
+    <div className={`page-stack ${role === "DRIVER" ? "driver" : "shipper"}`}>
       <div className="surface">
         <SectionTitle
           title="패널티 현황"
-          desc="취소 관련 제재 상태와 누적 점수를 한 화면에서 확인할 수 있습니다."
+          desc="취소로 인한 제재 상태와 누적 점수를 한눈에 확인할 수 있습니다."
         />
 
-        <div className="kpi-grid">
-          <div className="kpi-card">
-            <span>현재 상태</span>
-            <strong>{penaltyStatus}</strong>
-          </div>
-          <div className="kpi-card">
-            <span>최근 30일 패널티 점수</span>
-            <strong>{penaltyScore}점</strong>
-          </div>
-          <div className="kpi-card">
-            <span>최근 취소율</span>
-            <strong>{cancelRate.toFixed(1)}%</strong>
-          </div>
-          <div className="kpi-card">
-            <span>현재 단계</span>
-            <strong>{penaltyStage}</strong>
+        <div className="penalty-kpi-wrap">
+          <div className="kpi-grid">
+            <div className="kpi-card">
+              <span>현재 상태</span>
+              <strong>{penaltyStatus}</strong>
+            </div>
+            <div className="kpi-card">
+              <span>최근 30일 패널티 점수</span>
+              <strong>{penaltyScore}점</strong>
+            </div>
+            <div className="kpi-card">
+              <span>최근 취소율</span>
+              <strong>{cancelRate.toFixed(1)}%</strong>
+            </div>
+            <div className="kpi-card">
+              <span>현재 단계</span>
+              <strong>{penaltyStage}</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -76,8 +81,8 @@ export default function UserPenaltyTab({ controller }) {
       <div className="admin-grid-2">
         <div className="surface">
           <SectionTitle
-            title="현재 제재 적용 내역"
-            desc="현재 계정에 걸려 있는 제한과 표시 상태입니다."
+            title="현재 적용 중인 제재"
+            desc="현재 계정에 적용된 제한 상태를 확인할 수 있습니다."
           />
 
           <div className="list-stack">
@@ -103,7 +108,7 @@ export default function UserPenaltyTab({ controller }) {
         <div className="surface">
           <SectionTitle
             title="취소 점수 기준"
-            desc="취소 시점에 따라 누적되는 점수 기준입니다."
+            desc="취소 시점에 따라 누적되는 점수를 확인할 수 있습니다."
           />
 
           <div className="list-stack">
@@ -119,8 +124,8 @@ export default function UserPenaltyTab({ controller }) {
 
       <div className="surface">
         <SectionTitle
-          title="누적 점수별 조치"
-          desc="점수가 쌓이면 아래 단계에 따라 제한이 강화됩니다."
+          title="점수별 제재 기준"
+          desc="누적 점수에 따라 단계별로 이용 제한이 적용됩니다."
         />
 
         <div className="list-stack">

@@ -90,28 +90,53 @@
 }
 
 /* 추가 */
-.penalty-item.stage-1 {
-  background: #f8fafc;
+.shipper .penalty-item.stage-1 {
+  background: #f7f9fd;
 }
 
-.penalty-item.stage-2 {
-  background: #f1f5ff;
+.shipper .penalty-item.stage-2 {
+  background: #eef3fb;
 }
 
-.penalty-item.stage-3 {
-  background: #eef2ff;
+.shipper .penalty-item.stage-3 {
+  background: #e2e9f6;
 }
 
-.penalty-item.stage-4 {
-  background: #e0e7ff;
+.shipper .penalty-item.stage-4 {
+  background: #d1dbef;
 }
 
-.penalty-item.stage-5 {
-  background: #c7d2fe;
+.shipper .penalty-item.stage-5 {
+  background: #b8c6e2;
 }
 
-.penalty-item.stage-6 {
-  background: #a5b4fc;
+.shipper .penalty-item.stage-6 {
+  background: #9fb2d6;
+}
+
+/* 추가 */
+.driver .penalty-item.stage-1 {
+  background: #f7faf9;
+}
+
+.driver .penalty-item.stage-2 {
+  background: #edf6f4;
+}
+
+.driver .penalty-item.stage-3 {
+  background: #e0efec;
+}
+
+.driver .penalty-item.stage-4 {
+  background: #cde3df;
+}
+
+.driver .penalty-item.stage-5 {
+  background: #b3d2cc;
+}
+
+.driver .penalty-item.stage-6 {
+  background: #9cc3bc;
 }
 
 .list-row {

@@ -37,7 +37,7 @@ export default function UserRatingsTab({ controller }) {
       </div>
       <div className="console-grid two">
         <div className="surface">
-          <SectionTitle title="평가 대기 화물" desc="완료된 거래에 대해 상대방을 평가할 수 있습니다." />
+          <SectionTitle title="평가 대기 목록" desc="완료된 거래에 대해 상대방을 평가할 수 있습니다." />
           <div className="list-stack">
             {(ratingsDashboard.pendingRatings || []).length ?
               ratingsDashboard.pendingRatings.map(item => {
@@ -94,7 +94,7 @@ export default function UserRatingsTab({ controller }) {
         </div>
         <div className="content-stack">
           <div className="surface">
-            <SectionTitle title="최근 받은 평점" desc="상대방이 남긴 최신 평가를 확인합니다." />
+            <SectionTitle title="최근 받은 평점" desc="상대방이 남긴 최근 평가를 확인할 수 있습니다." />
             <div className="list-stack">
               {(ratingsDashboard.receivedSummary?.recentRatings || []).length ? ratingsDashboard.receivedSummary.recentRatings.map(item => <div key={item.id} className="list-row block">
                 <strong>{renderStars(item.score)} · {item.fromUserName}</strong>
@@ -107,7 +107,7 @@ export default function UserRatingsTab({ controller }) {
             </div>
           </div>
           <div className="surface">
-            <SectionTitle title="내가 남긴 평가" desc="최근 작성한 평가 기록입니다." />
+            <SectionTitle title="내 평가 내역" desc="작성한 평가 내역을 확인할 수 있습니다." />
             <div className="list-stack">{(ratingsDashboard.givenRatings || []).length ? ratingsDashboard.givenRatings.slice(0, 8).map(item =>
               <div key={item.id} className="list-row block">
                 <strong>{renderStars(item.score)} · {item.toUserName}</strong>

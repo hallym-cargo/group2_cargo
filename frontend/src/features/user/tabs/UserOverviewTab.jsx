@@ -92,7 +92,7 @@ export default function UserOverviewTab({ controller }) {
 
           <SectionTitle
             title="회원정보 수정"
-            desc="현재 회원가입 필수 정보는 유지하고, 아래 정보는 선택으로 추가할 수 있습니다."
+            desc="기본 정보는 그대로 유지되며, 추가 정보는 자유롭게 입력할 수 있습니다."
           />
 
           <div className="form-stack">
@@ -262,7 +262,7 @@ export default function UserOverviewTab({ controller }) {
         </div>
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="내 공개 프로필 미리보기" desc="거래 상대가 거래 전에 볼 수 있는 정보입니다." />
+          <SectionTitle title="공개 프로필 미리보기" desc="거래 상대가 확인할 수 있는 공개 정보입니다." />
           <ProfilePreviewCard
             title="내 프로필"
             profile={
@@ -292,26 +292,28 @@ export default function UserOverviewTab({ controller }) {
 
       <div className="surface">
         <SectionTitle
-          title="패널티 요약"
-          desc="패널티 상세 정보는 별도 탭에서 보고, 마이페이지에는 현재 상태만 간단히 표시합니다."
+          title="패널티 현황"
+          desc="현재 패널티 상태를 간단히 확인할 수 있습니다."
         />
 
-        <div className="kpi-grid">
-          <div className="kpi-card">
-            <span>현재 상태</span>
-            <strong>{penaltyStatus}</strong>
-          </div>
-          <div className="kpi-card">
-            <span>최근 30일 패널티 점수</span>
-            <strong>{penaltyScore}점</strong>
-          </div>
-          <div className="kpi-card">
-            <span>최근 취소율</span>
-            <strong>{cancelRate.toFixed(1)}%</strong>
-          </div>
-          <div className="kpi-card">
-            <span>취소율 높음 뱃지</span>
-            <strong>{profile?.highCancelBadge ? '표시 중' : '없음'}</strong>
+        <div className="penalty-kpi-wrap">
+          <div className="kpi-grid">
+            <div className="kpi-card">
+              <span>현재 상태</span>
+              <strong>{penaltyStatus}</strong>
+            </div>
+            <div className="kpi-card">
+              <span>최근 30일 패널티 점수</span>
+              <strong>{penaltyScore}점</strong>
+            </div>
+            <div className="kpi-card">
+              <span>최근 취소율</span>
+              <strong>{cancelRate.toFixed(1)}%</strong>
+            </div>
+            <div className="kpi-card">
+              <span>취소율 높음 뱃지</span>
+              <strong>{profile?.highCancelBadge ? '표시 중' : '없음'}</strong>
+            </div>
           </div>
         </div>
 
@@ -462,7 +464,7 @@ export default function UserOverviewTab({ controller }) {
       <div className="admin-grid-2">
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="FAQ" desc="자주 묻는 질문" />
+          <SectionTitle title="자주 묻는 질문" desc="서비스 이용 중 자주 묻는 질문을 확인할 수 있습니다." />
           <div className="faq-section">
             <div className="landing-faqList">
               {(controller.publicData?.faqs || []).map((faq) => (
@@ -476,7 +478,7 @@ export default function UserOverviewTab({ controller }) {
         </div>
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="도입 문의" desc="서비스 관련 상담 요청" />
+          <SectionTitle title="문의하기" desc="이용 중 궁금한 점이나 도움이 필요하면 문의해 주세요." />
 
           <div className="landing-formStack">
             <input

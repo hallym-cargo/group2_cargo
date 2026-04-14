@@ -81,11 +81,11 @@ function getTrackingMeta(shipment, now = Date.now()) {
       ? 0
       : shipment.status === "IN_TRANSIT" && shipment.estimatedArrivalAt
         ? Math.max(
-            0,
-            Math.ceil(
-              (new Date(shipment.estimatedArrivalAt).getTime() - now) / 60000,
-            ),
-          )
+          0,
+          Math.ceil(
+            (new Date(shipment.estimatedArrivalAt).getTime() - now) / 60000,
+          ),
+        )
         : (shipment.tracking?.remainingMinutes ?? shipment.estimatedMinutes);
 
   const roughLocation =
@@ -229,8 +229,8 @@ export default function KakaoMapView({ shipment }) {
         if (!cancelled) {
           setError(
             e?.response?.data?.message ||
-              e.message ||
-              "도로 경로를 불러오지 못했습니다.",
+            e.message ||
+            "도로 경로를 불러오지 못했습니다.",
           );
           setRouteState({
             loading: false,
@@ -266,10 +266,10 @@ export default function KakaoMapView({ shipment }) {
       shipment.status === "COMPLETED" ? destination : origin;
     const current = routeState.coords.length
       ? getPositionByProgress(
-          routeState.coords,
-          routeState.cumulative,
-          trackingMeta.progress,
-        )
+        routeState.coords,
+        routeState.cumulative,
+        trackingMeta.progress,
+      )
       : fallbackCurrent;
 
     return { origin, destination, current };
@@ -406,19 +406,19 @@ export default function KakaoMapView({ shipment }) {
       const progress = getProgress(shipment, now);
       const remainingMinutes = shipment.estimatedArrivalAt
         ? Math.max(
-            0,
-            Math.ceil(
-              (new Date(shipment.estimatedArrivalAt).getTime() - now) / 60000,
-            ),
-          )
+          0,
+          Math.ceil(
+            (new Date(shipment.estimatedArrivalAt).getTime() - now) / 60000,
+          ),
+        )
         : (shipment.tracking?.remainingMinutes ?? shipment.estimatedMinutes);
 
       const current = routeState.coords.length
         ? getPositionByProgress(
-            routeState.coords,
-            routeState.cumulative,
-            progress,
-          )
+          routeState.coords,
+          routeState.cumulative,
+          progress,
+        )
         : points.current;
 
       if (!current || !window.kakao?.maps || !truckOverlayRef.current) return;
