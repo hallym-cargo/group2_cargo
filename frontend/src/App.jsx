@@ -24,6 +24,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ReceiptPdfBridge from "./components/common/ReceiptPdfBridge";
+import QuoteDetailPage from "./features/public/QuoteDetailPage";
 
 export default function App() {
   const hasReceiptPdfQuery =
@@ -40,11 +41,18 @@ export default function App() {
 
   if (controller.routePage === "payment") {
     page = <PaymentPage controller={controller} />;
-  } else if (controller.dashboardTab === "quotes") {
+  } else if (controller.routePage === "quotes") {
     page = <QuoteListPage controller={controller} />;
+  } else if (controller.routePage === "detail") {
+    page = (
+      <QuoteDetailPage
+        controller={controller}
+        routeParams={controller.routeParams}
+      />
+    );
   } else if (controller.routePage === "register") {
     page = <QuoteRegisterPage controller={controller} />;
-  } else if (controller.dashboardTab === "quoteRegister") {
+  } else if (controller.routePage === "quoteRegister") {
     page = <QuoteRegisterPage controller={controller} />;
   } else if (controller.routePage === "status") {
     page = <TransportStatus controller={controller} />;
@@ -110,10 +118,6 @@ export default function App() {
 
       {controller.paymentModalOpen && <PaymentModal controller={controller} />}
 
-      {controller.isLoggedIn && !controller.isAdmin && (
-      {controller.paymentModalOpen && (
-        <PaymentModal controller={controller} />
-      )}
       {controller.isLoggedIn && !controller.isAdmin ? (
         <>
           <ScrollTopFloatingButton />
@@ -143,6 +147,7 @@ export default function App() {
             onQuickAction={controller.handleAssistantQuickAction}
             onNavigate={controller.handleAssistantNavigate}
           />
+
           <ChatInboxPanel
             open={controller.chatInboxOpen}
             rooms={controller.chatRooms}

@@ -1,14 +1,22 @@
+import { useState } from "react";
 import AddressPanel from "../components/AddressPanel";
 import SchedulePanel from "../components/SchedulePanel";
 
 export default function QuoteStepRoute({
-  formData,
-  errors,
+  formData = {},
+  errors = {},
   updateField,
-  activePanel,
-  openPanel,
-  closePanel,
 }) {
+  const [activePanel, setActivePanel] = useState(null);
+
+  const openPanel = (panelName) => {
+    setActivePanel(panelName);
+  };
+
+  const closePanel = () => {
+    setActivePanel(null);
+  };
+
   if (!formData) return null;
 
   const transportScheduleText =
@@ -17,9 +25,7 @@ export default function QuoteStepRoute({
       : "운송일자와 시간을 선택해주세요";
 
   return (
-    // Step 1, 2가 같은 비율을 쓰도록 공통 레이아웃 클래스 사용
     <section className="quote-step-layout">
-      {/* 왼쪽 입력 영역 */}
       <div className="quote-step-layout__main">
         <div className="form-group">
           <label>
@@ -27,7 +33,7 @@ export default function QuoteStepRoute({
           </label>
           <input
             type="text"
-            value={formData.estimateName}
+            value={formData.estimateName || ""}
             onChange={(e) => updateField("estimateName", e.target.value)}
             placeholder="예: 서울 → 부산 냉장 식품 운송"
           />
@@ -110,7 +116,6 @@ export default function QuoteStepRoute({
         </div>
       </div>
 
-      {/* 오른쪽 보조 패널 영역 - Step 2와 같은 공통 폭/비율 사용 */}
       <aside className="quote-step-side-panel">
         {activePanel === "origin" && (
           <AddressPanel

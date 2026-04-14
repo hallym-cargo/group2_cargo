@@ -1,44 +1,104 @@
+import { useEffect, useMemo, useState } from "react";
+import ShipperHeader from "./components/ShipperHeader";
+import "./quoteList/quoteList.css";
+import QuoteListFilterBar from "./quoteList/components/QuoteListFilterBar";
+import QuoteListSummaryBar from "./quoteList/components/QuoteListSummaryBar";
+import QuoteCard from "./quoteList/components/QuoteCard";
+import QuoteListPagination from "./quoteList/components/QuoteListPagination";
+import { QUOTE_LIST_DUMMY_DATA } from "./quoteList/constants/quoteListDummyData";
+
 export default function QuoteListPage({ controller }) {
+  const [status, setStatus] = useState("전체");
+  const [origin, setOrigin] = useState("전체");
+  const [destination, setDestination] = useState("전체");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 10;
+
+  const filteredQuotes = useMemo(() => {
+    return QUOTE_LIST_DUMMY_DATA.filter((quote) => {
+      const quoteStatus = quote.status || "입찰 진행중";
+      const quoteOrigin = quote.originAddress || "";
+      const quoteDestination = quote.destinationAddress || "";
+
+      const matchStatus = status === "전체" || quoteStatus === status;
+      const matchOrigin = origin === "전체" || quoteOrigin.includes(origin);
+      const matchDestination =
+        destination === "전체" || quoteDestination.includes(destination);
+
+      return matchStatus && matchOrigin && matchDestination;
+    });
+  }, [status, origin, destination]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [status, origin, destination]);
+
+  const totalCount = filteredQuotes.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const paginatedQuotes = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredQuotes.slice(startIndex, endIndex);
+  }, [filteredQuotes, currentPage]);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   return (
     <div className="public-shell">
-      <button onClick={() => controller.setDashboardTab("home")}>
-        메인으로 돌아가기
-      </button>
-      <h1>견적 목록</h1>
+      <ShipperHeader controller={controller} />
 
-      {/* 전체 견적 개수 표시
-          - 서버에서 totalCount 받아오기
-          - 예: "전체 23건의 견적이 등록되어 있습니다"
-      */}
-      <p>전체 (전체 견적 등록 수)건의 견적이 등록되어있습니다.</p>
+      <div className="quote-list-page">
+        <section className="quote-list-hero">
+          <div className="quote-list-hero__badge">QUOTE LIST</div>
+          <h1>견적 목록</h1>
+          <p>
+            등록된 견적을 확인하고 조건에 맞는 운송 요청을 비교할 수 있습니다.
+          </p>
+        </section>
 
-      {/*필터 영역 
-        - 진행 상태, 출발지, 도착지 select
-        - 선택시 controller 상태 변경
-        - 선택값에 따라 리스트 재조회
-      */}
-      <p>select (진행상태, 출발지, 도착지) 선택할때마다 해당 결과 나오게</p>
+        <QuoteListFilterBar
+          status={status}
+          origin={origin}
+          destination={destination}
+          onChangeStatus={setStatus}
+          onChangeOrigin={setOrigin}
+          onChangeDestination={setDestination}
+        />
 
-      {/* 추가 옵션 영역
-          - 체크박스: 진행중인 공고만 보기
-          - select: n개씩 보기 (페이지 사이즈)
-          - 변경 시 리스트 재조회
-      */}
-      <p>진행중인 공고만 보기 / n개씩 보기 / 견적 등록 버튼</p>
-      <input
-        className="toolbar-search"
-        placeholder="제목, 지역, 화물 종류 검색"
-      />
-      <button onClick={() => controller.setDashboardTab("quoteRegister")}>
-        견적 요청하기
-      </button>
+        <QuoteListSummaryBar
+          totalCount={totalCount}
+          onMoveToRegister={() => controller.setRoutePage("register")}
+        />
 
-      {/* 리스트 영역 (추후 추가)
-          - 견적 카드/테이블 형태로 출력
-          - map으로 반복 렌더링
-          - 각 견적 클릭 시 상세 페이지 이동
-      */}
-      <p></p>
+        <section className="quote-list-card-section">
+          {paginatedQuotes.length > 0 ? (
+            paginatedQuotes.map((quote) => (
+              <QuoteCard
+                key={quote.id}
+                quote={quote}
+                onClickDetail={(quoteId) =>
+                  controller.setRoutePage("detail", { quoteId })
+                }
+              />
+            ))
+          ) : (
+            <p className="quote-list-empty">조건에 맞는 견적이 없습니다.</p>
+          )}
+        </section>
+
+        <QuoteListPagination
+          totalCount={totalCount}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+        />
+      </div>
     </div>
   );
 }

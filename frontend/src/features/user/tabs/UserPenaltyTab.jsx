@@ -82,19 +82,19 @@ export default function UserPenaltyTab({ controller }) {
 
           <div className="list-stack">
             <div className="bookmark-item" as="div">
-              <strong>매칭 제한 종료 시각</strong>
+              <strong>매칭 제한 종료 시각</strong><br />
               <small>{formatDate(profile?.matchingBlockedUntil)}</small>
             </div>
             <div className="bookmark-item" as="div">
-              <strong>거래 금지 종료 시각</strong>
+              <strong>거래 금지 종료 시각</strong><br />
               <small>{formatDate(profile?.tradingBlockedUntil)}</small>
             </div>
             <div className="bookmark-item" as="div">
-              <strong>취소율 높음 뱃지</strong>
+              <strong>취소율 높음 뱃지</strong><br />
               <small>{profile?.highCancelBadge ? '표시 중' : '없음'}</small>
             </div>
             <div className="bookmark-item" as="div">
-              <strong>안내</strong>
+              <strong>안내</strong><br />
               <small>취소 직전 모달에서도 이번 취소로 추가될 예상 점수를 다시 확인할 수 있습니다.</small>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function UserPenaltyTab({ controller }) {
           <div className="list-stack">
             {PENALTY_RULES.map(([title, score]) => (
               <div key={title} className="bookmark-item" as="div">
-                <strong>{title}</strong>
+                <strong>{title}</strong><br />
                 <small>{score}</small>
               </div>
             ))}
@@ -124,14 +124,21 @@ export default function UserPenaltyTab({ controller }) {
         />
 
         <div className="list-stack">
-          {PENALTY_ACTIONS.map(([title, desc]) => (
+          {/* {PENALTY_ACTIONS.map(([title, desc]) => (
             <div key={title} className="bookmark-item" as="div">
-              <strong>{title}</strong>
+              <strong>{title}</strong><br />
+              <small>{desc}</small>
+            </div>
+          ))} */}
+
+          {PENALTY_ACTIONS.map(([title, desc], idx) => (
+            <div key={title} className={`bookmark-item penalty-item stage-${idx + 1}`}>
+              <strong>{title}</strong><br />
               <small>{desc}</small>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </div >
   )
 }

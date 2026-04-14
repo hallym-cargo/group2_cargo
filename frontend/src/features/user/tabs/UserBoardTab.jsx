@@ -43,92 +43,110 @@ export default function UserBoardTab({ controller }) {
       (auth.role === 'DRIVER' && selected.assignedToMe)
     )
 
+  function formatMinutesToHour(mins) {
+    if (mins == null) return '-'
+
+    const hours = Math.floor(mins / 60)
+    const minutes = mins % 60
+
+    if (hours === 0) return `${minutes}분`
+    if (minutes === 0) return `${hours}시간`
+
+    return `${hours}시간 ${minutes}분`
+  }
+
   return (
     <div className="page-stack">
       <div className="surface table-surface">
-        <SectionTitle title="배차 보드" desc="행을 클릭하면 상세와 지도, 역할별 액션이 함께 열립니다." />
-
-        <table className="board-table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>상태</th>
-              <th>배차명</th>
-              <th>태그</th>
-              <th>구간</th>
-              <th>입찰</th>
-              <th>차주</th>
-              <th>예상</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredShipments.map((item) => (
-              <tr
-                key={item.id}
-                className={selectedId === item.id ? 'is-selected' : ''}
-                onClick={() => {
-                  setSelectedId(item.id)
-                }}
-              >
-                <td>
-                  <button
-                    className={item.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleToggleBookmark(item.id)
-                    }}
-                    aria-label={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-                    title={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-                  >
-                    ★
-                  </button>
-                </td>
-
-                <td>
-                  <span className={`badge badge-${item.status.toLowerCase()}`}>
-                    {statusText(item.status)}
-                  </span>
-                </td>
-
-                <td>
-                  <strong>{item.title}</strong>
-                  <small>{item.cargoType}</small>
-                </td>
-
-                <td>
-                  {auth.role === 'DRIVER' ? (
-                    <div className="chip-group">
-                      {item.assignedToMe && <span className="tag tag-dark">내 배차</span>}
-                      {!item.assignedToMe && item.hasMyOffer && <span className="tag">내 입찰</span>}
-                      {!item.assignedToMe && !item.hasMyOffer && item.status === 'BIDDING' && (
-                        <span className="tag">입찰 가능</span>
-                      )}
-                      {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
-                    </div>
-                  ) : (
-                    <div className="chip-group">
-                      <span className="tag">{roleText(auth.role)}</span>
-                      {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
-                    </div>
-                  )}
-                </td>
-
-                <td>
-                  {item.originAddress} → {item.destinationAddress}
-                </td>
-
-                <td>
-                  {item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}
-                </td>
-
-                <td>{item.assignedDriverName || '-'}</td>
-
-                <td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td>
+        <div className="table-head">
+          <SectionTitle title="배차 보드" desc="행을 클릭하면 상세와 지도, 역할별 액션이 함께 열립니다." />
+        </div>
+        <div className="table-scroll">
+          <table className="board-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>상태</th>
+                <th>배차명</th>
+                <th>태그</th>
+                <th>구간</th>
+                <th>입찰</th>
+                <th>차주</th>
+                <th>예상</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {filteredShipments.map((item) => (
+                <tr
+                  key={item.id}
+                  className={selectedId === item.id ? 'is-selected' : ''}
+                  onClick={() => {
+                    setSelectedId(item.id)
+                  }}
+                >
+                  <td>
+                    <button
+                      className={item.bookmarked ? 'bookmark-toggle active' : 'bookmark-toggle'}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleBookmark(item.id)
+                      }}
+                      aria-label={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                      title={item.bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                    >
+                      ★
+                    </button>
+                  </td>
+
+                  <td>
+                    <span className={`badge badge-${item.status.toLowerCase()}`}>
+                      {statusText(item.status)}
+                    </span>
+                  </td>
+
+                  <td>
+                    <strong>{item.title}</strong>
+                    <small>{item.cargoType}</small>
+                  </td>
+
+                  <td>
+                    {auth.role === 'DRIVER' ? (
+                      <div className="chip-group">
+                        {item.assignedToMe && <span className="tag tag-dark">내 배차</span>}
+                        {!item.assignedToMe && item.hasMyOffer && <span className="tag">내 입찰</span>}
+                        {!item.assignedToMe && !item.hasMyOffer && item.status === 'BIDDING' && (
+                          <span className="tag">입찰 가능</span>
+                        )}
+                        {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
+                      </div>
+                    ) : (
+                      <div className="chip-group">
+                        <span className="tag">{roleText(auth.role)}</span>
+                        {item.counterpartyHighCancelBadge && <span className="tag tag-dark">취소율 높음</span>}
+                      </div>
+                    )}
+                  </td>
+
+                  <td>
+                    {item.originAddress} → {item.destinationAddress}
+                  </td>
+
+                  <td>
+                    {item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}
+                  </td>
+
+                  <td>{item.assignedDriverName || '-'}</td>
+
+                  {/* <td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td> */}
+                  <td>
+                    {formatMinutesToHour(item.tracking?.remainingMinutes ?? item.estimatedMinutes)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
@@ -188,7 +206,10 @@ export default function UserBoardTab({ controller }) {
                 </div>
                 <div>
                   <span>남은 시간</span>
-                  <strong>{selected.tracking?.remainingMinutes ?? selected.estimatedMinutes}분</strong>
+                  {/* <strong>{selected.tracking?.remainingMinutes ?? selected.estimatedMinutes}분</strong> */}
+                  <strong>
+                    {formatMinutesToHour(selected.tracking?.remainingMinutes ?? selected.estimatedMinutes)}
+                  </strong>
                 </div>
                 <div>
                   <span>내 누적 취소 점수</span>
@@ -221,40 +242,40 @@ export default function UserBoardTab({ controller }) {
                 profile={
                   auth.role === 'DRIVER'
                     ? {
-                        id: selected.shipperId,
-                        name: selected.shipperName,
-                        role: 'SHIPPER',
-                        companyName: selected.companyName,
-                        bio: selected.shipperBio,
-                        profileImageUrl: selected.shipperProfileImageUrl,
-                        contactEmail: selected.shipperContactEmail,
-                        contactPhone: selected.shipperContactPhone,
-                        averageRating: selected.shipperAverageRating,
-                        ratingCount: selected.shipperRatingCount,
+                      id: selected.shipperId,
+                      name: selected.shipperName,
+                      role: 'SHIPPER',
+                      companyName: selected.companyName,
+                      bio: selected.shipperBio,
+                      profileImageUrl: selected.shipperProfileImageUrl,
+                      contactEmail: selected.shipperContactEmail,
+                      contactPhone: selected.shipperContactPhone,
+                      averageRating: selected.shipperAverageRating,
+                      ratingCount: selected.shipperRatingCount,
+                      completedCount: undefined,
+                      highCancelBadge: selected.counterpartyHighCancelBadge,
+                    }
+                    : selected.assignedDriverName
+                      ? {
+                        id: selected.assignedDriverId,
+                        name: selected.assignedDriverName,
+                        role: 'DRIVER',
+                        bio: selected.assignedDriverBio,
+                        profileImageUrl: selected.assignedDriverProfileImageUrl,
+                        contactEmail: selected.assignedDriverContactEmail,
+                        contactPhone: selected.assignedDriverContactPhone,
+                        averageRating: selected.assignedDriverAverageRating,
+                        ratingCount: selected.assignedDriverRatingCount,
                         completedCount: undefined,
                         highCancelBadge: selected.counterpartyHighCancelBadge,
                       }
-                    : selected.assignedDriverName
-                      ? {
-                          id: selected.assignedDriverId,
-                          name: selected.assignedDriverName,
-                          role: 'DRIVER',
-                          bio: selected.assignedDriverBio,
-                          profileImageUrl: selected.assignedDriverProfileImageUrl,
-                          contactEmail: selected.assignedDriverContactEmail,
-                          contactPhone: selected.assignedDriverContactPhone,
-                          averageRating: selected.assignedDriverAverageRating,
-                          ratingCount: selected.assignedDriverRatingCount,
-                          completedCount: undefined,
-                          highCancelBadge: selected.counterpartyHighCancelBadge,
-                        }
                       : null
                 }
               />
-
-              <KakaoMapView shipment={selected} />
-
-              <div className="surface-sub">
+              <div className="map-section">
+                <KakaoMapView shipment={selected} />
+              </div>
+              <div className="surface-sub timeline-section">
                 <SectionTitle title="상태 타임라인" />
                 <div className="list-stack">
                   {(selected.histories || []).map((history) => (
@@ -277,9 +298,9 @@ export default function UserBoardTab({ controller }) {
         <div className="surface side-form">
           {selected ? (
             <>
-              <SectionTitle title="역할별 액션" desc={`${roleText(auth.role)} 기준으로 표시됩니다.`} />
+              <SectionTitle title="제안 업체 목록" desc={`${roleText(auth.role)} 기준으로 표시됩니다.`} />
 
-              <div className="surface-sub role-side-guide">
+              {/* <div className="surface-sub role-side-guide">
                 <strong>{roleTheme?.label}</strong>
                 <p className="section-desc">
                   {auth.role === 'SHIPPER'
@@ -292,7 +313,7 @@ export default function UserBoardTab({ controller }) {
                 {selected.viewerTradingBlockedUntil && (
                   <small>거래 금지 해제 시각: {formatDate(selected.viewerTradingBlockedUntil)}</small>
                 )}
-              </div>
+              </div> */}
 
               {auth.role === 'DRIVER' && selected.status === 'BIDDING' && !selected.hasMyOffer && (
                 <div className="form-stack">
@@ -347,7 +368,17 @@ export default function UserBoardTab({ controller }) {
                   )}
                 </div>
               )}
-
+              {showCancelButton && (
+                <div className="surface-sub">
+                  <strong>거래 취소</strong>
+                  <p className="section-desc">
+                    취소 시점에 따라 패널티 점수가 누적되며, 반복 취소 시 매칭 제한 또는 거래 금지가 적용됩니다.
+                  </p>
+                  <button className="btn" onClick={openCancelModal}>
+                    거래 취소 요청
+                  </button>
+                </div>
+              )}
               {auth.role === 'SHIPPER' && (
                 <div className="list-stack">
                   {(selected.offers || []).length ? (
@@ -441,18 +472,6 @@ export default function UserBoardTab({ controller }) {
                       )}
                     </>
                   )}
-                </div>
-              )}
-
-              {showCancelButton && (
-                <div className="surface-sub">
-                  <strong>거래 취소</strong>
-                  <p className="section-desc">
-                    취소 시점에 따라 패널티 점수가 누적되며, 반복 취소 시 매칭 제한 또는 거래 금지가 적용됩니다.
-                  </p>
-                  <button className="btn" onClick={openCancelModal}>
-                    거래 취소 요청
-                  </button>
                 </div>
               )}
             </>
