@@ -5,6 +5,23 @@ import {
   validateQuoteStepCargo,
   validateAllSteps,
 } from "../utils/quoteRegisterValidation";
+import { createShipment } from "../../../api";
+
+function convertFileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    if (!(file instanceof File)) {
+      resolve(null);
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function useQuoteRegisterForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -73,25 +90,83 @@ export default function useQuoteRegisterForm() {
     return numericWeight;
   };
 
-  const buildSubmitPayload = () => {
+  const buildScheduledStartAt = () => {
+    if (!formData.transportDate || !formData.transportTime) {
+      return null;
+    }
+
+    return `${formData.transportDate}T${formData.transportTime}:00`;
+  };
+
+  const buildImagePayload = async () => {
+    const cargoImages = Array.isArray(formData.cargoImages)
+      ? formData.cargoImages
+      : [];
+
+    const files = cargoImages.filter((image) => image instanceof File);
+
+    if (files.length === 0) {
+      return {
+        cargoImageDataUrls: [],
+        cargoImageNames: [],
+      };
+    }
+
+    const cargoImageDataUrls = await Promise.all(
+      files.map((file) => convertFileToDataUrl(file)),
+    );
+
+    const cargoImageNames = files.map((file) => file.name);
+
+    return {
+      cargoImageDataUrls,
+      cargoImageNames,
+    };
+  };
+
+  const buildSubmitPayload = async () => {
     const convertedWeight = convertWeightToKg(
       formData.weight,
       formData.weightUnit,
       formData.weightNeedConsult,
     );
 
+    const { cargoImageDataUrls, cargoImageNames } = await buildImagePayload();
+
     return {
-      ...formData,
-
-      // 중량은 서버 전송 시 kg 기준으로 통일
-      weight: convertedWeight,
-      weightUnit: convertedWeight === null ? null : "kg",
-
-      // 운임 숫자 변환
-      desiredPrice:
-        formData.desiredPrice === "" || formData.desiredPrice === null
+      title: formData.estimateName || "",
+      cargoType: formData.cargoType || "",
+      weightKg: convertedWeight,
+      description: formData.requestNote || "",
+      originAddress: formData.originAddress || "",
+      originLat:
+        formData.originLat === "" ||
+        formData.originLat === undefined ||
+        formData.originLat === null
           ? null
-          : Number(formData.desiredPrice),
+          : Number(formData.originLat),
+      originLng:
+        formData.originLng === "" ||
+        formData.originLng === undefined ||
+        formData.originLng === null
+          ? null
+          : Number(formData.originLng),
+      destinationAddress: formData.destinationAddress || "",
+      destinationLat:
+        formData.destinationLat === "" ||
+        formData.destinationLat === undefined ||
+        formData.destinationLat === null
+          ? null
+          : Number(formData.destinationLat),
+      destinationLng:
+        formData.destinationLng === "" ||
+        formData.destinationLng === undefined ||
+        formData.destinationLng === null
+          ? null
+          : Number(formData.destinationLng),
+      scheduledStartAt: buildScheduledStartAt(),
+      cargoImageDataUrls,
+      cargoImageNames,
     };
   };
 
@@ -103,15 +178,23 @@ export default function useQuoteRegisterForm() {
       return false;
     }
 
-    const payload = buildSubmitPayload();
+    try {
+      const payload = await buildSubmitPayload();
 
-    console.log("입력용 formData:", formData);
-    console.log("서버 전송용 payload:", payload);
+      console.log("입력용 formData:", formData);
+      console.log("서버 전송 payload:", payload);
 
-    // 실제 API 연결 시
-    // await postQuote(payload);
+      await createShipment(payload);
 
-    return true;
+      return true;
+    } catch (error) {
+      console.error("견적 등록 실패:", error);
+      console.error("응답 데이터:", error.response?.data);
+      console.error("응답 상태:", error.response?.status);
+      console.error("전송 payload:", await buildSubmitPayload());
+      alert("견적 등록에 실패했습니다.");
+      return false;
+    }
   };
 
   const resetForm = () => {

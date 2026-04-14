@@ -279,11 +279,7 @@ export default function RegionSelect({ value, onChange }) {
   }, []);
 
   const handleSelectCity = (city) => {
-    const handleSelectCity = (city) => {
-      const nextValue = `${selectedDo} ${city}`;
-      onChange(nextValue);
-      setOpen(false);
-    };
+    const nextValue = `${selectedDo} ${city}`;
     onChange(nextValue);
     setOpen(false);
   };

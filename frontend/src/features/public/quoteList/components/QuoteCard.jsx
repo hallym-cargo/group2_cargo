@@ -1,9 +1,20 @@
+function getStatusLabel(status) {
+  switch (status) {
+    case "BIDDING":
+      return "입찰 진행중";
+    case "CONFIRMED":
+      return "배차 완료";
+    default:
+      return status || "입찰 진행중";
+  }
+}
+
 function getStatusClass(status) {
   switch (status) {
-    case "입찰 진행중":
+    case "BIDDING":
       return "is-bidding";
-    case "배차 완료":
-      return "is-matched";
+    case "CONFIRMED":
+      return "is-confirmed";
     default:
       return "is-default";
   }
@@ -91,8 +102,8 @@ export default function QuoteCard({ quote, onClickDetail }) {
     status,
   } = quote;
 
-  const statusText = status || "입찰 진행중";
-  const statusClass = getStatusClass(statusText);
+  const statusText = getStatusLabel(status);
+  const statusClass = getStatusClass(status);
 
   const originSido = getRegionLabel(originAddress);
   const destinationSido = getRegionLabel(destinationAddress);
@@ -107,6 +118,7 @@ export default function QuoteCard({ quote, onClickDetail }) {
             <span className={`quote-card__status-badge ${statusClass}`}>
               {statusText}
             </span>
+
             {priceProposalAllowed && (
               <span className="quote-card__price-badge">가격 상담 가능</span>
             )}
@@ -144,13 +156,15 @@ export default function QuoteCard({ quote, onClickDetail }) {
 
               <div className="quote-card__cargo-row">
                 <strong className="quote-card__cargo-value">
-                  {cargoType || "-"} · {vehicleType || "-"}
+                  {vehicleType
+                    ? `${cargoType || "-"} · ${vehicleType}`
+                    : `${cargoType || "-"}`}
                 </strong>
               </div>
             </div>
 
             <div className="quote-card__price-wrap">
-              <span className="quote-card__info-label">희망 운임 </span>
+              <span className="quote-card__info-label">희망 운임</span>
               <strong className="quote-card__price">{priceText}</strong>
             </div>
           </div>

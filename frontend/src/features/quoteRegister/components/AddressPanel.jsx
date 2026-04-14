@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DaumPostcode from "react-daum-postcode";
 
 export default function AddressPanel({
@@ -14,9 +14,20 @@ export default function AddressPanel({
   const [detailAddress, setDetailAddress] = useState("");
   const [floor, setFloor] = useState("");
   const [hasElevator, setHasElevator] = useState("");
+  const [isClient, setIsClient] = useState(false);
+
+  const mountedRef = useRef(false);
 
   useEffect(() => {
-    // 기존에 선택한 주소가 있으면 다시 열 때 상세주소 입력 화면부터 보여주기
+    mountedRef.current = true;
+    setIsClient(true);
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (currentValue) {
       setSelectedBaseAddress(currentValue);
       setPanelStep("detail");
@@ -54,7 +65,62 @@ export default function AddressPanel({
     return "";
   };
 
-  const handleComplete = (data) => {
+  const getLatFieldName = () => {
+    if (fieldName === "originAddress") return "originLat";
+    if (fieldName === "destinationAddress") return "destinationLat";
+    return "";
+  };
+
+  const getLngFieldName = () => {
+    if (fieldName === "originAddress") return "originLng";
+    if (fieldName === "destinationAddress") return "destinationLng";
+    return "";
+  };
+
+  const geocodeAddress = (address) => {
+    return new Promise((resolve, reject) => {
+      if (typeof window === "undefined") {
+        reject(new Error("브라우저 환경이 아닙니다."));
+        return;
+      }
+
+      if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
+        reject(
+          new Error("카카오 지도 services 라이브러리가 로드되지 않았습니다."),
+        );
+        return;
+      }
+
+      if (!address || !address.trim()) {
+        reject(new Error("좌표 변환에 사용할 주소가 비어 있습니다."));
+        return;
+      }
+
+      const geocoder = new window.kakao.maps.services.Geocoder();
+
+      geocoder.addressSearch(address, (result, status) => {
+        if (
+          status !== window.kakao.maps.services.Status.OK ||
+          !result ||
+          result.length === 0
+        ) {
+          reject(new Error("주소를 좌표로 변환하지 못했습니다."));
+          return;
+        }
+
+        resolve({
+          lat: Number(result[0].y),
+          lng: Number(result[0].x),
+        });
+      });
+    });
+  };
+
+  const handleComplete = async (data) => {
+    if (!mountedRef.current) return;
+
+    console.log("주소 선택 결과:", data);
+
     let fullAddress = data.address;
     let extraAddress = "";
 
@@ -75,8 +141,41 @@ export default function AddressPanel({
     }
 
     updateField(fieldName, fullAddress);
-    setSelectedBaseAddress(fullAddress);
-    setPanelStep("detail");
+
+    const latFieldName = getLatFieldName();
+    const lngFieldName = getLngFieldName();
+
+    try {
+      const addressForGeocoding = data.roadAddress || data.address;
+      const { lat, lng } = await geocodeAddress(addressForGeocoding);
+
+      if (!mountedRef.current) return;
+
+      if (latFieldName) {
+        updateField(latFieldName, lat);
+      }
+
+      if (lngFieldName) {
+        updateField(lngFieldName, lng);
+      }
+
+      setSelectedBaseAddress(fullAddress);
+      setPanelStep("detail");
+    } catch (error) {
+      console.error("좌표 변환 실패:", error);
+
+      if (!mountedRef.current) return;
+
+      if (latFieldName) {
+        updateField(latFieldName, null);
+      }
+
+      if (lngFieldName) {
+        updateField(lngFieldName, null);
+      }
+
+      alert("주소 좌표를 가져오지 못했습니다. 다시 검색해주세요.");
+    }
   };
 
   const isValidFloor = useMemo(() => {
@@ -120,6 +219,7 @@ export default function AddressPanel({
   };
 
   const handleBackToSearch = () => {
+    if (!mountedRef.current) return;
     setPanelStep("search");
   };
 
@@ -149,11 +249,14 @@ export default function AddressPanel({
           )}
 
           <div className="daum-postcode-wrapper">
-            <DaumPostcode
-              onComplete={handleComplete}
-              autoClose={false}
-              style={{ width: "100%", height: "100%" }}
-            />
+            {isClient ? (
+              <DaumPostcode
+                key={`${fieldName}-postcode`}
+                onComplete={handleComplete}
+                autoClose={false}
+                style={{ width: "100%", height: "100%" }}
+              />
+            ) : null}
           </div>
         </div>
       )}
@@ -216,6 +319,7 @@ export default function AddressPanel({
             <label>
               건물 내 엘리베이터 <span className="required-mark">*</span>
             </label>
+
             <div className="elevator-toggle-group">
               <button
                 type="button"
