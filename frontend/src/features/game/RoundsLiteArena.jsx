@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  cancelRoundsLiteMatchmaking,
   createRoundsLiteRoom,
   getRoundsLiteState,
+  joinRoundsLiteMatchmaking,
   joinRoundsLiteRoom,
   leaveRoundsLiteRoom,
   readyRoundsLiteRoom,
@@ -26,11 +28,12 @@ const phaseText = {
   MATCH_END: '매치 종료',
 }
 
-const mapNames = {
-  CLASSIC: '클래식',
-  CENTER_GAP: '센터 갭',
-  TWIN_TOWERS: '트윈 타워',
-}
+const platforms = [
+  { x: 0, y: 500, w: 960, h: 40, kind: 'floor' },
+  { x: 200, y: 360, w: 180, h: 18, kind: 'platform' },
+  { x: 580, y: 300, w: 180, h: 18, kind: 'platform' },
+  { x: 390, y: 420, w: 180, h: 18, kind: 'platform' },
+]
 
 function getErrorMessage(error, fallback) {
   return error?.response?.data?.message || fallback
@@ -47,8 +50,7 @@ function blendVisualRoom(current, target) {
   const shouldSnap =
     current.phase !== 'ACTIVE' ||
     target.phase !== 'ACTIVE' ||
-    current.roundNo !== target.roundNo ||
-    current.mapType !== target.mapType
+    current.roundNo !== target.roundNo
 
   const currentPlayers = new Map((current.players || []).map((player) => [player.seat, player]))
   const currentProjectiles = new Map((current.projectiles || []).map((projectile) => [projectile.id, projectile]))
@@ -99,7 +101,6 @@ export default function RoundsLiteArena({ controller }) {
   const visualTargetRef = useRef(null)
 
   const currentRoom = displayRoom || room
-  const platforms = currentRoom?.platforms || []
 
   const me = useMemo(
     () => room?.players?.find((player) => player.seat === room?.mySeat) ?? null,
@@ -272,6 +273,42 @@ export default function RoundsLiteArena({ controller }) {
     }
   }
 
+  async function handleMatchmaking() {
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await joinRoundsLiteMatchmaking()
+      setRoom(response)
+      setRoomCodeInput(response.roomCode)
+      localStorage.setItem(LAST_ROOM_KEY, response.roomCode)
+    } catch (matchError) {
+      setError(getErrorMessage(matchError, '자동 매칭에 실패했습니다.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleCancelMatchmaking() {
+    if (!room?.roomCode) return
+
+    setLoading(true)
+    setError('')
+
+    try {
+      await cancelRoundsLiteMatchmaking(room.roomCode)
+      stopLoops()
+      localStorage.removeItem(LAST_ROOM_KEY)
+      setRoom(null)
+      setDisplayRoom(null)
+      setRoomCodeInput('')
+    } catch (cancelError) {
+      setError(getErrorMessage(cancelError, '매칭 취소에 실패했습니다.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleReady() {
     if (!room?.roomCode) return
 
@@ -300,28 +337,16 @@ export default function RoundsLiteArena({ controller }) {
   }
 
   async function handleSelectCard(cardKey) {
-    if (!room?.roomCode || loading) return
+    if (!room?.roomCode) return
 
     setLoading(true)
     setError('')
-
-    setRoom((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        phase: 'COUNTDOWN',
-        pickerSeat: null,
-        cardOptions: [],
-        message: '카드를 선택했습니다. 다음 라운드를 준비 중입니다.',
-      }
-    })
 
     try {
       const response = await selectRoundsLiteCard(room.roomCode, cardKey)
       setRoom(response)
     } catch (cardError) {
       setError(getErrorMessage(cardError, '카드 선택에 실패했습니다.'))
-      await fetchState(room.roomCode, true)
     } finally {
       setLoading(false)
     }
@@ -387,7 +412,7 @@ export default function RoundsLiteArena({ controller }) {
             <p className="rounds-lite-eyebrow">MINI GAME</p>
             <h1 className="rounds-lite-title">Rounds Lite Duel</h1>
             <p className="rounds-lite-subtitle">
-              라운드마다 발판 위치가 바뀌고, 가운데가 뚫린 맵도 등장하는 Lite 버전이야.
+              2인 대전, 이동, 점프, 발사, 체력, 라운드 승리, 카드 선택까지 넣은 웹용 Lite 버전이야.
             </p>
           </div>
 
@@ -444,13 +469,22 @@ export default function RoundsLiteArena({ controller }) {
                   <span>라운드</span>
                   <strong>{room ? `${room.roundNo} / 목표 ${room.targetWins}승` : '-'}</strong>
                 </div>
-                <div>
-                  <span>맵</span>
-                  <strong>{mapNames[room?.mapType] || '-'}</strong>
-                </div>
               </div>
 
-              <p className="rounds-lite-message">{error || room?.message || '방을 만들거나 참가한 뒤 시작하세요.'}</p>
+              <p className="rounds-lite-message">{error || room?.message || '방을 만들거나, 방 코드를 입력하거나, 자동 매칭으로 시작하세요.'}</p>
+
+              {room?.matchmakingQueued && (
+                <div className="rounds-lite-controls">
+                  <button
+                    type="button"
+                    className="rounds-lite-secondary"
+                    onClick={handleCancelMatchmaking}
+                    disabled={loading}
+                  >
+                    매칭 취소
+                  </button>
+                </div>
+              )}
 
               <div className="rounds-lite-controls">
                 <button
@@ -474,7 +508,7 @@ export default function RoundsLiteArena({ controller }) {
                 <li>A / D 또는 ← / → : 좌우 이동</li>
                 <li>W 또는 ↑ : 점프</li>
                 <li>Space : 발사</li>
-                <li>라운드 시작마다 맵이 바뀜</li>
+                <li>라운드 승리 시 카드 1장 선택</li>
               </ul>
             </section>
 
@@ -553,12 +587,7 @@ export default function RoundsLiteArena({ controller }) {
                     <div
                       key={`${platform.kind}-${index}`}
                       className={`rounds-lite-platform rounds-lite-platform--${platform.kind}`}
-                      style={{
-                        left: platform.x,
-                        top: platform.y,
-                        width: platform.w,
-                        height: platform.h,
-                      }}
+                      style={{ left: platform.x, top: platform.y, width: platform.w, height: platform.h }}
                     />
                   ))}
 
@@ -603,11 +632,11 @@ export default function RoundsLiteArena({ controller }) {
             <section className="rounds-lite-bottom-card">
               <div>
                 <strong>현재 안내</strong>
-                <p>{room?.message || '방을 만들거나 참가한 뒤 시작하세요.'}</p>
+                <p>{room?.message || '방을 만들거나, 방 코드를 입력하거나, 자동 매칭으로 시작하세요.'}</p>
               </div>
               <div>
-                <strong>현재 맵</strong>
-                <p>{mapNames[room?.mapType] || '대기 중'}</p>
+                <strong>전투 팁</strong>
+                <p>위쪽 플랫폼을 먼저 잡고, 카드 승리 효과를 누적하면 점점 Rounds 느낌이 강해져.</p>
               </div>
               <div>
                 <strong>내 상태</strong>

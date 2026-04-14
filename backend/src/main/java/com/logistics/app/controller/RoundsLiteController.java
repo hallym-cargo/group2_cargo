@@ -24,6 +24,16 @@ public class RoundsLiteController {
         return roundsLiteService.createRoom(currentUser(authentication));
     }
 
+    @PostMapping("/matchmaking/join")
+    public GameDtos.RoundsLiteRoomResponse joinMatchmaking(Authentication authentication) {
+        return roundsLiteService.joinMatchmaking(currentUser(authentication));
+    }
+
+    @PostMapping("/matchmaking/{roomCode}/cancel")
+    public void cancelMatchmaking(@PathVariable String roomCode, Authentication authentication) {
+        roundsLiteService.cancelMatchmaking(roomCode, currentUser(authentication));
+    }
+
     @PostMapping("/rooms/join")
     public GameDtos.RoundsLiteRoomResponse joinRoom(
             @RequestBody GameDtos.JoinRoomRequest request,

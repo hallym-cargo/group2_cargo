@@ -265,3 +265,10 @@ export const resetRoundsLiteRoom = async (roomCode) =>
 
 export const leaveRoundsLiteRoom = async (roomCode) =>
   (await api.delete(`/api/game/rounds-lite/rooms/${roomCode}`)).data;
+
+
+export const joinRoundsLiteMatchmaking = async () =>
+  (await api.post('/api/game/rounds-lite/matchmaking/join')).data;
+
+export const cancelRoundsLiteMatchmaking = async (roomCode) =>
+  (await api.post(`/api/game/rounds-lite/matchmaking/${roomCode}/cancel`)).data;
