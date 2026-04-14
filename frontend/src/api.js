@@ -220,6 +220,58 @@ export const fetchAdminActionLogs = async () =>
   (await api.get('/api/admin/action-logs')).data;
 
 export default api;
+export const createQuickDrawRoom = async () =>
+  (await api.post('/api/game/quickdraw/rooms')).data;
+
+export const joinQuickDrawRoom = async (roomCode) =>
+  (await api.post('/api/game/quickdraw/rooms/join', { roomCode })).data;
+
+export const getQuickDrawRoomState = async (roomCode) =>
+  (await api.get(`/api/game/quickdraw/rooms/${roomCode}`)).data;
+
+export const markQuickDrawReady = async (roomCode) =>
+  (await api.post(`/api/game/quickdraw/rooms/${roomCode}/ready`)).data;
+
+export const shootQuickDraw = async (roomCode) =>
+  (await api.post(`/api/game/quickdraw/rooms/${roomCode}/shoot`)).data;
+
+export const resetQuickDrawRoom = async (roomCode) =>
+  (await api.post(`/api/game/quickdraw/rooms/${roomCode}/reset`)).data;
+
+export const leaveQuickDrawRoom = async (roomCode) =>
+  (await api.delete(`/api/game/quickdraw/rooms/${roomCode}`)).data;
+
+
+export const createRoundsLiteRoom = async () =>
+  (await api.post('/api/game/rounds-lite/rooms')).data;
+
+export const joinRoundsLiteRoom = async (roomCode) =>
+  (await api.post('/api/game/rounds-lite/rooms/join', { roomCode })).data;
+
+export const getRoundsLiteState = async (roomCode) =>
+  (await api.get(`/api/game/rounds-lite/rooms/${roomCode}`)).data;
+
+export const readyRoundsLiteRoom = async (roomCode) =>
+  (await api.post(`/api/game/rounds-lite/rooms/${roomCode}/ready`)).data;
+
+export const sendRoundsLiteInput = async (roomCode, payload) =>
+  (await api.post(`/api/game/rounds-lite/rooms/${roomCode}/input`, payload)).data;
+
+export const selectRoundsLiteCard = async (roomCode, cardKey) =>
+  (await api.post(`/api/game/rounds-lite/rooms/${roomCode}/select-card`, { cardKey })).data;
+
+export const resetRoundsLiteRoom = async (roomCode) =>
+  (await api.post(`/api/game/rounds-lite/rooms/${roomCode}/reset`)).data;
+
+export const leaveRoundsLiteRoom = async (roomCode) =>
+  (await api.delete(`/api/game/rounds-lite/rooms/${roomCode}`)).data;
+
+
+export const joinRoundsLiteMatchmaking = async () =>
+  (await api.post('/api/game/rounds-lite/matchmaking/join')).data;
+
+export const cancelRoundsLiteMatchmaking = async (roomCode) =>
+  (await api.post(`/api/game/rounds-lite/matchmaking/${roomCode}/cancel`)).data;
 export const askAssistant = async (payload) =>
   (await api.post('/api/assistant/chat', payload)).data;
 

@@ -9,6 +9,7 @@ import ScrollTopFloatingButton from "./components/common/ScrollTopFloatingButton
 import AdminConsolePage from "./features/admin/AdminConsolePage";
 import MessagesPage from "./features/chat/MessagesPage";
 import NotificationsPage from "./features/chat/NotificationsPage";
+import RoundsLiteArena from "./features/game/RoundsLiteArena";
 import QuoteListPage from "./features/public/QuoteListPage";
 import QuoteRegisterPage from "./features/public/QuoteRegisterPage";
 import PublicHomePage from "./features/public/PublicHomePage";
@@ -25,7 +26,9 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ReceiptPdfBridge from "./components/common/ReceiptPdfBridge";
 
 export default function App() {
-  const hasReceiptPdfQuery = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("receiptPdf");
+  const hasReceiptPdfQuery =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("receiptPdf");
 
   if (hasReceiptPdfQuery) {
     return <ReceiptPdfBridge />;
@@ -49,6 +52,8 @@ export default function App() {
     page = <MessagesPage controller={controller} />;
   } else if (controller.routePage === "notifications") {
     page = <NotificationsPage controller={controller} />;
+  } else if (controller.routePage === "game") {
+    page = <RoundsLiteArena controller={controller} />;
   } else if (controller.routePage === "shippers") {
     page = <PublicUserSearchPage controller={controller} role="SHIPPER" />;
   } else if (controller.routePage === "drivers") {
@@ -66,7 +71,11 @@ export default function App() {
   } else if (controller.routePage === "forgot-password") {
     page = <ForgotPasswordPage controller={controller} />;
   } else if (controller.routePage === "dashboard") {
-    page = controller.isAdmin ? <AdminConsolePage controller={controller} /> : <UserConsolePage controller={controller} />;
+    page = controller.isAdmin ? (
+      <AdminConsolePage controller={controller} />
+    ) : (
+      <UserConsolePage controller={controller} />
+    );
   } else if (controller.dashboardTab === "home") {
     page = <PublicHomePage controller={controller} />;
   } else if (controller.isAdmin) {
@@ -78,6 +87,7 @@ export default function App() {
   return (
     <>
       {page}
+
       {controller.profileModalOpen && (
         <UserProfileModal
           profile={controller.activeProfile}
@@ -86,6 +96,7 @@ export default function App() {
           onOpenChat={controller.openChatWithUser}
         />
       )}
+
       {controller.chatModalOpen && controller.routePage !== "messages" && (
         <ChatWindowModal
           room={controller.chatRoom}
@@ -96,6 +107,10 @@ export default function App() {
           isSending={controller.chatSending}
         />
       )}
+
+      {controller.paymentModalOpen && <PaymentModal controller={controller} />}
+
+      {controller.isLoggedIn && !controller.isAdmin && (
       {controller.paymentModalOpen && (
         <PaymentModal controller={controller} />
       )}
@@ -108,7 +123,14 @@ export default function App() {
             onAssistantClick={controller.openAssistant}
             onChatClick={controller.openChatInbox}
             onNotificationClick={controller.openNotificationPanel}
+            onGameClick={() => {
+              controller.closeChatInbox();
+              controller.closeNotificationPanel();
+              controller.setChatModalOpen(false);
+              controller.setRoutePage("game");
+            }}
           />
+
           <AssistantWindowModal
             open={controller.assistantOpen}
             messages={controller.assistantMessages}
