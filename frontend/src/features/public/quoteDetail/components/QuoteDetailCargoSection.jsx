@@ -1,10 +1,10 @@
 function formatWeight(weight, unit) {
-  if (!weight) return "-";
+  if (weight === null || weight === undefined || weight === "") return "-";
   return `${weight}${unit || ""}`;
 }
 
 function formatPrice(price) {
-  if (!price) return "-";
+  if (price === null || price === undefined || price === "") return "-";
   return `${Number(price).toLocaleString()}원`;
 }
 
@@ -22,6 +22,22 @@ export default function QuoteDetailCargoSection({
 }) {
   const images = Array.isArray(quote.cargoImages) ? quote.cargoImages : [];
   const hasImages = images.length > 0;
+
+  const cargoName =
+    quote.cargoName ||
+    quote.cargoType ||
+    quote.estimateName ||
+    quote.title ||
+    "-";
+
+  const requestNote = quote.requestNote || quote.description || "-";
+
+  const desiredPrice =
+    quote.desiredPrice ?? quote.agreedPrice ?? quote.bestOfferPrice ?? null;
+
+  const photosClassName = `quote-detail-cargo-section__photos ${
+    hasImages ? "has-photos" : "is-empty"
+  }`;
 
   return (
     <section className="quote-detail-card quote-detail-cargo-section">
@@ -63,7 +79,7 @@ export default function QuoteDetailCargoSection({
           <div className="quote-detail-info-table__row">
             <div className="quote-detail-info-table__label">화물명</div>
             <div className="quote-detail-info-table__content">
-              <strong>{quote.cargoName || "-"}</strong>
+              <strong>{cargoName}</strong>
             </div>
           </div>
 
@@ -77,14 +93,14 @@ export default function QuoteDetailCargoSection({
           <div className="quote-detail-info-table__row">
             <div className="quote-detail-info-table__label">요청사항</div>
             <div className="quote-detail-info-table__content">
-              <strong>{quote.requestNote || "-"}</strong>
+              <strong>{requestNote}</strong>
             </div>
           </div>
 
           <div className="quote-detail-info-table__row">
             <div className="quote-detail-info-table__label">희망 운임</div>
             <div className="quote-detail-info-table__content">
-              <strong>{formatPrice(quote.desiredPrice)}</strong>
+              <strong>{formatPrice(desiredPrice)}</strong>
 
               {quote.priceProposalAllowed && (
                 <span className="quote-detail-info-card__price-badge">
@@ -95,7 +111,7 @@ export default function QuoteDetailCargoSection({
           </div>
         </div>
 
-        <div className="quote-detail-cargo-section__photos">
+        <div className={photosClassName}>
           {hasImages ? (
             <div className="quote-detail-photo-card__grid quote-detail-photo-card__grid--in-section">
               {images.map((image, index) => {

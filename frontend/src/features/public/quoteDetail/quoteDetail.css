@@ -1,7 +1,7 @@
 .quote-detail-page {
   width: min(1520px, calc(100vw - 96px));
   margin: 0 auto;
-  padding: 36px 0 80px;
+  padding: 20px 0 80px;
 }
 
 /* 헤더 */
@@ -9,25 +9,41 @@
   margin-bottom: 24px;
 }
 
-.quote-detail-header__top-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-}
-
 .quote-detail-header__title-wrap {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .quote-detail-header__title {
-  margin: 0 0 10px;
+  margin: 0 0 16px;
   font-size: 40px;
   font-weight: 800;
   color: #111827;
   letter-spacing: -0.04em;
   line-height: 1.2;
+}
+
+.quote-detail-header__hero-badge-wrap {
+  margin-bottom: 18px;
+}
+
+.quote-detail-hero__badge {
+  display: inline-block;
+  padding: 0;
+  min-width: auto;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .quote-detail-header__badge-row {
@@ -70,28 +86,21 @@
   color: #b54708;
 }
 
+.quote-detail-header__top-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
 .quote-detail-header__actions {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: flex-end;
   gap: 10px;
-}
-
-.quote-detail-header__delete-btn {
-  height: 44px;
-  padding: 0 16px;
-  border-radius: 12px;
-  border: 1px solid #d7deea;
-  background: #ffffff;
-  color: #111827;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.quote-detail-header__delete-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  flex-shrink: 0;
+  padding-top: 0;
+  align-self: flex-end;
 }
 
 .bookmark-btn {
@@ -108,7 +117,9 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 20px 40px rgba(15, 23, 42, 0.04),
+    0 2px 6px rgba(15, 23, 42, 0.02);
 }
 
 .bookmark-btn:hover {
@@ -129,6 +140,7 @@
   border-radius: 24px;
   background: #ffffff;
   overflow: hidden;
+  min-height: 0;
   box-shadow:
     0 20px 40px rgba(15, 23, 42, 0.04),
     0 2px 6px rgba(15, 23, 42, 0.02);
@@ -140,6 +152,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 20px 24px 0;
+  flex-shrink: 0;
 }
 
 .quote-detail-card__title {
@@ -178,6 +191,7 @@
 .quote-detail-left-column,
 .quote-detail-right-column {
   min-width: 0;
+  min-height: 0;
 }
 
 .quote-detail-left-column {
@@ -188,6 +202,17 @@
 
 .quote-detail-right-column {
   display: flex;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.quote-detail-right-column > .quote-detail-card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 지도 카드 */
@@ -332,13 +357,14 @@
   color: #b54708;
 }
 
-/* 화물 정보 + 사진 */
+/* 화물 정보 카드 */
 .quote-detail-cargo-section {
   width: 100%;
   height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .quote-detail-cargo-section__title-group {
@@ -352,22 +378,33 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .quote-detail-cargo-section__table {
-  padding-bottom: 12px;
   flex-shrink: 0;
+  padding-bottom: 12px;
 }
 
+/* 사진 영역: 남는 높이 전부 사용 */
 .quote-detail-cargo-section__photos {
+  height: 400px;
+  min-height: 400px;
+  max-height: 400px;
   padding: 0 24px 24px;
-  flex: 1;
-  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
+/* 사진 없을 때: 아래까지 채우기 */
+.quote-detail-cargo-section__photos:has(.quote-detail-photo-card__placeholder) {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 사진 개수 배지 */
 .quote-detail-photo-card__count {
   display: inline-flex;
   align-items: center;
@@ -381,19 +418,27 @@
   font-weight: 700;
 }
 
+/* 사진 그리드 */
 .quote-detail-photo-card__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
+/* 사진 그리드: 고정된 사진 영역 안에서만 스크롤 */
 .quote-detail-photo-card__grid--in-section {
-  padding: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   align-content: start;
+  padding-right: 4px;
+  box-sizing: border-box;
 }
 
-/* 사진은 카드 높이를 넘지 않도록 줄임 */
+/* 사진 크기 */
 .quote-detail-photo-card__image {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -401,12 +446,13 @@
   border-radius: 16px;
   border: 1px solid #e5e7eb;
   background: #f8fafc;
-  max-height: 160px;
+  display: block;
 }
 
+/* 사진 없을 때 placeholder는 남은 높이 채움 */
 .quote-detail-photo-card__placeholder {
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  height: 100%;
   border: 1px dashed #cfd8e3;
   border-radius: 16px;
   background: #fafbfd;
@@ -418,6 +464,7 @@
   justify-content: center;
   text-align: center;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 /* 모달 */
@@ -520,16 +567,33 @@
     grid-template-columns: 1fr;
   }
 
+  .quote-detail-right-column {
+    min-height: auto;
+  }
+
+  .quote-detail-right-column > .quote-detail-card {
+    height: auto;
+    min-height: auto;
+  }
+
   .quote-detail-cargo-section {
     height: auto;
+    overflow: visible;
+  }
+
+  .quote-detail-cargo-section__body {
+    overflow: visible;
   }
 
   .quote-detail-cargo-section__photos {
     overflow: visible;
+    min-height: 340px;
   }
 
   .quote-detail-photo-card__grid--in-section {
+    height: auto;
     overflow-y: visible;
+    padding-right: 0;
   }
 
   .quote-detail-map-real {
@@ -550,6 +614,10 @@
 
   .quote-detail-header__actions {
     justify-content: flex-end;
+  }
+
+  .quote-detail-header__hero-badge-wrap {
+    margin-bottom: 14px;
   }
 
   .quote-detail-header__title {
@@ -586,24 +654,30 @@
     left: 12px;
     right: 12px;
     bottom: 12px;
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
   .quote-detail-map-real__meta-card {
     min-width: 0;
     width: 100%;
-    padding: 12px 14px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .quote-detail-map-real__meta-card span {
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+
+  .quote-detail-map-real__meta-card strong {
+    font-size: 14px;
   }
 
   .quote-detail-photo-card__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
-  }
-
-  .quote-detail-photo-card__image {
-    max-height: none;
   }
 
   .quote-edit-modal-overlay {
@@ -667,6 +741,27 @@
 
   .quote-detail-map-real {
     height: 260px;
+  }
+
+  .quote-detail-map-real__meta-row {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    gap: 8px;
+  }
+
+  .quote-detail-map-real__meta-card {
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+
+  .quote-detail-map-real__meta-card span {
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+
+  .quote-detail-map-real__meta-card strong {
+    font-size: 13px;
   }
 
   .quote-detail-photo-card__grid {
