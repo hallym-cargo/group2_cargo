@@ -26,7 +26,6 @@ public class RoundsLiteService {
 
     private static final double ARENA_WIDTH = 960d;
     private static final double ARENA_HEIGHT = 540d;
-    private static final double FLOOR_Y = 500d;
     private static final double PLAYER_WIDTH = 52d;
     private static final double PLAYER_HEIGHT = 84d;
     private static final double GRAVITY = 1500d;
@@ -54,6 +53,8 @@ public class RoundsLiteService {
             roomCode = generateRoomCode();
         } while (roomRepository.findByRoomCode(roomCode).isPresent());
 
+        GeneratedMap generatedMap = generatePlayableMap();
+
         RoundsLiteRoom room = RoundsLiteRoom.builder()
                 .roomCode(roomCode)
                 .phase("WAITING")
@@ -62,13 +63,13 @@ public class RoundsLiteService {
                 .message("상대가 참가하면 준비 버튼으로 라운드를 시작하세요.")
                 .projectilesJson("[]")
                 .cardOptionsJson("[]")
+                .mapType(generatedMap.type())
+                .mapPlatformsJson(writeJson(generatedMap.platforms()))
                 .lastTickAt(LocalDateTime.now())
                 .build();
 
         RoundsLitePlayer player = createBasePlayer(room, user, "P1");
-        player.setX(180d);
-        player.setY(FLOOR_Y - PLAYER_HEIGHT);
-        player.setFacingRight(true);
+        spawnPlayer(player, generatedMap.spawnP1(), true);
         room.getPlayers().add(player);
 
         roomRepository.saveAndFlush(room);
@@ -91,10 +92,10 @@ public class RoundsLiteService {
 
         detachUserFromExistingRoom(user.getId());
 
+        MapState mapState = getMapState(room);
         RoundsLitePlayer player = createBasePlayer(room, user, "P2");
-        player.setX(ARENA_WIDTH - 180d - PLAYER_WIDTH);
-        player.setY(FLOOR_Y - PLAYER_HEIGHT);
-        player.setFacingRight(false);
+        spawnPlayer(player, mapState.spawnP2(), false);
+
         room.getPlayers().add(player);
         room.setMessage("두 플레이어가 준비하면 결투가 시작됩니다.");
 
@@ -236,9 +237,13 @@ public class RoundsLiteService {
         room.setMatchWinnerSeat(null);
         room.setMessage("상대가 방을 나갔습니다. 새 상대를 기다립니다.");
         room.setLastTickAt(LocalDateTime.now());
+
+        GeneratedMap generatedMap = generatePlayableMap();
+        room.setMapType(generatedMap.type());
+        room.setMapPlatformsJson(writeJson(generatedMap.platforms()));
+
         for (RoundsLitePlayer player : room.getPlayers()) {
             player.setReady(false);
-            resetPlayerPosition(player);
             player.setHp(player.getMaxHp());
             player.setMoveLeft(false);
             player.setMoveRight(false);
@@ -247,6 +252,11 @@ public class RoundsLiteService {
             player.setVx(0d);
             player.setVy(0d);
             player.setWins(0);
+            if ("P1".equals(player.getSeat())) {
+                spawnPlayer(player, generatedMap.spawnP1(), true);
+            } else {
+                spawnPlayer(player, generatedMap.spawnP2(), false);
+            }
         }
         room.setRoundNo(1);
     }
@@ -262,6 +272,11 @@ public class RoundsLiteService {
         room.setMatchWinnerSeat(null);
         room.setMessage("새 매치를 시작했습니다. 두 플레이어가 준비해 주세요.");
         room.setLastTickAt(LocalDateTime.now());
+
+        GeneratedMap generatedMap = generatePlayableMap();
+        room.setMapType(generatedMap.type());
+        room.setMapPlatformsJson(writeJson(generatedMap.platforms()));
+
         for (RoundsLitePlayer player : room.getPlayers()) {
             player.setReady(false);
             player.setWins(0);
@@ -282,11 +297,18 @@ public class RoundsLiteService {
             player.setMoveRight(false);
             player.setJumpPressed(false);
             player.setShootPressed(false);
-            resetPlayerPosition(player);
+
+            if ("P1".equals(player.getSeat())) {
+                spawnPlayer(player, generatedMap.spawnP1(), true);
+            } else {
+                spawnPlayer(player, generatedMap.spawnP2(), false);
+            }
         }
     }
 
     private void prepareRound(RoundsLiteRoom room) {
+        GeneratedMap generatedMap = generatePlayableMap();
+
         room.setPhase("COUNTDOWN");
         room.setCountdownEndsAt(LocalDateTime.now().plusSeconds(2));
         room.setProjectilesJson("[]");
@@ -294,8 +316,11 @@ public class RoundsLiteService {
         room.setPickerSeat(null);
         room.setRoundWinnerSeat(null);
         room.setMatchWinnerSeat(null);
+        room.setMapType(generatedMap.type());
+        room.setMapPlatformsJson(writeJson(generatedMap.platforms()));
         room.setLastTickAt(LocalDateTime.now());
         room.setMessage("3초 후 결투가 시작됩니다.");
+
         for (RoundsLitePlayer player : room.getPlayers()) {
             player.setReady(false);
             player.setHp(player.getMaxHp());
@@ -304,22 +329,22 @@ public class RoundsLiteService {
             player.setJumpPressed(false);
             player.setShootPressed(false);
             player.setLastShotAt(null);
-            resetPlayerPosition(player);
+
+            if ("P1".equals(player.getSeat())) {
+                spawnPlayer(player, generatedMap.spawnP1(), true);
+            } else {
+                spawnPlayer(player, generatedMap.spawnP2(), false);
+            }
         }
     }
 
-    private void resetPlayerPosition(RoundsLitePlayer player) {
-        if ("P1".equals(player.getSeat())) {
-            player.setX(180d);
-            player.setFacingRight(true);
-        } else {
-            player.setX(ARENA_WIDTH - 180d - PLAYER_WIDTH);
-            player.setFacingRight(false);
-        }
-        player.setY(FLOOR_Y - PLAYER_HEIGHT);
+    private void spawnPlayer(RoundsLitePlayer player, SpawnPoint spawnPoint, boolean facingRight) {
+        player.setX(spawnPoint.x());
+        player.setY(spawnPoint.y());
         player.setVx(0d);
         player.setVy(0d);
         player.setOnGround(true);
+        player.setFacingRight(facingRight);
     }
 
     private void simulateRoom(RoundsLiteRoom room) {
@@ -349,7 +374,7 @@ public class RoundsLiteService {
 
         for (int i = 0; i < steps; i++) {
             for (RoundsLitePlayer player : room.getPlayers()) {
-                updatePlayerInput(player, dt);
+                updatePlayerInput(player, room, dt);
                 maybeFireProjectile(player, room, projectiles);
             }
             updateProjectiles(room, projectiles, dt);
@@ -362,7 +387,7 @@ public class RoundsLiteService {
         room.setLastTickAt(now);
     }
 
-    private void updatePlayerInput(RoundsLitePlayer player, double dt) {
+    private void updatePlayerInput(RoundsLitePlayer player, RoundsLiteRoom room, double dt) {
         double vx = 0d;
         if (Boolean.TRUE.equals(player.getMoveLeft())) {
             vx -= player.getMoveSpeed();
@@ -383,27 +408,34 @@ public class RoundsLiteService {
         player.setX(clamp(player.getX() + player.getVx() * dt, 0d, ARENA_WIDTH - PLAYER_WIDTH));
         player.setY(player.getY() + player.getVy() * dt);
 
-        resolveVerticalCollision(player);
+        resolveVerticalCollision(player, room, dt);
+
+        if (player.getY() > ARENA_HEIGHT + 160d) {
+            String winnerSeat = "P1".equals(player.getSeat()) ? "P2" : "P1";
+            handleRoundWin(room, winnerSeat);
+        }
     }
 
-    private void resolveVerticalCollision(RoundsLitePlayer player) {
-        List<Platform> platforms = platforms();
+    private void resolveVerticalCollision(RoundsLitePlayer player, RoundsLiteRoom room, double dt) {
+        List<Platform> platforms = readPlatforms(room.getMapPlatformsJson());
         boolean grounded = false;
+        double previousBottom = (player.getY() - player.getVy() * dt) + PLAYER_HEIGHT;
+        double currentBottom = player.getY() + PLAYER_HEIGHT;
+
         for (Platform platform : platforms) {
-            double playerBottom = player.getY() + PLAYER_HEIGHT;
-            double previousBottom = playerBottom - player.getVy() * TICK_SECONDS;
-            boolean overlapsX = player.getX() + PLAYER_WIDTH > platform.x && player.getX() < platform.x + platform.w;
-            if (overlapsX && player.getVy() >= 0d && previousBottom <= platform.y && playerBottom >= platform.y) {
+            double playerRight = player.getX() + PLAYER_WIDTH;
+            double playerLeft = player.getX();
+            boolean overlapsX = playerRight > platform.x && playerLeft < platform.x + platform.w;
+            if (!overlapsX) {
+                continue;
+            }
+            if (player.getVy() >= 0d && previousBottom <= platform.y && currentBottom >= platform.y) {
                 player.setY(platform.y - PLAYER_HEIGHT);
                 player.setVy(0d);
                 grounded = true;
             }
         }
-        if (player.getY() + PLAYER_HEIGHT >= FLOOR_Y) {
-            player.setY(FLOOR_Y - PLAYER_HEIGHT);
-            player.setVy(0d);
-            grounded = true;
-        }
+
         player.setOnGround(grounded);
     }
 
@@ -450,11 +482,29 @@ public class RoundsLiteService {
             projectile.setY(projectile.getY() + projectile.getVy() * dt);
             projectile.setTtl(projectile.getTtl() - dt);
 
-            if (projectile.getTtl() <= 0d || projectile.getX() < -50d || projectile.getX() > ARENA_WIDTH + 50d || projectile.getY() < -50d || projectile.getY() > ARENA_HEIGHT + 50d) {
+            if (projectile.getTtl() <= 0d
+                    || projectile.getX() < -50d
+                    || projectile.getX() > ARENA_WIDTH + 50d
+                    || projectile.getY() < -50d
+                    || projectile.getY() > ARENA_HEIGHT + 80d) {
                 iterator.remove();
                 continue;
             }
 
+            for (Platform platform : readPlatforms(room.getMapPlatformsJson())) {
+                if (projectile.getY() + projectile.getRadius() >= platform.y
+                        && projectile.getY() - projectile.getRadius() <= platform.y + platform.h
+                        && projectile.getX() + projectile.getRadius() >= platform.x
+                        && projectile.getX() - projectile.getRadius() <= platform.x + platform.w) {
+                    iterator.remove();
+                    break;
+                }
+            }
+            if (!iterator.hasNext()) {
+                break;
+            }
+
+            boolean hitRemoved = false;
             for (RoundsLitePlayer target : room.getPlayers()) {
                 if (projectile.getOwnerSeat().equals(target.getSeat())) {
                     continue;
@@ -466,12 +516,16 @@ public class RoundsLiteService {
                     target.setVy(-projectile.getKnockback() * 0.45d);
                     target.setOnGround(false);
                     iterator.remove();
+                    hitRemoved = true;
 
                     if (target.getHp() <= 0) {
                         handleRoundWin(room, projectile.getOwnerSeat());
                     }
                     break;
                 }
+            }
+            if (hitRemoved) {
+                continue;
             }
         }
     }
@@ -582,7 +636,6 @@ public class RoundsLiteService {
                 .build();
     }
 
-
     private String resolveDisplayName(User user) {
         if (user == null) {
             return "Player";
@@ -639,6 +692,16 @@ public class RoundsLiteService {
                         .build())
                 .collect(Collectors.toList());
 
+        List<GameDtos.RoundsLitePlatformView> platforms = readPlatforms(room.getMapPlatformsJson()).stream()
+                .map(platform -> GameDtos.RoundsLitePlatformView.builder()
+                        .x(platform.x)
+                        .y(platform.y)
+                        .w(platform.w)
+                        .h(platform.h)
+                        .kind(platform.kind)
+                        .build())
+                .collect(Collectors.toList());
+
         return GameDtos.RoundsLiteRoomResponse.builder()
                 .roomCode(room.getRoomCode())
                 .phase(room.getPhase())
@@ -650,19 +713,103 @@ public class RoundsLiteService {
                 .roundNo(room.getRoundNo())
                 .targetWins(room.getTargetWins())
                 .countdownEndsAt(room.getCountdownEndsAt())
+                .mapType(room.getMapType())
+                .platforms(platforms)
                 .players(players)
                 .projectiles(projectiles)
                 .cardOptions(cardOptions)
                 .build();
     }
 
-    private List<Platform> platforms() {
-        return List.of(
-                new Platform(0d, FLOOR_Y, ARENA_WIDTH, ARENA_HEIGHT - FLOOR_Y),
-                new Platform(200d, 360d, 180d, 18d),
-                new Platform(580d, 300d, 180d, 18d),
-                new Platform(390d, 420d, 180d, 18d)
+    private GeneratedMap generatePlayableMap() {
+        int typeIndex = ThreadLocalRandom.current().nextInt(3);
+        return switch (typeIndex) {
+            case 0 -> generateClassicMap();
+            case 1 -> generateCenterGapMap();
+            default -> generateTwinTowerMap();
+        };
+    }
+
+    private GeneratedMap generateClassicMap() {
+        double leftY = randomBetween(342d, 386d);
+        double centerY = randomBetween(392d, 436d);
+        double rightY = randomBetween(286d, 332d);
+
+        List<Platform> platforms = new ArrayList<>();
+        platforms.add(new Platform(0d, 500d, ARENA_WIDTH, 40d, "floor"));
+        platforms.add(new Platform(randomBetween(150d, 235d), leftY, randomBetween(150d, 205d), 18d, "platform"));
+        platforms.add(new Platform(randomBetween(378d, 445d), centerY, randomBetween(140d, 190d), 18d, "platform"));
+        platforms.add(new Platform(randomBetween(615d, 705d), rightY, randomBetween(150d, 205d), 18d, "platform"));
+
+        return new GeneratedMap(
+                "CLASSIC",
+                platforms,
+                new SpawnPoint(110d, 500d - PLAYER_HEIGHT),
+                new SpawnPoint(ARENA_WIDTH - 110d - PLAYER_WIDTH, 500d - PLAYER_HEIGHT)
         );
+    }
+
+    private GeneratedMap generateCenterGapMap() {
+        double leftFloorWidth = randomBetween(250d, 310d);
+        double rightFloorWidth = randomBetween(250d, 310d);
+        double gapStart = leftFloorWidth;
+        double gapEnd = ARENA_WIDTH - rightFloorWidth;
+        double gapCenter = (gapStart + gapEnd) / 2d;
+
+        List<Platform> platforms = new ArrayList<>();
+        platforms.add(new Platform(0d, 500d, leftFloorWidth, 40d, "floor"));
+        platforms.add(new Platform(gapEnd, 500d, ARENA_WIDTH - gapEnd, 40d, "floor"));
+        platforms.add(new Platform(gapCenter - 110d, randomBetween(396d, 426d), 220d, 18d, "platform"));
+        platforms.add(new Platform(randomBetween(128d, 205d), randomBetween(320d, 365d), 160d, 18d, "platform"));
+        platforms.add(new Platform(randomBetween(650d, 728d), randomBetween(320d, 365d), 160d, 18d, "platform"));
+        platforms.add(new Platform(gapCenter - 65d, randomBetween(250d, 292d), 130d, 18d, "platform"));
+
+        return new GeneratedMap(
+                "CENTER_GAP",
+                platforms,
+                new SpawnPoint(leftFloorWidth * 0.35d, 500d - PLAYER_HEIGHT),
+                new SpawnPoint(gapEnd + (ARENA_WIDTH - gapEnd - PLAYER_WIDTH) * 0.35d, 500d - PLAYER_HEIGHT)
+        );
+    }
+
+    private GeneratedMap generateTwinTowerMap() {
+        List<Platform> platforms = new ArrayList<>();
+        platforms.add(new Platform(0d, 500d, ARENA_WIDTH, 40d, "floor"));
+        platforms.add(new Platform(randomBetween(96d, 136d), 410d, 170d, 18d, "platform"));
+        platforms.add(new Platform(randomBetween(180d, 235d), 315d, 140d, 18d, "platform"));
+        platforms.add(new Platform(randomBetween(694d, 734d), 410d, 170d, 18d, "platform"));
+        platforms.add(new Platform(randomBetween(640d, 695d), 315d, 140d, 18d, "platform"));
+        platforms.add(new Platform(400d, randomBetween(355d, 395d), 160d, 18d, "platform"));
+        platforms.add(new Platform(420d, randomBetween(255d, 295d), 120d, 18d, "platform"));
+
+        return new GeneratedMap(
+                "TWIN_TOWERS",
+                platforms,
+                new SpawnPoint(130d, 500d - PLAYER_HEIGHT),
+                new SpawnPoint(ARENA_WIDTH - 130d - PLAYER_WIDTH, 500d - PLAYER_HEIGHT)
+        );
+    }
+
+    private MapState getMapState(RoundsLiteRoom room) {
+        List<Platform> platforms = readPlatforms(room.getMapPlatformsJson());
+        return switch (room.getMapType() == null ? "CLASSIC" : room.getMapType()) {
+            case "CENTER_GAP" -> {
+                Platform leftFloor = platforms.stream().filter(p -> "floor".equals(p.kind) && p.x < 100d).findFirst().orElse(null);
+                Platform rightFloor = platforms.stream().filter(p -> "floor".equals(p.kind) && p.x > 300d).findFirst().orElse(null);
+                double p1x = leftFloor != null ? leftFloor.x + leftFloor.w * 0.35d : 110d;
+                double p2x = rightFloor != null ? rightFloor.x + (rightFloor.w - PLAYER_WIDTH) * 0.35d : ARENA_WIDTH - 110d - PLAYER_WIDTH;
+                yield new MapState(
+                        platforms,
+                        new SpawnPoint(p1x, 500d - PLAYER_HEIGHT),
+                        new SpawnPoint(p2x, 500d - PLAYER_HEIGHT)
+                );
+            }
+            default -> new MapState(
+                    platforms,
+                    new SpawnPoint(110d, 500d - PLAYER_HEIGHT),
+                    new SpawnPoint(ARENA_WIDTH - 110d - PLAYER_WIDTH, 500d - PLAYER_HEIGHT)
+            );
+        };
     }
 
     private List<CardOption> cardPool() {
@@ -694,14 +841,23 @@ public class RoundsLiteService {
     private void normalizeSeats(RoundsLiteRoom room) {
         List<RoundsLitePlayer> ordered = new ArrayList<>(room.getPlayers());
         ordered.sort(Comparator.comparing(RoundsLitePlayer::getSeat));
+        MapState mapState = getMapState(room);
         for (int i = 0; i < ordered.size(); i++) {
             ordered.get(i).setSeat(i == 0 ? "P1" : "P2");
-            resetPlayerPosition(ordered.get(i));
+            if (i == 0) {
+                spawnPlayer(ordered.get(i), mapState.spawnP1(), true);
+            } else {
+                spawnPlayer(ordered.get(i), mapState.spawnP2(), false);
+            }
         }
     }
 
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private double randomBetween(double min, double max) {
+        return ThreadLocalRandom.current().nextDouble(min, max);
     }
 
     private long millisBetween(LocalDateTime start, LocalDateTime end) {
@@ -721,8 +877,7 @@ public class RoundsLiteService {
             return new ArrayList<>();
         }
         try {
-            return objectMapper.readValue(json, new TypeReference<List<ProjectileState>>() {
-            });
+            return objectMapper.readValue(json, new TypeReference<List<ProjectileState>>() {});
         } catch (Exception e) {
             return new ArrayList<>();
         }
@@ -733,8 +888,18 @@ public class RoundsLiteService {
             return new ArrayList<>();
         }
         try {
-            return objectMapper.readValue(json, new TypeReference<List<CardOption>>() {
-            });
+            return objectMapper.readValue(json, new TypeReference<List<CardOption>>() {});
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private List<Platform> readPlatforms(String json) {
+        if (json == null || json.isBlank()) {
+            return new ArrayList<>();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<Platform>>() {});
         } catch (Exception e) {
             return new ArrayList<>();
         }
@@ -783,5 +948,20 @@ public class RoundsLiteService {
         private String description;
     }
 
-    private record Platform(double x, double y, double w, double h) {}
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class Platform {
+        private double x;
+        private double y;
+        private double w;
+        private double h;
+        private String kind;
+    }
+
+    private record SpawnPoint(double x, double y) {}
+
+    private record GeneratedMap(String type, List<Platform> platforms, SpawnPoint spawnP1, SpawnPoint spawnP2) {}
+
+    private record MapState(List<Platform> platforms, SpawnPoint spawnP1, SpawnPoint spawnP2) {}
 }

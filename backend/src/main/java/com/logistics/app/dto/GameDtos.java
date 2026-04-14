@@ -96,6 +96,16 @@ public class GameDtos {
 
     @Data
     @Builder
+    public static class RoundsLitePlatformView {
+        private double x;
+        private double y;
+        private double w;
+        private double h;
+        private String kind;
+    }
+
+    @Data
+    @Builder
     public static class RoundsLiteRoomResponse {
         private String roomCode;
         private String phase;
@@ -107,6 +117,8 @@ public class GameDtos {
         private int roundNo;
         private int targetWins;
         private LocalDateTime countdownEndsAt;
+        private String mapType;
+        private List<RoundsLitePlatformView> platforms;
         private List<RoundsLitePlayerView> players;
         private List<RoundsLiteProjectileView> projectiles;
         private List<RoundsLiteCardOptionView> cardOptions;

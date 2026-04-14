@@ -50,6 +50,12 @@ public class RoundsLiteRoom {
     @Lob
     private String cardOptionsJson;
 
+    @Column(length = 40)
+    private String mapType;
+
+    @Lob
+    private String mapPlatformsJson;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -68,6 +74,12 @@ public class RoundsLiteRoom {
         }
         if (targetWins == null) {
             targetWins = 3;
+        }
+        if (mapType == null) {
+            mapType = "CLASSIC";
+        }
+        if (mapPlatformsJson == null) {
+            mapPlatformsJson = "[]";
         }
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
