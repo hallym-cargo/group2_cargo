@@ -135,6 +135,54 @@ public class AdminDtos {
         @NotBlank private String status;
     }
 
+
+    @Data
+    @Builder
+    public static class AssistantLogRow {
+        private Long id;
+        private Long userId;
+        private String userName;
+        private String userEmail;
+        private String userRole;
+        private String question;
+        private String answer;
+        private String mode;
+        private boolean usedAi;
+        private String matchedKnowledge;
+        private String reviewStatus;
+        private String adminMemo;
+        private String recommendedAnswer;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+    }
+
+    @Data
+    public static class AssistantLogReviewRequest {
+        @NotBlank private String reviewStatus;
+        private String adminMemo;
+        private String recommendedAnswer;
+    }
+
+    @Data
+    @Builder
+    public static class AssistantGuidelineRow {
+        private Long id;
+        private String title;
+        private String instruction;
+        private boolean active;
+        private int sortOrder;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+    }
+
+    @Data
+    public static class AssistantGuidelineUpsertRequest {
+        @NotBlank private String title;
+        @NotBlank private String instruction;
+        private boolean active;
+        private int sortOrder;
+    }
+
     @Data @Builder
     public static class ActionLogRow {
         private Long id;

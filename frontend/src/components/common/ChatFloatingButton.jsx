@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-export default function ChatFloatingButton({ unreadCount, notificationUnreadCount, onChatClick, onNotificationClick, onPlaceholderClick }) {
+export default function ChatFloatingButton({ unreadCount, notificationUnreadCount, onAssistantClick, onChatClick, onNotificationClick }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
 
@@ -25,8 +25,8 @@ export default function ChatFloatingButton({ unreadCount, notificationUnreadCoun
   return (
     <div className={`floating-quick-menu ${open ? 'is-open' : ''}`} ref={rootRef}>
       <div className="floating-quick-menu__actions">
-        <button className="floating-quick-menu__action floating-quick-menu__action--placeholder" type="button" onClick={() => handleAction(onPlaceholderClick, 'placeholder-1')} aria-label="추가 메뉴 1">
-          <span className="floating-quick-menu__action-label">준비중</span>
+        <button className="floating-quick-menu__action floating-quick-menu__action--assistant" type="button" onClick={() => handleAction(onAssistantClick, 'assistant')} aria-label="AI 비서 열기">
+          <span className="floating-quick-menu__action-label">AI</span>
         </button>
 
         <button className="floating-quick-menu__action floating-quick-menu__action--notification" type="button" onClick={() => handleAction(onNotificationClick, 'notification')} aria-label="알림 열기">

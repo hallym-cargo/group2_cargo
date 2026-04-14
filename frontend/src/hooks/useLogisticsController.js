@@ -42,6 +42,7 @@ import {
   markChatRoomRead,
   sendChatMessage,
   fetchRatingsDashboard,
+  fetchReceipt,
   fetchShipment,
   fetchShipments,
   forceShipmentStatus,
@@ -57,6 +58,14 @@ import {
   updateMyProfile,
   uploadMyProfileImage,
   createRating,
+  askAssistant,
+  fetchAdminAssistantLogs,
+  updateAdminAssistantLog,
+  deleteAdminAssistantLog,
+  fetchAdminAssistantGuidelines,
+  createAdminAssistantGuideline,
+  updateAdminAssistantGuideline,
+  deleteAdminAssistantGuideline,
 } from '../api';
 
 import {
@@ -70,6 +79,109 @@ import {
 import { roleThemeMeta } from '../constants/theme';
 import { buildAdminAlerts, buildUserAlerts } from '../utils/dashboard';
 import { fileToDataUrl } from '../utils/formatters';
+
+const ASSISTANT_STORAGE_PREFIX = 'wantAssistantMessages';
+
+const ASSISTANT_ROUTE_TARGETS = {
+  'main-home': { routePage: 'main', dashboardTab: 'home' },
+  'main-board': { routePage: 'main', dashboardTab: 'home', pendingScrollTarget: 'board' },
+  'main-notice-faq': { routePage: 'main', dashboardTab: 'home', pendingScrollTarget: 'notice-faq' },
+  messages: { routePage: 'messages' },
+  notifications: { routePage: 'notifications' },
+  'chat-inbox': { special: 'chatInbox' },
+  'notification-panel': { special: 'notificationPanel' },
+  'assistant-open': { special: 'assistantOpen' },
+  'user-overview': { routePage: 'dashboard', dashboardTab: 'overview', roles: ['SHIPPER', 'DRIVER'] },
+  'user-board': { routePage: 'dashboard', dashboardTab: 'board', roles: ['SHIPPER', 'DRIVER'] },
+  'user-register': { routePage: 'dashboard', dashboardTab: 'register', roles: ['SHIPPER', 'DRIVER'] },
+  'user-finance': { routePage: 'dashboard', dashboardTab: 'finance', roles: ['SHIPPER', 'DRIVER'] },
+  'user-penalty': { routePage: 'dashboard', dashboardTab: 'penalty', roles: ['SHIPPER', 'DRIVER'] },
+  'user-ratings': { routePage: 'dashboard', dashboardTab: 'ratings', roles: ['SHIPPER', 'DRIVER'] },
+  'user-bookmarks': { routePage: 'dashboard', dashboardTab: 'bookmarks', roles: ['SHIPPER', 'DRIVER'] },
+  'public-shippers': { routePage: 'shippers' },
+  'public-drivers': { routePage: 'drivers' },
+  'admin-overview': { routePage: 'dashboard', dashboardTab: 'overview', roles: ['ADMIN'] },
+  'admin-members': { routePage: 'dashboard', dashboardTab: 'members', roles: ['ADMIN'] },
+  'admin-shipments': { routePage: 'dashboard', dashboardTab: 'shipments', roles: ['ADMIN'] },
+  'admin-finance': { routePage: 'dashboard', dashboardTab: 'finance', roles: ['ADMIN'] },
+  'admin-ratings': { routePage: 'dashboard', dashboardTab: 'ratings', roles: ['ADMIN'] },
+  'admin-notices': { routePage: 'dashboard', dashboardTab: 'notices', roles: ['ADMIN'] },
+  'admin-faqs': { routePage: 'dashboard', dashboardTab: 'faqs', roles: ['ADMIN'] },
+  'admin-inquiries': { routePage: 'dashboard', dashboardTab: 'inquiries', roles: ['ADMIN'] },
+  'admin-issues': { routePage: 'dashboard', dashboardTab: 'issues', roles: ['ADMIN'] },
+  'admin-assistant': { routePage: 'dashboard', dashboardTab: 'assistant', roles: ['ADMIN'] },
+};
+
+function buildAssistantStorageKey(email) {
+  return `${ASSISTANT_STORAGE_PREFIX}:${email || 'anonymous'}`;
+}
+
+function buildLocalAssistantFallback(content, role) {
+  const q = (content || '').toLowerCase();
+  const nav = [];
+  const quickActions = ['수수료 알려줘', '차량등록 어디서 수정해?', role === 'SHIPPER' ? '화물 등록은 어떻게 해?' : '배차 보드는 어디야?', '결제수단 어디서 바꿔?'];
+
+  if (q.includes('수수료') || q.includes('fee')) {
+    nav.push({ label: '돈 관리 열기', targetKey: 'user-finance', description: '정산과 결제 내역을 확인합니다.' });
+    nav.push({ label: '공지 / FAQ 보기', targetKey: 'main-notice-faq', description: '정책 안내를 확인합니다.' });
+    return {
+      answer: '안녕하세요. 현재 플랫폼 수수료 관련 안내는 돈 관리 또는 공지/FAQ에서 확인하실 수 있습니다. 자세한 정산 기준이 필요하시면 돈 관리 화면으로 바로 이동해 보시겠어요?',
+      quickActions,
+      navigationActions: nav,
+      mode: 'LOCAL_FALLBACK',
+    };
+  }
+
+  if (q.includes('차량')) {
+    nav.push({ label: '마이페이지 열기', targetKey: 'user-overview', description: '회원정보 수정 화면으로 이동합니다.' });
+    return {
+      answer: '안녕하세요. 차량 등록 정보는 로그인 후 마이페이지의 회원정보 수정에서 변경하실 수 있습니다.',
+      quickActions,
+      navigationActions: nav,
+      mode: 'LOCAL_FALLBACK',
+    };
+  }
+
+  if (q.includes('화물')) {
+    nav.push({ label: '화물 등록 열기', targetKey: 'user-register', description: '화물 등록 화면으로 이동합니다.' });
+    nav.push({ label: '배차 보드 열기', targetKey: 'user-board', description: '등록 후 진행 상황을 확인합니다.' });
+    return {
+      answer: '안녕하세요. 화물 등록은 로그인 후 대시보드의 화물 등록 메뉴에서 진행하실 수 있습니다. 등록 후에는 배차 보드에서 제안과 진행 상태를 확인하실 수 있습니다.',
+      quickActions,
+      navigationActions: nav,
+      mode: 'LOCAL_FALLBACK',
+    };
+  }
+
+  if (q.includes('배차') || q.includes('보드') || q.includes('입찰')) {
+    nav.push({ label: '배차 보드 열기', targetKey: 'user-board', description: '배차와 진행 상태를 확인합니다.' });
+    return {
+      answer: '안녕하세요. 배차 보드는 로그인 후 대시보드의 배차 보드 탭에서 확인하실 수 있습니다.',
+      quickActions,
+      navigationActions: nav,
+      mode: 'LOCAL_FALLBACK',
+    };
+  }
+
+  if (q.includes('결제')) {
+    nav.push({ label: '돈 관리 열기', targetKey: 'user-finance', description: '결제 및 정산 내역을 확인합니다.' });
+    nav.push({ label: '마이페이지 열기', targetKey: 'user-overview', description: '등록된 회원정보를 확인합니다.' });
+    return {
+      answer: '안녕하세요. 결제수단 관련 정보는 돈 관리와 마이페이지에서 함께 확인하실 수 있습니다. 먼저 돈 관리 화면으로 이동해 보시겠어요?',
+      quickActions,
+      navigationActions: nav,
+      mode: 'LOCAL_FALLBACK',
+    };
+  }
+
+  nav.push({ label: role === 'ADMIN' ? 'AI 비서 관리 열기' : '마이페이지 열기', targetKey: role === 'ADMIN' ? 'admin-assistant' : 'user-overview', description: '가장 가까운 관련 화면으로 이동합니다.' });
+  return {
+    answer: '안녕하세요. 문의 내용을 확인했습니다. 현재 연결 문제로 기본 안내로 도와드리고 있으며, 아래 버튼으로 관련 화면으로 바로 이동하실 수 있습니다.',
+    quickActions,
+    navigationActions: nav,
+    mode: 'LOCAL_FALLBACK',
+  };
+}
 
 export function useLogisticsController() {
   const [auth, setAuth] = useState(() => ({
@@ -148,6 +260,11 @@ export function useLogisticsController() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentModalStep, setPaymentModalStep] = useState('summary');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('REGISTERED');
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantDraft, setAssistantDraft] = useState('');
+  const [assistantSending, setAssistantSending] = useState(false);
+  const [assistantMessages, setAssistantMessages] = useState([]);
+  const [assistantQuickActions, setAssistantQuickActions] = useState([]);
 
   const [page, setPage] = useState(0);
 
@@ -160,6 +277,8 @@ export function useLogisticsController() {
   const [adminReports, setAdminReports] = useState([]);
   const [adminDisputes, setAdminDisputes] = useState([]);
   const [adminLogs, setAdminLogs] = useState([]);
+  const [adminAssistantLogs, setAdminAssistantLogs] = useState([]);
+  const [adminAssistantGuidelines, setAdminAssistantGuidelines] = useState([]);
 
   const [financeSummary, setFinanceSummary] = useState(null);
   const [financeTransactions, setFinanceTransactions] = useState([]);
@@ -170,6 +289,7 @@ export function useLogisticsController() {
 
   const [noticeForm, setNoticeForm] = useState(emptyNotice);
   const [faqForm, setFaqForm] = useState(emptyFaq);
+  const [assistantGuidelineForm, setAssistantGuidelineForm] = useState({ title: '', instruction: '', active: true, sortOrder: 0 });
 
   const [completionProof, setCompletionProof] = useState({
     dataUrl: '',
@@ -184,6 +304,10 @@ export function useLogisticsController() {
 
   const [editingNoticeId, setEditingNoticeId] = useState(null);
   const [editingFaqId, setEditingFaqId] = useState(null);
+  const [editingAssistantGuidelineId, setEditingAssistantGuidelineId] = useState(null);
+  const [assistantLogReviewDrafts, setAssistantLogReviewDrafts] = useState({});
+  const [assistantLogSavingIds, setAssistantLogSavingIds] = useState({});
+  const [assistantLogSaveMarks, setAssistantLogSaveMarks] = useState({});
   const [inquiryAnswerDraft, setInquiryAnswerDraft] = useState({});
 
   const stompClientRef = useRef(null);
@@ -193,6 +317,41 @@ export function useLogisticsController() {
     () => roleThemeMeta[auth.role] || null,
     [auth.role],
   );
+  const assistantBaseQuickActions = useMemo(() => {
+    const base = ['수수료 알려줘', '차량등록 어디서 수정해?', '결제수단 어디서 바꿔?'];
+    if (auth.role === 'SHIPPER') {
+      base.splice(2, 0, '화물 등록은 어떻게 해?');
+    } else if (auth.role === 'DRIVER') {
+      base.splice(2, 0, '배차 보드는 어디야?');
+    }
+    return base;
+  }, [auth.role]);
+
+  useEffect(() => {
+    if (!isLoggedIn || isAdmin) {
+      setAssistantMessages([]);
+      setAssistantQuickActions([]);
+      setAssistantDraft('');
+      setAssistantOpen(false);
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(buildAssistantStorageKey(auth.email));
+      const parsed = raw ? JSON.parse(raw) : [];
+      setAssistantMessages(Array.isArray(parsed) ? parsed : []);
+    } catch (err) {
+      console.error(err);
+      setAssistantMessages([]);
+    }
+
+    setAssistantQuickActions(assistantBaseQuickActions);
+  }, [isLoggedIn, isAdmin, auth.email, assistantBaseQuickActions]);
+
+  useEffect(() => {
+    if (!isLoggedIn || isAdmin) return;
+    localStorage.setItem(buildAssistantStorageKey(auth.email), JSON.stringify(assistantMessages.slice(-30)));
+  }, [assistantMessages, isLoggedIn, isAdmin, auth.email]);
 
   const publicBoard = useMemo(() => {
     return (publicData.liveBoard || []).filter((item) => {
@@ -573,6 +732,118 @@ export function useLogisticsController() {
     setChatInboxOpen(false);
   };
 
+  const openAssistant = () => {
+    setChatInboxOpen(false);
+    setNotificationPanelOpen(false);
+    setAssistantOpen(true);
+  };
+
+  const closeAssistant = () => {
+    setAssistantOpen(false);
+  };
+
+  const applyAssistantNavigation = async (action) => {
+    const targetKey = typeof action === 'string' ? action : action?.targetKey;
+    if (!targetKey) return;
+
+    const target = ASSISTANT_ROUTE_TARGETS[targetKey];
+    if (!target) {
+      setMessage('아직 연결되지 않은 페이지입니다.');
+      return;
+    }
+
+    if (target.roles?.length && !target.roles.includes(auth.role)) {
+      setMessage('현재 계정에서는 해당 페이지로 바로 이동할 수 없습니다.');
+      return;
+    }
+
+    if (target.special === 'chatInbox') {
+      await openChatInbox();
+      return;
+    }
+
+    if (target.special === 'notificationPanel') {
+      await openNotificationPanel();
+      return;
+    }
+
+    if (target.special === 'assistantOpen') {
+      openAssistant();
+      return;
+    }
+
+    setChatInboxOpen(false);
+    setNotificationPanelOpen(false);
+    setChatModalOpen(false);
+    setPendingScrollTarget(target.pendingScrollTarget || '');
+    if (target.dashboardTab) {
+      setDashboardTab(target.dashboardTab);
+    }
+    if (target.routePage) {
+      setRoutePage(target.routePage);
+    }
+    setAssistantOpen(false);
+  };
+
+  const handleAssistantNavigate = async (action) => {
+    try {
+      await applyAssistantNavigation(action);
+    } catch (err) {
+      console.error(err);
+      setMessage('페이지 이동 중 문제가 발생했습니다.');
+    }
+  };
+
+  const handleAssistantSend = async (forcedMessage) => {
+    const content = (typeof forcedMessage === 'string' ? forcedMessage : assistantDraft).trim();
+    if (!content || assistantSending) return;
+
+    const nextMessages = [...assistantMessages, { role: 'user', content }];
+    setAssistantMessages(nextMessages);
+    setAssistantDraft('');
+    setAssistantSending(true);
+    setAssistantOpen(true);
+
+    try {
+      const response = await askAssistant({
+        message: content,
+        history: nextMessages.slice(-12).map((item) => ({ role: item.role, content: item.content })),
+      });
+
+      const assistantMessage = {
+        role: 'assistant',
+        content: response?.answer || '안녕하세요. 지금은 답변을 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+        quickActions: response?.quickActions || assistantBaseQuickActions,
+        navigationActions: response?.navigationActions || [],
+        mode: response?.mode || 'FALLBACK',
+        logId: response?.logId || null,
+      };
+
+      setAssistantMessages((prev) => [...prev, assistantMessage]);
+      setAssistantQuickActions(response?.quickActions?.length ? response.quickActions : assistantBaseQuickActions);
+    } catch (err) {
+      console.error(err);
+      const fallback = buildLocalAssistantFallback(content, auth.role);
+      setAssistantMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: fallback.answer,
+        quickActions: fallback.quickActions || assistantBaseQuickActions,
+        navigationActions: fallback.navigationActions || [],
+        mode: fallback.mode || 'LOCAL_FALLBACK',
+      }]);
+      setAssistantQuickActions(fallback.quickActions || assistantBaseQuickActions);
+      setMessage(err.response?.data?.message || 'AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.');
+    } finally {
+      setAssistantSending(false);
+    }
+  };
+
+  const handleAssistantQuickAction = (value) => {
+    if (!value || assistantSending) return;
+    setAssistantDraft(value);
+    handleAssistantSend(value);
+  };
+
   const openChatRoomFromSummary = async (room, options = {}) => {
     const targetUserId = room?.targetProfile?.id;
     if (!targetUserId) return;
@@ -729,6 +1000,11 @@ export function useLogisticsController() {
     setChatDraft('');
     setChatModalOpen(false);
     setChatSending(false);
+    setAssistantOpen(false);
+    setAssistantDraft('');
+    setAssistantSending(false);
+    setAssistantMessages([]);
+    setAssistantQuickActions([]);
     setPage(0);
   };
 
@@ -795,6 +1071,8 @@ export function useLogisticsController() {
       reports,
       disputes,
       logs,
+      assistantLogs,
+      assistantGuidelines,
     ] = await Promise.all([
       fetchAdminDashboard(),
       fetchAdminMembers(),
@@ -805,6 +1083,8 @@ export function useLogisticsController() {
       fetchAdminReports(),
       fetchAdminDisputes(),
       fetchAdminActionLogs(),
+      fetchAdminAssistantLogs(),
+      fetchAdminAssistantGuidelines(),
     ]);
 
     setAdminDashboard(dashboard);
@@ -816,6 +1096,31 @@ export function useLogisticsController() {
     setAdminReports(reports);
     setAdminDisputes(disputes);
     setAdminLogs(logs);
+    setAdminAssistantLogs(assistantLogs);
+    setAdminAssistantGuidelines(assistantGuidelines);
+    setAssistantLogReviewDrafts(
+      (assistantLogs || []).reduce((acc, item) => {
+        acc[item.id] = {
+          reviewStatus: item.reviewStatus || 'NEW',
+          adminMemo: item.adminMemo || '',
+          recommendedAnswer: item.recommendedAnswer || '',
+        };
+        return acc;
+      }, {}),
+    );
+    setAssistantLogSaveMarks(
+      (assistantLogs || []).reduce((acc, item) => {
+        const hasSavedReview = Boolean(
+          (item.reviewStatus && item.reviewStatus !== 'NEW')
+          || (item.adminMemo && item.adminMemo.trim())
+          || (item.recommendedAnswer && item.recommendedAnswer.trim()),
+        );
+        if (hasSavedReview) {
+          acc[item.id] = item.updatedAt || item.createdAt || new Date().toISOString();
+        }
+        return acc;
+      }, {}),
+    );
   };
 
   const loadFinance = async () => {
@@ -1435,6 +1740,86 @@ export function useLogisticsController() {
     }
   };
 
+
+
+  const submitAssistantGuideline = async () => {
+    try {
+      const payload = {
+        ...assistantGuidelineForm,
+        active: true,
+        sortOrder: Number(assistantGuidelineForm.sortOrder || 0),
+      };
+
+      if (editingAssistantGuidelineId) {
+        await updateAdminAssistantGuideline(editingAssistantGuidelineId, payload);
+      } else {
+        await createAdminAssistantGuideline(payload);
+      }
+
+      setEditingAssistantGuidelineId(null);
+      setAssistantGuidelineForm({ title: '', instruction: '', active: true, sortOrder: 0 });
+      setMessage('AI 운영 가이드가 저장되었습니다.');
+      await loadAdmin();
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'AI 운영 가이드 저장 실패');
+    }
+  };
+
+  const saveAssistantLogReview = async (logId) => {
+    try {
+      const payload = assistantLogReviewDrafts[logId] || {
+        reviewStatus: 'NEW',
+        adminMemo: '',
+        recommendedAnswer: '',
+      };
+      setAssistantLogSavingIds((prev) => ({ ...prev, [logId]: true }));
+      const saved = await updateAdminAssistantLog(logId, payload);
+      setAdminAssistantLogs((prev) => prev.map((item) => (item.id === logId ? saved : item)));
+      setAssistantLogReviewDrafts((prev) => ({
+        ...prev,
+        [logId]: {
+          reviewStatus: saved.reviewStatus || 'NEW',
+          adminMemo: saved.adminMemo || '',
+          recommendedAnswer: saved.recommendedAnswer || '',
+        },
+      }));
+      setAssistantLogSaveMarks((prev) => ({
+        ...prev,
+        [logId]: saved.updatedAt || saved.createdAt || new Date().toISOString(),
+      }));
+      setMessage('AI 대화 검토 내용이 저장되었습니다. 계속 수정할 수 있습니다.');
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'AI 대화 검토 저장 실패');
+    } finally {
+      setAssistantLogSavingIds((prev) => ({ ...prev, [logId]: false }));
+    }
+  };
+
+  const removeAssistantLog = async (logId) => {
+    try {
+      await deleteAdminAssistantLog(logId);
+      setAdminAssistantLogs((prev) => prev.filter((item) => item.id !== logId));
+      setAssistantLogReviewDrafts((prev) => {
+        const next = { ...prev };
+        delete next[logId];
+        return next;
+      });
+      setAssistantLogSaveMarks((prev) => {
+        const next = { ...prev };
+        delete next[logId];
+        return next;
+      });
+      setAssistantLogSavingIds((prev) => {
+        const next = { ...prev };
+        delete next[logId];
+        return next;
+      });
+      setMessage('AI 질문/답변 기록이 삭제되었습니다.');
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'AI 질문/답변 기록 삭제 실패');
+    }
+  };
+
   const handleAnswerInquiry = async (id) => {
     try {
       await answerAdminInquiry(id, inquiryAnswerDraft[id] || '');
@@ -1496,6 +1881,12 @@ export function useLogisticsController() {
     setChatDraft,
     chatModalOpen,
     chatSending,
+    assistantOpen,
+    assistantDraft,
+    setAssistantDraft,
+    assistantSending,
+    assistantMessages,
+    assistantQuickActions,
     notificationSummary,
     allNotifications,
     notificationPanelOpen,
@@ -1540,6 +1931,8 @@ export function useLogisticsController() {
     adminReports,
     adminDisputes,
     adminLogs,
+    adminAssistantLogs,
+    adminAssistantGuidelines,
     financeSummary,
     financeTransactions,
     ratingsDashboard,
@@ -1550,6 +1943,8 @@ export function useLogisticsController() {
     setNoticeForm,
     faqForm,
     setFaqForm,
+    assistantGuidelineForm,
+    setAssistantGuidelineForm,
     completionProof,
     cancelModalOpen,
     cancelSubmitting,
@@ -1559,6 +1954,12 @@ export function useLogisticsController() {
     setEditingNoticeId,
     editingFaqId,
     setEditingFaqId,
+    editingAssistantGuidelineId,
+    setEditingAssistantGuidelineId,
+    assistantLogReviewDrafts,
+    setAssistantLogReviewDrafts,
+    assistantLogSavingIds,
+    assistantLogSaveMarks,
     inquiryAnswerDraft,
     setInquiryAnswerDraft,
     isLoggedIn,
@@ -1599,6 +2000,11 @@ export function useLogisticsController() {
     closeUserProfile,
     openChatWithUser,
     openChatInbox,
+    openAssistant,
+    closeAssistant,
+    handleAssistantSend,
+    handleAssistantQuickAction,
+    handleAssistantNavigate,
     openNotificationPanel,
     openNotificationsPage,
     closeNotificationPanel,
@@ -1615,6 +2021,9 @@ export function useLogisticsController() {
     handleForceShipmentStatus,
     submitNotice,
     submitFaq,
+    submitAssistantGuideline,
+    saveAssistantLogReview,
+    removeAssistantLog,
     handleAnswerInquiry,
     handleResolveDispute,
     handleSaveProfile,
@@ -1626,6 +2035,7 @@ export function useLogisticsController() {
     loadPublic,
     deleteAdminFaq,
     deleteAdminNotice,
+    deleteAdminAssistantGuideline,
     receipt,
     receiptOpen,
     openReceipt,
