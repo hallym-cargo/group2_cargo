@@ -4,6 +4,8 @@ import ProfilePreviewCard from '../../../components/common/ProfilePreviewCard'
 import SectionTitle from '../../../components/common/SectionTitle'
 import ShipmentCancelModal from '../../../components/common/ShipmentCancelModal'
 import { formatCurrency, formatDate, formatRatingSummary, roleText, statusText } from '../../../utils/formatters'
+// 추가
+import { useMemo, useState } from 'react'
 
 export default function UserBoardTab({ controller }) {
   const {
@@ -35,6 +37,16 @@ export default function UserBoardTab({ controller }) {
     cancelSubmitting,
   } = controller
 
+  // 추가
+  const offerStatusText = {
+    PENDING: '대기중',
+    ACCEPTED: '수락됨',
+    REJECTED: '거절됨',
+  }
+
+  // 추가
+  const [statusFilter, setStatusFilter] = useState('ALL')
+
   const showCancelButton =
     selected &&
     (selected.status === 'BIDDING' || selected.status === 'CONFIRMED' || selected.status === 'IN_TRANSIT') &&
@@ -42,6 +54,18 @@ export default function UserBoardTab({ controller }) {
       (auth.role === 'SHIPPER' && selected.shipperId === Number(localStorage.getItem('userId') || selected.shipperId)) ||
       (auth.role === 'DRIVER' && selected.assignedToMe)
     )
+
+  // 추가
+  const sortedShipments = useMemo(() => {
+    return [...filteredShipments]
+      .filter((item) => {
+        if (statusFilter === 'ALL') return true
+        return item.status === statusFilter
+      })
+      .sort((a, b) => {
+        return (b.bookmarked === true) - (a.bookmarked === true)
+      })
+  }, [filteredShipments, statusFilter])
 
   function formatMinutesToHour(mins) {
     if (mins == null) return '-'
@@ -59,7 +83,49 @@ export default function UserBoardTab({ controller }) {
     <div className="page-stack">
       <div className="surface table-surface">
         <div className="table-head">
-          <SectionTitle title="배차 보드" desc="행을 클릭하면 상세와 지도, 역할별 액션이 함께 열립니다." />
+          <div className="table-head-row">
+            <SectionTitle title="배차 목록" />
+
+            {/* 추가 */}
+            <div className={`board-filter ${auth.role === 'SHIPPER' ? 'shipper' : 'driver'}`}>
+              <button
+                className={statusFilter === 'ALL' ? 'active' : ''}
+                onClick={() => setStatusFilter('ALL')}
+              >
+                전체
+              </button>
+
+              <button
+                className={statusFilter === 'BIDDING' ? 'active' : ''}
+                onClick={() => setStatusFilter('BIDDING')}
+              >
+                입찰중
+              </button>
+
+              <button
+                className={statusFilter === 'IN_TRANSIT' ? 'active' : ''}
+                onClick={() => setStatusFilter('IN_TRANSIT')}
+              >
+                운반중
+              </button>
+
+              <button
+                className={statusFilter === 'CONFIRMED' ? 'active' : ''}
+                onClick={() => setStatusFilter('CONFIRMED')}
+              >
+                확정
+              </button>
+
+              <button
+                className={statusFilter === 'CANCELLED' ? 'active' : ''}
+                onClick={() => setStatusFilter('CANCELLED')}
+              >
+                취소
+              </button>
+            </div>
+
+
+          </div>
         </div>
         <div className="table-scroll">
           <table className="board-table">
@@ -77,7 +143,8 @@ export default function UserBoardTab({ controller }) {
             </thead>
 
             <tbody>
-              {filteredShipments.map((item) => (
+              {/* {filteredShipments.map((item) => ( */}
+              {sortedShipments.map((item) => (
                 <tr
                   key={item.id}
                   className={selectedId === item.id ? 'is-selected' : ''}
@@ -218,7 +285,7 @@ export default function UserBoardTab({ controller }) {
               </div>
 
               {!!selected.cargoImageUrls?.length && (
-                <div className="surface-sub">
+                <div className="surface-sub cargo-images">
                   <strong>등록 화물 사진</strong>
                   <div className="image-preview-row">
                     {selected.cargoImageUrls.map((src, idx) => (
@@ -275,7 +342,7 @@ export default function UserBoardTab({ controller }) {
               <div className="map-section">
                 <KakaoMapView shipment={selected} />
               </div>
-              <div className="surface-sub timeline-section">
+              {/* <div className="surface-sub timeline-section">
                 <SectionTitle title="상태 타임라인" />
                 <div className="list-stack">
                   {(selected.histories || []).map((history) => (
@@ -288,7 +355,7 @@ export default function UserBoardTab({ controller }) {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </>
           ) : (
             <div className="empty-box">배차를 선택해 주세요.</div>
@@ -298,7 +365,8 @@ export default function UserBoardTab({ controller }) {
         <div className="surface side-form">
           {selected ? (
             <>
-              <SectionTitle title="제안 업체 목록" desc={`${roleText(auth.role)} 기준으로 표시됩니다.`} />
+              {/* <SectionTitle title="제안 업체 목록" desc={`${roleText(auth.role)} 기준으로 표시됩니다.`} /> */}
+              <SectionTitle title="제안 업체 목록" desc="입찰에 참여한 업체 목록을 확인할 수 있습니다." />
 
               {/* <div className="surface-sub role-side-guide">
                 <strong>{roleTheme?.label}</strong>
@@ -320,8 +388,7 @@ export default function UserBoardTab({ controller }) {
                   <div className="surface-sub">
                     <strong>정산 안내</strong>
                     <p className="section-desc">
-                      차주는 확정 금액에서 3% 수수료를 제외한 나머지 금액을 받습니다. 예를 들어 100,000원
-                      제안이 확정되면 97,000원이 정산됩니다.
+                      차주는 확정 금액에서 3% 수수료를 제외한 나머지 금액을 받습니다.
                     </p>
                   </div>
 
@@ -386,7 +453,10 @@ export default function UserBoardTab({ controller }) {
                       <div key={offer.id} className="offer-card">
                         <div className="detail-head">
                           <strong>{offer.driverName}</strong>
-                          <span className="badge badge-neutral">{offer.status}</span>
+                          {/* <span className="badge badge-neutral">{offer.status}</span> */}
+                          <span className="badge badge-neutral">
+                            {offerStatusText[offer.status] || offer.status}
+                          </span>
                         </div>
 
                         <div className="section-desc">
@@ -432,8 +502,7 @@ export default function UserBoardTab({ controller }) {
                       <div className="surface-sub">
                         <strong>자동 이동 시뮬레이션</strong>
                         <p className="section-desc">
-                          운반 시작 시 예상 시간에 맞춰 트럭이 출발지에서 도착지까지 자동으로 이동합니다.
-                          위치 입력 없이 지도에서 진행률과 남은 시간을 바로 확인할 수 있습니다.
+                          운반 시작과 함께 트럭이 출발지에서 도착지까지 자동으로 이동하며, 지도에서 진행률과 남은 시간을 실시간으로 확인할 수 있습니다.
                         </p>
                       </div>
 

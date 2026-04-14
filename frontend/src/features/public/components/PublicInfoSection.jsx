@@ -33,10 +33,10 @@ export default function PublicInfoSection({ controller }) {
             </div>
           </article> */}
 
-          <article className="landing-infoPanel" data-reveal>
+          {/* <article className="landing-infoPanel" data-reveal> */}
+          <article className="landing-infoPanel landing-infoPanel--faq">
             <div className="landing-infoPanel__top">
-              <span>자주 묻는 질문</span>
-              <strong>FAQ</strong>
+              <strong>자주 묻는 질문</strong>
             </div>
             <div className="landing-faqList">
               {(publicData.faqs || []).map((faq) => (
@@ -50,8 +50,7 @@ export default function PublicInfoSection({ controller }) {
 
           <article className="landing-infoPanel landing-infoPanel--form" data-reveal>
             <div className="landing-infoPanel__top">
-              <span>도입 문의</span>
-              <strong>상담 요청</strong>
+              <strong>문의하기</strong>
             </div>
             <div className="landing-formStack">
               <input placeholder="회사명" value={inquiryForm.companyName} onChange={(e) => setInquiryForm({ ...inquiryForm, companyName: e.target.value })} />

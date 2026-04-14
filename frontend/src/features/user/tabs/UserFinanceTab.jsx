@@ -73,10 +73,10 @@ export default function UserFinanceTab({ controller }) {
 
       <div className="surface">
         <SectionTitle
-          title={auth.role === 'SHIPPER' ? '지출 내역' : '정산 내역'}
+          title={auth.role === 'SHIPPER' ? '결제 내역' : '정산 상세 내역'}
           desc={auth.role === 'SHIPPER'
-            ? '화주는 확정된 운임 총액만 결제하며, 플랫폼 수수료는 차주 정산 금액에서만 차감됩니다. 행을 클릭하면 영수증을 확인할 수 있습니다.'
-            : '차주는 거래 원금, 수수료, 실제 정산 금액을 한 번에 확인합니다. 행을 클릭하면 영수증을 확인할 수 있습니다.'}
+            ? '확정된 운임 내역과 결제 금액을 확인할 수 있습니다. 항목을 클릭하면 영수증을 확인할 수 있습니다.'
+            : '운임, 수수료, 정산 금액을 한눈에 확인할 수 있습니다. 항목을 클릭하면 영수증을 확인할 수 있습니다.'}
         />
         <div className="finance-table-scroll">
           <table className="board-table compact">

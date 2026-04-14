@@ -287,7 +287,12 @@
 
 .kpi-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 16px;
+  /* margin-top: 16px; */
+}
+
+/* 추가 */
+.penalty-kpi-wrap {
+  margin-top: 12px;
 }
 
 /* 추가 */

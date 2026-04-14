@@ -55,7 +55,7 @@ export default function ShipmentCancelModal({
         </div>
 
         <div className="form-stack">
-          <div className="surface-sub">
+          <div className="surface-sub cancel-reason-block">
             <strong>취소 사유</strong>
             <select
               value={form.reason}
@@ -68,11 +68,11 @@ export default function ShipmentCancelModal({
             </select>
           </div>
 
-          <div className="surface-sub">
+          <div className="surface-sub cancel-detail-block">
             <strong>상세 설명</strong>
-            {form.reason === 'OTHER' && (
+            {/* {form.reason === 'OTHER' && (
               <p className="section-desc">기타 사유를 구체적으로 입력해 주세요. 상세 설명은 필수입니다.</p>
-            )}
+            )} */}
             <textarea
               rows="5"
               value={form.detail}
