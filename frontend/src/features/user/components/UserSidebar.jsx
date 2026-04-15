@@ -69,6 +69,15 @@ export default function UserSidebar({
           견적 목록 보기
         </button>
 
+        {auth.role === "SHIPPER" && (
+          <button
+            className={routePage === "createQuote" ? "nav-link active" : "nav-link"}
+            onClick={() => setRoutePage("createQuote")}
+          >
+            견적 등록
+          </button>
+        )}
+
         {/* <button
           className={dashboardTab === "transport" ? "nav-link active" : "nav-link"}
           onClick={() => setDashboardTab("transport")}

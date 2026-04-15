@@ -645,15 +645,16 @@ body.theme-admin .app-logo__image {
   padding-bottom: 18px;
 }
 
-.landing-info .landing-infoPanel:first-child {
-  background: linear-gradient(180deg,
-      rgba(255, 255, 255, 0.72),
-      rgba(240, 246, 255, 0.82)) !important;
-}
-
 /* 추가 */
 .landing-infoPanel--faq .landing-infoPanel__top {
   margin-bottom: 16px;
+}
+
+.landing-infoPanel--faq,
+.landing-infoPanel--form {
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.72),
+      rgba(240, 246, 255, 0.82));
 }
 
 .landing-accessBand {
@@ -1185,10 +1186,8 @@ body.theme-admin .app-logo__image {
 
 .public-directory-card {
   border-radius: 28px;
-<<<<<<< HEAD
-  display: grid;
-  gap: 18px;
-=======
+  /* display: grid;
+  gap: 18px; */
   padding: 20px 20px 18px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(248, 251, 255, 0.92) 100%);
@@ -1424,7 +1423,6 @@ body.theme-admin .app-logo__image {
   .public-directory-card__summaryStats strong {
     font-size: 14px;
   }
->>>>>>> origin/frontend_merge
 }
 
 .public-directory-card__head {
@@ -1532,7 +1530,6 @@ body.theme-admin .app-logo__image {
   cursor: pointer;
 }
 
-<<<<<<< HEAD
 .public-directory-card__profileTrigger:hover .public-directory-card__profileText h3 {
   color: var(--primary);
 }
@@ -1567,12 +1564,12 @@ body.theme-admin .app-logo__image {
   color: var(--primary);
   font-size: 22px;
   font-weight: 800;
-=======
-  .public-directory-card__summaryStats>div+div {
-    border-left: 0;
-    border-top: 1px solid rgba(226, 232, 240, 0.9);
-  }
->>>>>>> origin/frontend_merge
+
+}
+
+.public-directory-card__summaryStats>div+div {
+  border-left: 0;
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .public-directory-card__profileText small {
@@ -1592,4 +1589,22 @@ body.theme-admin .app-logo__image {
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   overflow: hidden;
   transition: all 0.2s ease;
+}
+
+/* 추가 */
+.profile-preview-box .public-directory-card {
+  background: #ffffff;
+  margin-top: 18px;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* 추가 */
+.profile-preview-box .public-directory-card::before {
+  display: none;
+}
+
+/* 추가 */
+.profile-preview-box .public-directory-card {
+  margin-top: 18px;
 }

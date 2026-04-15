@@ -199,6 +199,59 @@ textarea {
 }
 
 /* 추가 */
+.shipment-table th:nth-child(2),
+.shipment-table td:nth-child(2) {
+  width: 90px;
+  text-align: center;
+}
+
+/* 추가 */
+.shipment-table th:nth-child(3),
+.shipment-table td:nth-child(3) {
+  width: 145px;
+  text-align: center;
+}
+
+/* 추가 */
+.shipment-table th:nth-child(4),
+.shipment-table td:nth-child(4) {
+  width: 110px;
+  text-align: center;
+}
+
+.shipment-table td:nth-child(4) .chip-group {
+  justify-content: center;
+}
+
+/* 추가 */
+.shipment-table th:nth-child(5),
+.shipment-table td:nth-child(5) {
+  width: 600px;
+  text-align: center;
+}
+
+/* 추가 */
+.shipment-table th:nth-child(6),
+.shipment-table td:nth-child(6) {
+  width: 150px;
+  text-align: center;
+}
+
+/* 추가 */
+.shipment-table th:nth-child(7),
+.shipment-table td:nth-child(7) {
+  width: 100px;
+  text-align: center;
+}
+
+/* 추가 */
+.shipment-table th:nth-child(8),
+.shipment-table td:nth-child(8) {
+  width: 110px;
+  text-align: center;
+}
+
+/* 추가 */
 .table-surface>.section-title-row:first-child {
   margin-top: 16px;
   margin-left: 16px;
@@ -279,6 +332,32 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+/* 추가 */
+.ratings-pending .split-2 {
+  display: flex;
+  gap: 15px;
+}
+
+/* 추가 */
+.ratings-pending .split-2>div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 추가 */
+.ratings-pending .surface-sub {
+  height: 56%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 추가 */
+.ratings-pending .btn {
+  margin-top: 8px;
 }
 
 .bookmark-title {
