@@ -23,15 +23,31 @@ export default function NotificationPanel({
 
   const items = (summary?.items || []).filter((item) => !item.isRead)
 
+  const handleClose = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onClose?.()
+  }
+
   return (
     <div className="chat-inbox-backdrop" onClick={onClose}>
       <aside className="chat-inbox-panel notification-panel" onClick={(e) => e.stopPropagation()}>
         <div className="chat-inbox-panel__head">
-          <div>
+          <div className="chat-inbox-panel__titleWrap">
             <strong>알림</strong>
             <p>거래 진행, 제안 선택, 결제 완료 알림을 확인할 수 있습니다.</p>
           </div>
-          <button className="modal-close" type="button" onClick={onClose}>×</button>
+
+          <button
+            className="modal-close"
+            type="button"
+            aria-label="알림 팝업 닫기"
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={handleClose}
+          >
+            ×
+          </button>
         </div>
 
         <div className="chat-inbox-panel__body">
