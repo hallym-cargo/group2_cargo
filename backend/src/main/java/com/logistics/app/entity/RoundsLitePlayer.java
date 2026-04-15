@@ -122,9 +122,22 @@ public class RoundsLitePlayer {
 
     @Column(nullable = false)
     @Builder.Default
+    private Boolean dropPressed = false;
+
+    @Column(nullable = false)
+    @Builder.Default
     private Boolean shootPressed = false;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Double aimX = 0d;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Double aimY = 0d;
+
     private LocalDateTime lastShotAt;
+    private LocalDateTime dropThroughUntil;
 
     @Column(length = 1000)
     private String selectedCardsCsv;

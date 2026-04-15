@@ -1,11 +1,12 @@
+
 .quickdraw-page {
   min-height: 100vh;
   box-sizing: border-box;
   padding: 40px 20px 88px;
   background:
-    radial-gradient(circle at top left, rgba(79, 70, 229, 0.14), transparent 30%),
-    radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 26%),
-    linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    radial-gradient(circle at top left, rgba(94, 122, 212, 0.13), transparent 30%),
+    radial-gradient(circle at top right, rgba(138, 110, 216, 0.11), transparent 24%),
+    linear-gradient(180deg, #f7f9fc 0%, #edf2f8 42%, #f7f9fc 100%);
 }
 
 .quickdraw-shell {
@@ -22,8 +23,8 @@
 }
 
 .quickdraw-back {
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.84);
   color: #0f172a;
   border-radius: 16px;
   padding: 13px 18px;
@@ -31,6 +32,12 @@
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.quickdraw-back:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.1);
 }
 
 .quickdraw-title-wrap {
@@ -39,9 +46,9 @@
 
 .quickdraw-eyebrow {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   color: #4f46e5;
 }
 
@@ -49,11 +56,13 @@
   margin: 0;
   font-size: 44px;
   line-height: 1.08;
+  letter-spacing: -0.04em;
   color: #0f172a;
 }
 
 .quickdraw-subtitle {
   margin: 10px 0 0;
+  max-width: 720px;
   font-size: 16px;
   line-height: 1.7;
   color: #475569;
@@ -66,9 +75,9 @@
 }
 
 .quickdraw-card {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 28px;
+  border-radius: 30px;
   padding: 28px;
   box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(12px);
@@ -96,7 +105,7 @@
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.16s ease, opacity 0.16s ease, box-shadow 0.16s ease;
 }
 
 .quickdraw-primary:hover,
@@ -118,36 +127,37 @@
 }
 
 .quickdraw-primary {
-  background: #111827;
   color: #fff;
+  background: linear-gradient(135deg, #111827 0%, #2563eb 100%);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
 }
 
 .quickdraw-secondary {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
   color: #fff;
+  background: linear-gradient(135deg, #4f46e5, #8b5cf6);
 }
 
 .quickdraw-ready {
-  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: #fff;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
 }
 
 .quickdraw-ready.is-active {
-  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.18);
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
 }
 
 .quickdraw-shoot {
-  background: linear-gradient(135deg, #991b1b, #ef4444);
   color: #fff;
+  background: linear-gradient(135deg, #312e81, #8b5cf6);
 }
 
 .quickdraw-shoot.is-armed {
-  box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.16);
+  box-shadow: 0 0 0 5px rgba(139, 92, 246, 0.16);
 }
 
 .quickdraw-reset {
-  background: linear-gradient(135deg, #312e81, #7c3aed);
   color: #fff;
+  background: linear-gradient(135deg, #0f172a, #334155);
 }
 
 .quickdraw-join {
@@ -160,7 +170,7 @@
   min-width: 0;
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 16px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
   padding: 0 14px;
   font-size: 16px;
   font-weight: 700;
@@ -183,7 +193,7 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 18px;
-  background: rgba(248, 250, 252, 0.92);
+  background: rgba(248, 250, 252, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
@@ -237,12 +247,12 @@
   gap: 8px;
   padding: 20px;
   border-radius: 24px;
-  background: linear-gradient(180deg, rgba(241, 245, 249, 0.96), rgba(226, 232, 240, 0.96));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(226, 232, 240, 0.92));
   border: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .quickdraw-player.is-winner {
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
 }
 
 .quickdraw-player__seat {
@@ -280,7 +290,7 @@
 }
 
 .quickdraw-player__ready.is-on {
-  color: #0f766e;
+  color: #2563eb;
 }
 
 .quickdraw-vs {
@@ -292,75 +302,678 @@
 
 .quickdraw-arena {
   position: relative;
-  min-height: 360px;
+  min-height: 420px;
   margin-top: 24px;
-  border-radius: 32px;
+  border-radius: 34px;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.96)),
-    radial-gradient(circle at center, rgba(239, 68, 68, 0.12), transparent 45%);
+    linear-gradient(180deg, #dfeaff 0%, #bfd7fc 42%, #9bbaf6 68%, #8fa3d6 100%);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.76),
+    0 30px 70px rgba(37, 99, 235, 0.14);
   display: grid;
   place-items: center;
 }
 
-.quickdraw-arena::before,
-.quickdraw-arena::after {
+.quickdraw-arena-sky,
+.quickdraw-arena-sun,
+.quickdraw-arena-mountain,
+.quickdraw-arena-town,
+.quickdraw-arena-ground,
+.quickdraw-duelist,
+.quickdraw-signal {
+  position: absolute;
+}
+
+.quickdraw-arena-sky {
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.78), transparent 20%),
+    radial-gradient(circle at 84% 14%, rgba(255, 255, 255, 0.62), transparent 18%);
+}
+
+.quickdraw-arena-sun {
+  top: 48px;
+  right: 94px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(254, 240, 138, 0.92), rgba(250, 204, 21, 0.1));
+  box-shadow: 0 0 40px rgba(250, 204, 21, 0.3);
+}
+
+.quickdraw-arena-mountain {
+  bottom: 144px;
+  width: 320px;
+  height: 150px;
+  background: linear-gradient(180deg, rgba(74, 98, 156, 0.4), rgba(69, 85, 136, 0.78));
+  clip-path: polygon(0% 100%, 28% 50%, 48% 66%, 70% 32%, 100% 100%);
+  opacity: 0.72;
+}
+
+.quickdraw-arena-mountain--left {
+  left: -20px;
+}
+
+.quickdraw-arena-mountain--right {
+  right: -20px;
+  transform: scaleX(-1);
+}
+
+.quickdraw-arena-town {
+  left: 50%;
+  bottom: 126px;
+  width: 360px;
+  height: 110px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+}
+
+.quickdraw-town-building {
+  display: block;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(86, 96, 140, 0.66));
+  border-radius: 14px 14px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+}
+
+.quickdraw-town-building--saloon {
+  width: 120px;
+  height: 72px;
+}
+
+.quickdraw-town-building--tower {
+  width: 72px;
+  height: 100px;
+}
+
+.quickdraw-town-building--shed {
+  width: 86px;
+  height: 58px;
+}
+
+.quickdraw-arena-ground {
+  left: -10%;
+  right: -10%;
+  bottom: -24px;
+  height: 160px;
+  border-radius: 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(75, 94, 138, 0.14)),
+    linear-gradient(180deg, #6d7db0 0%, #5c6fa3 44%, #4f6496 100%);
+}
+
+.quickdraw-duelist {
+  bottom: 86px;
+  width: 90px;
+  height: 168px;
+  z-index: 2;
+}
+
+.quickdraw-duelist--left {
+  left: 88px;
+}
+
+.quickdraw-duelist--right {
+  right: 88px;
+  transform: scaleX(-1);
+}
+
+.quickdraw-duelist__aura,
+.quickdraw-duelist__hat,
+.quickdraw-duelist__core,
+.quickdraw-duelist__face,
+.quickdraw-duelist__gun {
+  position: absolute;
+  display: block;
+}
+
+.quickdraw-duelist__aura {
+  left: 6px;
+  top: 18px;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.18), rgba(37, 99, 235, 0));
+  filter: blur(10px);
+}
+
+.quickdraw-duelist--right .quickdraw-duelist__aura {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0));
+}
+
+.quickdraw-duelist__hat {
+  left: 20px;
+  top: 8px;
+  width: 44px;
+  height: 14px;
+  border-radius: 999px 999px 10px 10px;
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+}
+
+.quickdraw-duelist__hat::before {
   content: '';
   position: absolute;
-  bottom: 36px;
-  width: 130px;
-  height: 130px;
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.14), rgba(148, 163, 184, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  left: 9px;
+  bottom: 10px;
+  width: 26px;
+  height: 16px;
+  border-radius: 10px 10px 4px 4px;
+  background: inherit;
 }
 
-.quickdraw-arena::before {
-  left: 52px;
+.quickdraw-duelist__core {
+  left: 14px;
+  top: 24px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #60a5fa 0%, #2563eb 52%, #1d4ed8 100%);
+  box-shadow:
+    inset 0 -8px 16px rgba(15, 23, 42, 0.14),
+    0 12px 20px rgba(37, 99, 235, 0.14);
 }
 
-.quickdraw-arena::after {
-  right: 52px;
+.quickdraw-duelist--right .quickdraw-duelist__core {
+  background: radial-gradient(circle at 32% 28%, #c4b5fd 0%, #8b5cf6 52%, #7c3aed 100%);
+  box-shadow:
+    inset 0 -8px 16px rgba(15, 23, 42, 0.14),
+    0 12px 20px rgba(139, 92, 246, 0.16);
 }
 
-.quickdraw-arena.is-draw {
-  box-shadow: inset 0 0 120px rgba(239, 68, 68, 0.14);
+.quickdraw-duelist__core::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quickdraw-duelist__face {
+  left: 50%;
+  top: 18px;
+  width: 18px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.98), rgba(255,255,255,0.34));
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.32);
+}
+
+.quickdraw-duelist__gun {
+  right: -12px;
+  top: 24px;
+  width: 28px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #111827, #475569);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 3px 8px rgba(15, 23, 42, 0.14);
+}
+
+.quickdraw-duelist__gun::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 2px;
+  width: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: #1f2937;
 }
 
 .quickdraw-signal {
-  position: relative;
-  z-index: 1;
-  width: 210px;
-  height: 210px;
+  position: absolute;
+}
+
+.quickdraw-arena-sky {
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.78), transparent 20%),
+    radial-gradient(circle at 84% 14%, rgba(255, 255, 255, 0.62), transparent 18%);
+}
+
+.quickdraw-arena-sun {
+  top: 48px;
+  right: 94px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(254, 240, 138, 0.92), rgba(250, 204, 21, 0.1));
+  box-shadow: 0 0 40px rgba(250, 204, 21, 0.3);
+}
+
+.quickdraw-arena-mountain {
+  bottom: 144px;
+  width: 320px;
+  height: 150px;
+  background: linear-gradient(180deg, rgba(74, 98, 156, 0.4), rgba(69, 85, 136, 0.78));
+  clip-path: polygon(0% 100%, 28% 50%, 48% 66%, 70% 32%, 100% 100%);
+  opacity: 0.72;
+}
+
+.quickdraw-arena-mountain--left {
+  left: -20px;
+}
+
+.quickdraw-arena-mountain--right {
+  right: -20px;
+  transform: scaleX(-1);
+}
+
+.quickdraw-arena-town {
+  left: 50%;
+  bottom: 126px;
+  width: 360px;
+  height: 110px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+}
+
+.quickdraw-town-building {
+  display: block;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(86, 96, 140, 0.66));
+  border-radius: 14px 14px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+}
+
+.quickdraw-town-building--saloon {
+  width: 120px;
+  height: 72px;
+}
+
+.quickdraw-town-building--tower {
+  width: 72px;
+  height: 100px;
+}
+
+.quickdraw-town-building--shed {
+  width: 86px;
+  height: 58px;
+}
+
+.quickdraw-arena-ground {
+  left: -10%;
+  right: -10%;
+  bottom: -24px;
+  height: 160px;
+  border-radius: 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(75, 94, 138, 0.14)),
+    linear-gradient(180deg, #6d7db0 0%, #5c6fa3 44%, #4f6496 100%);
+}
+
+.quickdraw-duelist {
+  bottom: 86px;
+  width: 90px;
+  height: 168px;
+  z-index: 2;
+}
+
+.quickdraw-duelist--left {
+  left: 88px;
+}
+
+.quickdraw-duelist--right {
+  right: 88px;
+  transform: scaleX(-1);
+}
+
+.quickdraw-duelist__aura,
+.quickdraw-duelist__hat,
+.quickdraw-duelist__core,
+.quickdraw-duelist__face,
+.quickdraw-duelist__gun {
+  position: absolute;
+  display: block;
+}
+
+.quickdraw-duelist__aura {
+  left: 6px;
+  top: 18px;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.18), rgba(37, 99, 235, 0));
+  filter: blur(10px);
+}
+
+.quickdraw-duelist--right .quickdraw-duelist__aura {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0));
+}
+
+.quickdraw-duelist__hat {
+  left: 20px;
+  top: 8px;
+  width: 44px;
+  height: 14px;
+  border-radius: 999px 999px 10px 10px;
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+}
+
+.quickdraw-duelist__hat::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  bottom: 10px;
+  width: 26px;
+  height: 16px;
+  border-radius: 10px 10px 4px 4px;
+  background: inherit;
+}
+
+.quickdraw-duelist__core {
+  left: 14px;
+  top: 24px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #60a5fa 0%, #2563eb 52%, #1d4ed8 100%);
+  box-shadow:
+    inset 0 -8px 16px rgba(15, 23, 42, 0.14),
+    0 12px 20px rgba(37, 99, 235, 0.14);
+}
+
+.quickdraw-duelist--right .quickdraw-duelist__core {
+  background: radial-gradient(circle at 32% 28%, #c4b5fd 0%, #8b5cf6 52%, #7c3aed 100%);
+  box-shadow:
+    inset 0 -8px 16px rgba(15, 23, 42, 0.14),
+    0 12px 20px rgba(139, 92, 246, 0.16);
+}
+
+.quickdraw-duelist__core::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quickdraw-duelist__face {
+  left: 50%;
+  top: 18px;
+  width: 18px;
+  height: 8px;
+  transform: translateX(-50%);
   border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.98), rgba(255,255,255,0.34));
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.32);
+}
+
+.quickdraw-duelist__gun {
+  right: -12px;
+  top: 24px;
+  width: 28px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #111827, #475569);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 3px 8px rgba(15, 23, 42, 0.14);
+}
+
+.quickdraw-duelist__gun::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 2px;
+  width: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: #1f2937;
+}
+
+.quickdraw-signal {
+  position: absolute;
+}
+
+.quickdraw-arena-sky {
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.78), transparent 20%),
+    radial-gradient(circle at 84% 14%, rgba(255, 255, 255, 0.62), transparent 18%);
+}
+
+.quickdraw-arena-sun {
+  top: 48px;
+  right: 94px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(254, 240, 138, 0.92), rgba(250, 204, 21, 0.1));
+  box-shadow: 0 0 40px rgba(250, 204, 21, 0.3);
+}
+
+.quickdraw-arena-mountain {
+  bottom: 144px;
+  width: 320px;
+  height: 150px;
+  background: linear-gradient(180deg, rgba(74, 98, 156, 0.4), rgba(69, 85, 136, 0.78));
+  clip-path: polygon(0% 100%, 28% 50%, 48% 66%, 70% 32%, 100% 100%);
+  opacity: 0.72;
+}
+
+.quickdraw-arena-mountain--left {
+  left: -20px;
+}
+
+.quickdraw-arena-mountain--right {
+  right: -20px;
+  transform: scaleX(-1);
+}
+
+.quickdraw-arena-town {
+  left: 50%;
+  bottom: 126px;
+  width: 360px;
+  height: 110px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+}
+
+.quickdraw-town-building {
+  display: block;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(86, 96, 140, 0.66));
+  border-radius: 14px 14px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+}
+
+.quickdraw-town-building--saloon {
+  width: 120px;
+  height: 72px;
+}
+
+.quickdraw-town-building--tower {
+  width: 72px;
+  height: 100px;
+}
+
+.quickdraw-town-building--shed {
+  width: 86px;
+  height: 58px;
+}
+
+.quickdraw-arena-ground {
+  left: -10%;
+  right: -10%;
+  bottom: -24px;
+  height: 160px;
+  border-radius: 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(75, 94, 138, 0.14)),
+    linear-gradient(180deg, #6d7db0 0%, #5c6fa3 44%, #4f6496 100%);
+}
+
+.quickdraw-duelist {
+  bottom: 86px;
+  width: 90px;
+  height: 168px;
+  z-index: 2;
+}
+
+.quickdraw-duelist--left {
+  left: 88px;
+}
+
+.quickdraw-duelist--right {
+  right: 88px;
+  transform: scaleX(-1);
+}
+
+.quickdraw-duelist__shadow,
+.quickdraw-duelist__hat,
+.quickdraw-duelist__head,
+.quickdraw-duelist__body,
+.quickdraw-duelist__arm,
+.quickdraw-duelist__gun,
+.quickdraw-duelist__leg {
+  position: absolute;
+  display: block;
+}
+
+.quickdraw-duelist__shadow {
+  left: 10px;
+  bottom: 0;
+  width: 70px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.24);
+  filter: blur(4px);
+}
+
+.quickdraw-duelist__hat {
+  left: 20px;
+  top: 6px;
+  width: 42px;
+  height: 14px;
+  border-radius: 999px 999px 10px 10px;
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+}
+
+.quickdraw-duelist__hat::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  bottom: 10px;
+  width: 26px;
+  height: 18px;
+  border-radius: 10px 10px 4px 4px;
+  background: inherit;
+}
+
+.quickdraw-duelist__head {
+  left: 30px;
+  top: 18px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f8fafc, #dbeafe);
+}
+
+.quickdraw-duelist__body {
+  left: 22px;
+  top: 38px;
+  width: 36px;
+  height: 62px;
+  border-radius: 16px 16px 12px 12px;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: inset 0 -6px 10px rgba(15, 23, 42, 0.12);
+}
+
+.quickdraw-duelist--right .quickdraw-duelist__body {
+  background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.quickdraw-duelist__arm {
+  left: 14px;
+  top: 48px;
+  width: 10px;
+  height: 42px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #dbeafe, #94a3b8);
+  transform: rotate(18deg);
+}
+
+.quickdraw-duelist__gun {
+  left: 2px;
+  top: 58px;
+  width: 24px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #111827, #475569);
+}
+
+.quickdraw-duelist__leg {
+  top: 94px;
+  width: 12px;
+  height: 52px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #334155, #0f172a);
+}
+
+.quickdraw-duelist__leg--front {
+  left: 28px;
+  transform: rotate(8deg);
+}
+
+.quickdraw-duelist__leg--back {
+  left: 42px;
+  transform: rotate(-7deg);
+}
+
+.quickdraw-signal {
+  left: 50%;
+  top: 86px;
+  transform: translateX(-50%);
+  z-index: 3;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at center, rgba(239, 68, 68, 0.95), rgba(153, 27, 27, 0.95));
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.32);
 }
 
 .quickdraw-signal span {
-  color: #fff;
-  font-size: 40px;
+  min-width: 142px;
+  height: 70px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.16);
+  font-size: 26px;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+  backdrop-filter: blur(8px);
 }
 
-@media (max-width: 980px) {
+.quickdraw-arena.is-draw .quickdraw-signal span {
+  color: #4338ca;
+  box-shadow: 0 18px 40px rgba(139, 92, 246, 0.22);
+}
+
+@media (max-width: 1080px) {
   .quickdraw-layout {
     grid-template-columns: 1fr;
   }
-
-  .quickdraw-scoreboard {
-    grid-template-columns: 1fr;
-  }
-
-  .quickdraw-vs {
-    display: none;
-  }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
+  .quickdraw-page {
+    padding: 24px 12px 64px;
+  }
+
   .quickdraw-topbar {
     flex-direction: column;
   }
@@ -369,26 +982,29 @@
     font-size: 34px;
   }
 
-  .quickdraw-actions {
+  .quickdraw-actions,
+  .quickdraw-scoreboard {
     grid-template-columns: 1fr;
   }
 
-  .quickdraw-join {
-    flex-direction: column;
+  .quickdraw-vs {
+    display: none;
   }
 
-  .quickdraw-arena::before,
-  .quickdraw-arena::after {
-    width: 94px;
-    height: 94px;
-    bottom: 24px;
+  .quickdraw-arena {
+    min-height: 360px;
   }
 
-  .quickdraw-arena::before {
-    left: 26px;
+  .quickdraw-duelist--left {
+    left: 36px;
   }
 
-  .quickdraw-arena::after {
-    right: 26px;
+  .quickdraw-duelist--right {
+    right: 36px;
+  }
+
+  .quickdraw-signal span {
+    min-width: 112px;
+    font-size: 20px;
   }
 }

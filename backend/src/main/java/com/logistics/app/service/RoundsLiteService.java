@@ -29,6 +29,8 @@ public class RoundsLiteService {
     private static final double FLOOR_Y = 500d;
     private static final double PLAYER_WIDTH = 52d;
     private static final double PLAYER_HEIGHT = 84d;
+    private static final double PROJECTILE_SPAWN_MARGIN = 18d;
+    private static final double SELF_PROJECTILE_BUFFER = 12d;
     private static final double GRAVITY = 1500d;
     private static final double TICK_SECONDS = 0.05d;
     private static final double MAX_SIM_SECONDS = 1.0d;
@@ -217,7 +219,14 @@ public class RoundsLiteService {
         me.setMoveLeft(request.isLeft());
         me.setMoveRight(request.isRight());
         me.setJumpPressed(request.isJump());
+        me.setDropPressed(request.isDrop());
         me.setShootPressed(request.isShoot());
+        if (request.getAimX() != null) {
+            me.setAimX(clamp(request.getAimX(), 0d, ARENA_WIDTH));
+        }
+        if (request.getAimY() != null) {
+            me.setAimY(clamp(request.getAimY(), 0d, ARENA_HEIGHT));
+        }
 
         simulateRoom(room);
         roomRepository.saveAndFlush(room);
@@ -322,7 +331,9 @@ public class RoundsLiteService {
             player.setMoveLeft(false);
             player.setMoveRight(false);
             player.setJumpPressed(false);
+            player.setDropPressed(false);
             player.setShootPressed(false);
+            player.setDropThroughUntil(null);
             player.setVx(0d);
             player.setVy(0d);
             player.setWins(0);
@@ -361,7 +372,9 @@ public class RoundsLiteService {
             player.setMoveLeft(false);
             player.setMoveRight(false);
             player.setJumpPressed(false);
+            player.setDropPressed(false);
             player.setShootPressed(false);
+            player.setDropThroughUntil(null);
             resetPlayerPosition(player);
         }
     }
@@ -382,7 +395,9 @@ public class RoundsLiteService {
             player.setMoveLeft(false);
             player.setMoveRight(false);
             player.setJumpPressed(false);
+            player.setDropPressed(false);
             player.setShootPressed(false);
+            player.setDropThroughUntil(null);
             player.setLastShotAt(null);
             resetPlayerPosition(player);
         }
@@ -392,14 +407,18 @@ public class RoundsLiteService {
         if ("P1".equals(player.getSeat())) {
             player.setX(180d);
             player.setFacingRight(true);
+            player.setAimX(280d);
         } else {
             player.setX(ARENA_WIDTH - 180d - PLAYER_WIDTH);
             player.setFacingRight(false);
+            player.setAimX(ARENA_WIDTH - 280d);
         }
         player.setY(FLOOR_Y - PLAYER_HEIGHT);
+        player.setAimY(FLOOR_Y - PLAYER_HEIGHT * 0.42d);
         player.setVx(0d);
         player.setVy(0d);
         player.setOnGround(true);
+        player.setDropThroughUntil(null);
     }
 
     private void simulateRoom(RoundsLiteRoom room) {
@@ -410,7 +429,7 @@ public class RoundsLiteService {
 
         if ("COUNTDOWN".equals(room.getPhase()) && room.getCountdownEndsAt() != null && !now.isBefore(room.getCountdownEndsAt())) {
             room.setPhase("ACTIVE");
-            room.setMessage("결투 시작! A/D 이동, W 점프, 스페이스 발사");
+            room.setMessage("결투 시작! A/D 이동, 스페이스 점프, 좌클릭 발사");
         }
 
         if (!"ACTIVE".equals(room.getPhase())) {
@@ -446,15 +465,25 @@ public class RoundsLiteService {
         double vx = 0d;
         if (Boolean.TRUE.equals(player.getMoveLeft())) {
             vx -= player.getMoveSpeed();
-            player.setFacingRight(false);
         }
         if (Boolean.TRUE.equals(player.getMoveRight())) {
             vx += player.getMoveSpeed();
-            player.setFacingRight(true);
         }
         player.setVx(vx);
 
-        if (Boolean.TRUE.equals(player.getJumpPressed()) && Boolean.TRUE.equals(player.getOnGround())) {
+        double centerX = player.getX() + PLAYER_WIDTH * 0.5d;
+        if (player.getAimX() != null) {
+            player.setFacingRight(player.getAimX() >= centerX);
+        } else if (vx != 0d) {
+            player.setFacingRight(vx > 0d);
+        }
+
+        if (Boolean.TRUE.equals(player.getDropPressed()) && Boolean.TRUE.equals(player.getOnGround()) && isStandingOnDropPlatform(player)) {
+            player.setY(player.getY() + 6d);
+            player.setVy(80d);
+            player.setOnGround(false);
+            player.setDropThroughUntil(LocalDateTime.now().plusNanos(260_000_000L));
+        } else if (Boolean.TRUE.equals(player.getJumpPressed()) && Boolean.TRUE.equals(player.getOnGround())) {
             player.setVy(-player.getJumpPower());
             player.setOnGround(false);
         }
@@ -469,7 +498,12 @@ public class RoundsLiteService {
     private void resolveVerticalCollision(RoundsLitePlayer player) {
         List<Platform> platforms = platforms();
         boolean grounded = false;
+        LocalDateTime now = LocalDateTime.now();
+        boolean ignoreDropPlatforms = player.getDropThroughUntil() != null && now.isBefore(player.getDropThroughUntil());
         for (Platform platform : platforms) {
+            if (platform.oneWay() && ignoreDropPlatforms) {
+                continue;
+            }
             double playerBottom = player.getY() + PLAYER_HEIGHT;
             double previousBottom = playerBottom - player.getVy() * TICK_SECONDS;
             boolean overlapsX = player.getX() + PLAYER_WIDTH > platform.x && player.getX() < platform.x + platform.w;
@@ -484,7 +518,26 @@ public class RoundsLiteService {
             player.setVy(0d);
             grounded = true;
         }
+        if (grounded) {
+            player.setDropThroughUntil(null);
+        }
         player.setOnGround(grounded);
+    }
+
+    private boolean isStandingOnDropPlatform(RoundsLitePlayer player) {
+        double playerBottom = player.getY() + PLAYER_HEIGHT;
+        double centerX = player.getX() + PLAYER_WIDTH * 0.5d;
+        for (Platform platform : platforms()) {
+            if (!platform.oneWay()) {
+                continue;
+            }
+            boolean withinX = centerX >= platform.x && centerX <= platform.x + platform.w;
+            boolean standingY = Math.abs(playerBottom - platform.y) <= 6d;
+            if (withinX && standingY) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void maybeFireProjectile(RoundsLitePlayer player, RoundsLiteRoom room, List<ProjectileState> projectiles) {
@@ -498,15 +551,20 @@ public class RoundsLiteService {
         player.setLastShotAt(now);
 
         int count = Math.max(1, player.getProjectileCount());
-        double baseAngle = player.getFacingRight() ? 0d : Math.PI;
+        double originX = player.getX() + PLAYER_WIDTH * 0.5d;
+        double originY = player.getY() + PLAYER_HEIGHT * 0.42d;
+        double aimX = player.getAimX() != null ? player.getAimX() : originX + (player.getFacingRight() ? 100d : -100d);
+        double aimY = player.getAimY() != null ? player.getAimY() : originY;
+        double baseAngle = Math.atan2(aimY - originY, aimX - originX);
         for (int i = 0; i < count; i++) {
             double angleOffsetDeg = count == 1 ? 0d : (i - (count - 1) / 2d) * player.getSpreadDeg();
             double angle = baseAngle + Math.toRadians(angleOffsetDeg);
             double speed = player.getBulletSpeed();
             double vx = Math.cos(angle) * speed;
             double vy = Math.sin(angle) * speed;
-            double startX = player.getX() + (player.getFacingRight() ? PLAYER_WIDTH + 8d : -8d);
-            double startY = player.getY() + PLAYER_HEIGHT * 0.45d;
+            double muzzleOffset = PLAYER_WIDTH * 0.36d + PROJECTILE_SPAWN_MARGIN + player.getProjectileRadius() + Math.abs(player.getVx() * TICK_SECONDS);
+            double startX = originX + Math.cos(angle) * muzzleOffset;
+            double startY = originY + Math.sin(angle) * muzzleOffset;
             projectiles.add(ProjectileState.builder()
                     .id(UUID.randomUUID().toString())
                     .ownerSeat(player.getSeat())
@@ -537,6 +595,9 @@ public class RoundsLiteService {
 
             for (RoundsLitePlayer target : room.getPlayers()) {
                 if (projectile.getOwnerSeat().equals(target.getSeat())) {
+                    continue;
+                }
+                if (isStillInsideOwnerSafeZone(room, projectile)) {
                     continue;
                 }
                 if (intersects(projectile, target)) {
@@ -609,6 +670,27 @@ public class RoundsLiteService {
         }
     }
 
+    private boolean isStillInsideOwnerSafeZone(RoundsLiteRoom room, ProjectileState projectile) {
+        RoundsLitePlayer owner = room.getPlayers().stream()
+                .filter(player -> projectile.getOwnerSeat().equals(player.getSeat()))
+                .findFirst()
+                .orElse(null);
+
+        if (owner == null) {
+            return false;
+        }
+
+        double safeLeft = owner.getX() - SELF_PROJECTILE_BUFFER;
+        double safeRight = owner.getX() + PLAYER_WIDTH + SELF_PROJECTILE_BUFFER;
+        double safeTop = owner.getY() - SELF_PROJECTILE_BUFFER;
+        double safeBottom = owner.getY() + PLAYER_HEIGHT + SELF_PROJECTILE_BUFFER;
+
+        return projectile.getX() >= safeLeft
+                && projectile.getX() <= safeRight
+                && projectile.getY() >= safeTop
+                && projectile.getY() <= safeBottom;
+    }
+
     private boolean intersects(ProjectileState projectile, RoundsLitePlayer player) {
         double closestX = clamp(projectile.getX(), player.getX(), player.getX() + PLAYER_WIDTH);
         double closestY = clamp(projectile.getY(), player.getY(), player.getY() + PLAYER_HEIGHT);
@@ -657,7 +739,10 @@ public class RoundsLiteService {
                 .moveLeft(false)
                 .moveRight(false)
                 .jumpPressed(false)
+                .dropPressed(false)
                 .shootPressed(false)
+                .aimX("P1".equals(seat) ? 280d : ARENA_WIDTH - 280d)
+                .aimY(FLOOR_Y - PLAYER_HEIGHT * 0.42d)
                 .selectedCardsCsv("")
                 .build();
     }
@@ -697,6 +782,7 @@ public class RoundsLiteService {
                         .width(PLAYER_WIDTH)
                         .height(PLAYER_HEIGHT)
                         .facingRight(Boolean.TRUE.equals(player.getFacingRight()))
+                        .aimAngleDeg(resolveAimAngleDeg(player))
                         .selectedCards(parseCards(player.getSelectedCardsCsv()))
                         .build())
                 .collect(Collectors.toList());
@@ -738,12 +824,20 @@ public class RoundsLiteService {
                 .build();
     }
 
+    private double resolveAimAngleDeg(RoundsLitePlayer player) {
+        double originX = player.getX() + PLAYER_WIDTH * 0.5d;
+        double originY = player.getY() + PLAYER_HEIGHT * 0.42d;
+        double aimX = player.getAimX() != null ? player.getAimX() : originX + (Boolean.TRUE.equals(player.getFacingRight()) ? 100d : -100d);
+        double aimY = player.getAimY() != null ? player.getAimY() : originY;
+        return Math.toDegrees(Math.atan2(aimY - originY, aimX - originX));
+    }
+
     private List<Platform> platforms() {
         return List.of(
-                new Platform(0d, FLOOR_Y, ARENA_WIDTH, ARENA_HEIGHT - FLOOR_Y),
-                new Platform(200d, 360d, 180d, 18d),
-                new Platform(580d, 300d, 180d, 18d),
-                new Platform(390d, 420d, 180d, 18d)
+                new Platform(0d, FLOOR_Y, ARENA_WIDTH, ARENA_HEIGHT - FLOOR_Y, false),
+                new Platform(200d, 360d, 180d, 18d, true),
+                new Platform(580d, 300d, 180d, 18d, true),
+                new Platform(390d, 420d, 180d, 18d, true)
         );
     }
 
@@ -865,5 +959,5 @@ public class RoundsLiteService {
         private String description;
     }
 
-    private record Platform(double x, double y, double w, double h) {}
+    private record Platform(double x, double y, double w, double h, boolean oneWay) {}
 }
