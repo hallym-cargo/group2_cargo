@@ -14,6 +14,7 @@ export default function QuoteRegisterContainer({ onMoveToQuoteList }) {
     errors,
     activePanel,
     updateField,
+    setRouteAddress,
     openPanel,
     closePanel,
     goPrevStep,
@@ -21,7 +22,6 @@ export default function QuoteRegisterContainer({ onMoveToQuoteList }) {
     submitForm,
   } = useQuoteRegisterForm();
 
-  // 1단계 유효성 검사
   const isRouteStepValid =
     !!(formData.estimateName || "").trim() &&
     !!(formData.originAddress || "").trim() &&
@@ -29,9 +29,10 @@ export default function QuoteRegisterContainer({ onMoveToQuoteList }) {
     !!(formData.destinationAddress || "").trim() &&
     !!(formData.destinationDetailAddress || "").trim() &&
     !!(formData.transportDate || "").trim() &&
-    !!(formData.transportTime || "").trim();
+    !!(formData.transportTime || "").trim() &&
+    (formData.originAddress || "").trim() !==
+      (formData.destinationAddress || "").trim();
 
-  // 2단계 유효성 검사
   const isCargoStepValid =
     (formData.vehicleNeedConsult || !!(formData.vehicleType || "").trim()) &&
     !!(formData.cargoType || "").trim() &&
@@ -61,6 +62,7 @@ export default function QuoteRegisterContainer({ onMoveToQuoteList }) {
         errors={errors}
         activePanel={activePanel}
         updateField={updateField}
+        setRouteAddress={setRouteAddress}
         openPanel={openPanel}
         closePanel={closePanel}
       />
