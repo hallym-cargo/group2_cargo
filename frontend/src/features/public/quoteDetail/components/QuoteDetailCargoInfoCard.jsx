@@ -10,7 +10,7 @@ function formatPrice(price) {
 
 export default function QuoteDetailCargoInfoCard({
   quote,
-  isShipper,
+  canEdit,
   onClickEdit,
 }) {
   return (
@@ -18,7 +18,7 @@ export default function QuoteDetailCargoInfoCard({
       <div className="quote-detail-card__title-row">
         <h2 className="quote-detail-card__title">화물 정보</h2>
 
-        {isShipper && (
+        {canEdit && (
           <button
             type="button"
             className="quote-detail-section-edit-btn"

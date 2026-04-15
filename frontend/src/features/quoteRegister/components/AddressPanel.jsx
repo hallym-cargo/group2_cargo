@@ -7,6 +7,7 @@ export default function AddressPanel({
   currentValue,
   currentDetailValue,
   updateField,
+  setRouteAddress,
   closePanel,
 }) {
   const [panelStep, setPanelStep] = useState("search");
@@ -62,18 +63,6 @@ export default function AddressPanel({
   const getDetailFieldName = () => {
     if (fieldName === "originAddress") return "originDetailAddress";
     if (fieldName === "destinationAddress") return "destinationDetailAddress";
-    return "";
-  };
-
-  const getLatFieldName = () => {
-    if (fieldName === "originAddress") return "originLat";
-    if (fieldName === "destinationAddress") return "destinationLat";
-    return "";
-  };
-
-  const getLngFieldName = () => {
-    if (fieldName === "originAddress") return "originLng";
-    if (fieldName === "destinationAddress") return "destinationLng";
     return "";
   };
 
@@ -140,23 +129,25 @@ export default function AddressPanel({
       }
     }
 
-    updateField(fieldName, fullAddress);
-
-    const latFieldName = getLatFieldName();
-    const lngFieldName = getLngFieldName();
-
     try {
       const addressForGeocoding = data.roadAddress || data.address;
       const { lat, lng } = await geocodeAddress(addressForGeocoding);
 
       if (!mountedRef.current) return;
 
-      if (latFieldName) {
-        updateField(latFieldName, lat);
-      }
+      const routeType =
+        fieldName === "originAddress" ? "origin" : "destination";
 
-      if (lngFieldName) {
-        updateField(lngFieldName, lng);
+      const isApplied = setRouteAddress({
+        type: routeType,
+        address: fullAddress,
+        detailAddress: currentDetailValue || "",
+        lat,
+        lng,
+      });
+
+      if (!isApplied) {
+        return;
       }
 
       setSelectedBaseAddress(fullAddress);
@@ -165,14 +156,6 @@ export default function AddressPanel({
       console.error("좌표 변환 실패:", error);
 
       if (!mountedRef.current) return;
-
-      if (latFieldName) {
-        updateField(latFieldName, null);
-      }
-
-      if (lngFieldName) {
-        updateField(lngFieldName, null);
-      }
 
       alert("주소 좌표를 가져오지 못했습니다. 다시 검색해주세요.");
     }

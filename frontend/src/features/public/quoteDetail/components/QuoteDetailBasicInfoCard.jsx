@@ -5,7 +5,7 @@ function formatDateTime(date, time) {
 
 export default function QuoteDetailBasicInfoCard({
   quote,
-  isShipper,
+  canEdit,
   onClickEdit,
 }) {
   const transportDateTime = formatDateTime(
@@ -18,7 +18,7 @@ export default function QuoteDetailBasicInfoCard({
       <div className="quote-detail-card__title-row">
         <h2 className="quote-detail-card__title">기본 정보</h2>
 
-        {isShipper && (
+        {canEdit && (
           <button
             type="button"
             className="quote-detail-section-edit-btn"
