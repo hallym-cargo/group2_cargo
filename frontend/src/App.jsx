@@ -4,9 +4,12 @@ import NotificationPanel from "./components/common/NotificationPanel";
 import PaymentModal from "./components/common/PaymentModal";
 import ChatWindowModal from "./components/common/ChatWindowModal";
 import UserProfileModal from "./components/common/UserProfileModal";
+import AssistantWindowModal from "./components/common/AssistantWindowModal";
+import ScrollTopFloatingButton from "./components/common/ScrollTopFloatingButton";
 import AdminConsolePage from "./features/admin/AdminConsolePage";
 import MessagesPage from "./features/chat/MessagesPage";
 import NotificationsPage from "./features/chat/NotificationsPage";
+import RoundsLiteArena from "./features/game/RoundsLiteArena";
 import QuoteListPage from "./features/public/QuoteListPage";
 import QuoteRegisterPage from "./features/public/QuoteRegisterPage";
 import PublicHomePage from "./features/public/PublicHomePage";
@@ -57,6 +60,8 @@ export default function App() {
     page = <MessagesPage controller={controller} />;
   } else if (controller.routePage === "notifications") {
     page = <NotificationsPage controller={controller} />;
+  } else if (controller.routePage === "game") {
+    page = <RoundsLiteArena controller={controller} />;
   } else if (controller.routePage === "shippers") {
     page = <PublicUserSearchPage controller={controller} role="SHIPPER" />;
   } else if (controller.routePage === "drivers") {
@@ -90,6 +95,7 @@ export default function App() {
   return (
     <>
       {page}
+
       {controller.profileModalOpen && (
         <UserProfileModal
           profile={controller.activeProfile}
@@ -98,6 +104,7 @@ export default function App() {
           onOpenChat={controller.openChatWithUser}
         />
       )}
+
       {controller.chatModalOpen && controller.routePage !== "messages" && (
         <ChatWindowModal
           room={controller.chatRoom}
@@ -108,15 +115,39 @@ export default function App() {
           isSending={controller.chatSending}
         />
       )}
+
       {controller.paymentModalOpen && <PaymentModal controller={controller} />}
-      {controller.isLoggedIn && !controller.isAdmin && (
+
+      {controller.isLoggedIn && !controller.isAdmin ? (
         <>
+          <ScrollTopFloatingButton />
           <ChatFloatingButton
             unreadCount={controller.unreadChatCount}
             notificationUnreadCount={controller.notificationUnreadCount}
+            onAssistantClick={controller.openAssistant}
             onChatClick={controller.openChatInbox}
             onNotificationClick={controller.openNotificationPanel}
+            onGameClick={() => {
+              controller.closeChatInbox();
+              controller.closeNotificationPanel();
+              controller.setChatModalOpen(false);
+              controller.setRoutePage("game");
+            }}
           />
+
+          <AssistantWindowModal
+            open={controller.assistantOpen}
+            messages={controller.assistantMessages}
+            draft={controller.assistantDraft}
+            setDraft={controller.setAssistantDraft}
+            onSend={controller.handleAssistantSend}
+            onClose={controller.closeAssistant}
+            isSending={controller.assistantSending}
+            quickActions={controller.assistantQuickActions}
+            onQuickAction={controller.handleAssistantQuickAction}
+            onNavigate={controller.handleAssistantNavigate}
+          />
+
           <ChatInboxPanel
             open={controller.chatInboxOpen}
             rooms={controller.chatRooms}
@@ -138,6 +169,8 @@ export default function App() {
             onOpenNotificationsPage={controller.openNotificationsPage}
           />
         </>
+      ) : (
+        <ScrollTopFloatingButton compact />
       )}
     </>
   );

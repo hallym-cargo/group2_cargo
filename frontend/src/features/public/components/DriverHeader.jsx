@@ -8,22 +8,22 @@ function moveToMain(controller, targetId = null) {
 
   controller.setRoutePage("main");
   controller.setDashboardTab("home");
+
   if (!controller.isLoggedIn) {
     controller.setAuthMode("signup");
   }
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 export default function DriverHeader({ controller }) {
   const currentRoute = controller.routePage;
-  const currentDashboard = controller.dashboardTab;
 
   const navButtonClass = (isActive) => (isActive ? "is-active" : "");
 
   return (
     <header className="landing-header">
       <div className="landing-header__inner">
-        {/* 로고 */}
         <button
           type="button"
           className="landing-brand"
@@ -33,7 +33,6 @@ export default function DriverHeader({ controller }) {
           <AppLogo subtitle="운송 운영 플랫폼" hideTitle />
         </button>
 
-        {/* 메뉴 */}
         <nav className="landing-nav">
           <button
             type="button"
@@ -42,6 +41,7 @@ export default function DriverHeader({ controller }) {
           >
             견적 목록 보기
           </button>
+
           <button
             type="button"
             className={navButtonClass(currentRoute === "status")}
@@ -57,11 +57,19 @@ export default function DriverHeader({ controller }) {
           >
             화주 찾기
           </button>
+
+          <button
+            type="button"
+            className={navButtonClass(currentRoute === "game")}
+            onClick={() => controller.setRoutePage("game")}
+          >
+            미니게임
+          </button>
         </nav>
 
-        {/* 오른쪽 버튼 */}
         <div className="landing-header__actions">
           <button
+            type="button"
             className="landing-btn landing-btn--light"
             onClick={() => {
               controller.setRoutePage("dashboard");
@@ -72,6 +80,7 @@ export default function DriverHeader({ controller }) {
           </button>
 
           <button
+            type="button"
             className="landing-btn landing-btn--primary"
             onClick={controller.logout}
           >

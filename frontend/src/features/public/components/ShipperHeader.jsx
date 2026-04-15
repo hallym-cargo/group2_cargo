@@ -22,7 +22,6 @@ export default function ShipperHeader({ controller }) {
   return (
     <header className="landing-header">
       <div className="landing-header__inner">
-        {/* 로고 */}
         <button
           type="button"
           className="landing-brand"
@@ -32,7 +31,6 @@ export default function ShipperHeader({ controller }) {
           <AppLogo subtitle="운송 운영 플랫폼" hideTitle />
         </button>
 
-        {/* 메뉴 */}
         <nav className="landing-nav">
           <button
             type="button"
@@ -49,6 +47,7 @@ export default function ShipperHeader({ controller }) {
           >
             견적 등록
           </button>
+
           <button
             type="button"
             className={navButtonClass(currentRoute === "status")}
@@ -64,9 +63,16 @@ export default function ShipperHeader({ controller }) {
           >
             차주 찾기
           </button>
+
+          <button
+            type="button"
+            className={navButtonClass(currentRoute === "game")}
+            onClick={() => controller.setRoutePage("game")}
+          >
+            미니게임
+          </button>
         </nav>
 
-        {/* 오른쪽 버튼 */}
         <div className="landing-header__actions">
           <button
             className="landing-btn landing-btn--light"
