@@ -1,12 +1,26 @@
 import { useState } from "react";
+import { createShipment } from "../../../api";
 import { QUOTE_REGISTER_INITIAL_STATE } from "../constants/quoteRegisterInitialState";
 import {
   validateQuoteStepRoute,
   validateQuoteStepCargo,
   validateAllSteps,
 } from "../utils/quoteRegisterValidation";
+import { quoteFormToShipmentPayload } from "../../public/quoteUtils";
 
-export default function useQuoteRegisterForm() {
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({
+      dataUrl: typeof reader.result === "string" ? reader.result : "",
+      name: file.name,
+    });
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+export default function useQuoteRegisterForm(controller) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(QUOTE_REGISTER_INITIAL_STATE);
   const [errors, setErrors] = useState({});
@@ -58,43 +72,6 @@ export default function useQuoteRegisterForm() {
     return true;
   };
 
-  const convertWeightToKg = (weight, unit, needConsult) => {
-    if (needConsult) return null;
-    if (weight === "" || weight === null || weight === undefined) return null;
-
-    const numericWeight = Number(weight);
-
-    if (Number.isNaN(numericWeight)) return null;
-
-    if (unit === "t") {
-      return numericWeight * 1000;
-    }
-
-    return numericWeight;
-  };
-
-  const buildSubmitPayload = () => {
-    const convertedWeight = convertWeightToKg(
-      formData.weight,
-      formData.weightUnit,
-      formData.weightNeedConsult,
-    );
-
-    return {
-      ...formData,
-
-      // 중량은 서버 전송 시 kg 기준으로 통일
-      weight: convertedWeight,
-      weightUnit: convertedWeight === null ? null : "kg",
-
-      // 운임 숫자 변환
-      desiredPrice:
-        formData.desiredPrice === "" || formData.desiredPrice === null
-          ? null
-          : Number(formData.desiredPrice),
-    };
-  };
-
   const submitForm = async () => {
     const finalErrors = validateAllSteps(formData);
     setErrors(finalErrors);
@@ -103,15 +80,26 @@ export default function useQuoteRegisterForm() {
       return false;
     }
 
-    const payload = buildSubmitPayload();
+    try {
+      const files = Array.isArray(formData.cargoImages) ? formData.cargoImages : [];
+      const converted = await Promise.all(files.map(fileToDataUrl));
+      const payload = quoteFormToShipmentPayload(
+        formData,
+        converted.map((item) => item.dataUrl),
+        converted.map((item) => item.name),
+      );
 
-    console.log("입력용 formData:", formData);
-    console.log("서버 전송용 payload:", payload);
-
-    // 실제 API 연결 시
-    // await postQuote(payload);
-
-    return true;
+      const created = await createShipment(payload);
+      controller?.setMessage?.("견적이 등록되었습니다.");
+      setFormData(QUOTE_REGISTER_INITIAL_STATE);
+      setErrors({});
+      setCurrentStep(1);
+      setActivePanel(null);
+      return created;
+    } catch (err) {
+      controller?.setMessage?.(err.response?.data?.message || "견적 등록 실패");
+      return false;
+    }
   };
 
   const resetForm = () => {

@@ -45,6 +45,14 @@ public class ShipmentController {
         return shipmentService.createShipment(currentUser(authentication), request);
     }
 
+    @PutMapping("/{shipmentId}")
+    @PreAuthorize("hasRole('SHIPPER')")
+    public ShipmentDtos.ShipmentResponse update(@PathVariable Long shipmentId,
+                                                @Valid @RequestBody ShipmentDtos.UpdateShipmentRequest request,
+                                                Authentication authentication) {
+        return shipmentService.updateShipment(shipmentId, currentUser(authentication), request);
+    }
+
     @PostMapping("/{shipmentId}/offers")
     @PreAuthorize("hasRole('DRIVER')")
     public ShipmentDtos.OfferResponse createOffer(@PathVariable Long shipmentId,

@@ -74,12 +74,22 @@ public class ShipmentService {
                 .shipper(shipper)
                 .title(request.getTitle())
                 .cargoType(request.getCargoType())
+                .cargoName(request.getCargoName())
+                .vehicleType(request.getVehicleType())
+                .vehicleNeedConsult(Boolean.TRUE.equals(request.getVehicleNeedConsult()))
                 .weightKg(request.getWeightKg())
+                .weightUnit(request.getWeightUnit())
+                .weightNeedConsult(Boolean.TRUE.equals(request.getWeightNeedConsult()))
                 .description(request.getDescription())
+                .requestNote(request.getRequestNote())
+                .desiredPrice(request.getDesiredPrice())
+                .priceProposalAllowed(Boolean.TRUE.equals(request.getPriceProposalAllowed()))
                 .originAddress(request.getOriginAddress())
+                .originDetailAddress(request.getOriginDetailAddress())
                 .originLat(request.getOriginLat())
                 .originLng(request.getOriginLng())
                 .destinationAddress(request.getDestinationAddress())
+                .destinationDetailAddress(request.getDestinationDetailAddress())
                 .destinationLat(request.getDestinationLat())
                 .destinationLng(request.getDestinationLng())
                 .scheduledStartAt(request.getScheduledStartAt())
@@ -90,6 +100,57 @@ public class ShipmentService {
         shipmentRepository.save(shipment);
         saveCargoImages(shipment, request.getCargoImageDataUrls(), request.getCargoImageNames());
         logStatus(shipment, ShipmentStatus.REQUESTED, ShipmentStatus.BIDDING, shipper.getEmail(), "화물 등록");
+        ShipmentDtos.ShipmentResponse response = toResponse(shipment, shipper);
+        realtimePublisher.publishShipmentUpdated(response);
+        return response;
+    }
+
+    public ShipmentDtos.ShipmentResponse updateShipment(Long shipmentId, User shipper, ShipmentDtos.UpdateShipmentRequest request) {
+        Shipment shipment = getById(shipmentId);
+        if (shipment.getShipper() == null || !shipment.getShipper().getId().equals(shipper.getId())) {
+            throw new RuntimeException("본인 견적만 수정할 수 있습니다.");
+        }
+        if (shipment.getStatus() == ShipmentStatus.IN_TRANSIT || shipment.getStatus() == ShipmentStatus.COMPLETED || shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            throw new RuntimeException("현재 상태에서는 수정할 수 없습니다.");
+        }
+        if (request.getScheduledStartAt() == null) {
+            throw new RuntimeException("운송 시작 예정 시각을 입력해 주세요.");
+        }
+        if (request.getScheduledStartAt().isBefore(LocalDateTime.now().plusMinutes(10))) {
+            throw new RuntimeException("운송 시작 예정 시각은 현재보다 최소 10분 이후여야 합니다.");
+        }
+
+        int estimatedMinutes = estimateMinutes(request.getOriginLat(), request.getOriginLng(), request.getDestinationLat(), request.getDestinationLng());
+        double estimatedDistanceKm = estimateDistanceKm(request.getOriginLat(), request.getOriginLng(), request.getDestinationLat(), request.getDestinationLng());
+
+        shipment.setTitle(request.getTitle());
+        shipment.setCargoType(request.getCargoType());
+        shipment.setCargoName(request.getCargoName());
+        shipment.setVehicleType(request.getVehicleType());
+        shipment.setVehicleNeedConsult(Boolean.TRUE.equals(request.getVehicleNeedConsult()));
+        shipment.setWeightKg(request.getWeightKg());
+        shipment.setWeightUnit(request.getWeightUnit());
+        shipment.setWeightNeedConsult(Boolean.TRUE.equals(request.getWeightNeedConsult()));
+        shipment.setDescription(request.getDescription());
+        shipment.setRequestNote(request.getRequestNote());
+        shipment.setDesiredPrice(request.getDesiredPrice());
+        shipment.setPriceProposalAllowed(Boolean.TRUE.equals(request.getPriceProposalAllowed()));
+        shipment.setOriginAddress(request.getOriginAddress());
+        shipment.setOriginDetailAddress(request.getOriginDetailAddress());
+        shipment.setOriginLat(request.getOriginLat());
+        shipment.setOriginLng(request.getOriginLng());
+        shipment.setDestinationAddress(request.getDestinationAddress());
+        shipment.setDestinationDetailAddress(request.getDestinationDetailAddress());
+        shipment.setDestinationLat(request.getDestinationLat());
+        shipment.setDestinationLng(request.getDestinationLng());
+        shipment.setScheduledStartAt(request.getScheduledStartAt());
+        shipment.setEstimatedMinutes(estimatedMinutes);
+        shipment.setEstimatedDistanceKm(estimatedDistanceKm);
+        shipmentRepository.save(shipment);
+
+        shipmentImageRepository.deleteByShipmentAndType(shipment, ShipmentImageType.CARGO);
+        saveCargoImages(shipment, request.getCargoImageDataUrls(), request.getCargoImageNames());
+        logStatus(shipment, shipment.getStatus(), shipment.getStatus(), shipper.getEmail(), "견적 수정");
         ShipmentDtos.ShipmentResponse response = toResponse(shipment, shipper);
         realtimePublisher.publishShipmentUpdated(response);
         return response;
@@ -409,12 +470,22 @@ public class ShipmentService {
                 .id(shipment.getId())
                 .title(shipment.getTitle())
                 .cargoType(shipment.getCargoType())
+                .cargoName(shipment.getCargoName())
+                .vehicleType(shipment.getVehicleType())
+                .vehicleNeedConsult(shipment.getVehicleNeedConsult())
                 .weightKg(shipment.getWeightKg())
+                .weightUnit(shipment.getWeightUnit())
+                .weightNeedConsult(shipment.getWeightNeedConsult())
                 .description(shipment.getDescription())
+                .requestNote(shipment.getRequestNote())
+                .desiredPrice(shipment.getDesiredPrice())
+                .priceProposalAllowed(shipment.getPriceProposalAllowed())
                 .originAddress(shipment.getOriginAddress())
+                .originDetailAddress(shipment.getOriginDetailAddress())
                 .originLat(shipment.getOriginLat())
                 .originLng(shipment.getOriginLng())
                 .destinationAddress(shipment.getDestinationAddress())
+                .destinationDetailAddress(shipment.getDestinationDetailAddress())
                 .destinationLat(shipment.getDestinationLat())
                 .destinationLng(shipment.getDestinationLng())
                 .estimatedMinutes(shipment.getEstimatedMinutes())

@@ -6,6 +6,54 @@ import {
   CARGO_TYPES,
 } from "../constants/quoteRegisterOptions";
 
+function getPreviewMeta(image, index) {
+  if (image instanceof File || image instanceof Blob) {
+    return {
+      key: `${image.name || "image"}-${index}`,
+      name: image.name || `image-${index + 1}`,
+      sizeText:
+        typeof image.size === "number"
+          ? `${(image.size / 1024 / 1024).toFixed(2)}MB`
+          : "",
+      objectUrlTarget: image,
+      fallbackUrl: null,
+    };
+  }
+
+  if (typeof image === "string") {
+    const trimmed = image.trim();
+    if (!trimmed) {
+      return {
+        key: `image-empty-${index}`,
+        name: `image-${index + 1}`,
+        sizeText: "",
+        objectUrlTarget: null,
+        fallbackUrl: "",
+      };
+    }
+
+    const isDataUrl = trimmed.startsWith("data:");
+    const isHttpUrl = /^https?:\/\//i.test(trimmed);
+    const isRelativeUrl = trimmed.startsWith("/");
+
+    return {
+      key: `${trimmed.slice(0, 30)}-${index}`,
+      name: `image-${index + 1}`,
+      sizeText: isDataUrl ? "저장된 이미지" : "등록된 이미지",
+      objectUrlTarget: null,
+      fallbackUrl: isDataUrl || isHttpUrl || isRelativeUrl ? trimmed : "",
+    };
+  }
+
+  return {
+    key: `image-unknown-${index}`,
+    name: `image-${index + 1}`,
+    sizeText: "",
+    objectUrlTarget: null,
+    fallbackUrl: "",
+  };
+}
+
 function VehicleItem({ item, selectedValue, onSelect }) {
   const isSelected = selectedValue === item.label;
 
@@ -48,11 +96,25 @@ export default function CargoAssistPanel({
   const isLargeTab = useMemo(() => tab === "large", [tab]);
 
   useEffect(() => {
-    const nextUrls = selectedImages.map((file) => URL.createObjectURL(file));
+    const previewMetaList = selectedImages.map((image, index) =>
+      getPreviewMeta(image, index)
+    );
+
+    const nextUrls = previewMetaList.map((meta) => {
+      if (meta.objectUrlTarget) {
+        return URL.createObjectURL(meta.objectUrlTarget);
+      }
+      return meta.fallbackUrl;
+    });
+
     setPreviewUrls(nextUrls);
 
     return () => {
-      nextUrls.forEach((url) => URL.revokeObjectURL(url));
+      previewMetaList.forEach((meta, index) => {
+        if (meta.objectUrlTarget && nextUrls[index]) {
+          URL.revokeObjectURL(nextUrls[index]);
+        }
+      });
     };
   }, [selectedImages]);
 
@@ -218,29 +280,35 @@ export default function CargoAssistPanel({
           </div>
         ) : (
           <ul className="image-preview-list">
-            {selectedImages.map((file, index) => (
-              <li key={`${file.name}-${index}`} className="image-preview-item">
-                <div className="image-preview-thumb">
-                  <img src={previewUrls[index]} alt={file.name} />
-                </div>
+            {selectedImages.map((image, index) => {
+              const previewMeta = getPreviewMeta(image, index);
+              const previewUrl = previewUrls[index];
+              return (
+                <li key={previewMeta.key} className="image-preview-item">
+                  <div className="image-preview-thumb">
+                    {previewUrl ? (
+                      <img src={previewUrl} alt={previewMeta.name} />
+                    ) : (
+                      <div className="image-preview-empty">미리보기 없음</div>
+                    )}
+                  </div>
 
-                <div className="image-preview-meta">
-                  <span className="image-preview-name">{file.name}</span>
-                  <span className="image-preview-size">
-                    {(file.size / 1024 / 1024).toFixed(2)}MB
-                  </span>
-                </div>
+                  <div className="image-preview-meta">
+                    <span className="image-preview-name">{previewMeta.name}</span>
+                    <span className="image-preview-size">{previewMeta.sizeText}</span>
+                  </div>
 
-                <button
-                  type="button"
-                  className="image-preview-remove"
-                  onClick={() => onRemoveImage?.(index)}
-                  aria-label={`${file.name} 삭제`}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    className="image-preview-remove"
+                    onClick={() => onRemoveImage?.(index)}
+                    aria-label={`${previewMeta.name} 삭제`}
+                  >
+                    ×
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

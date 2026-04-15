@@ -34,7 +34,7 @@ export default function ShipperHeader({ controller }) {
         <nav className="landing-nav">
           <button
             type="button"
-            className={navButtonClass(currentRoute === "quotes")}
+            className={navButtonClass(currentRoute === "quotes" || currentRoute === "detail")}
             onClick={() => controller.setRoutePage("quotes")}
           >
             견적 목록 보기
@@ -42,7 +42,7 @@ export default function ShipperHeader({ controller }) {
 
           <button
             type="button"
-            className={navButtonClass(currentRoute === "register")}
+            className={navButtonClass(currentRoute === "register" || currentRoute === "quoteRegister")}
             onClick={() => controller.setRoutePage("register")}
           >
             견적 등록

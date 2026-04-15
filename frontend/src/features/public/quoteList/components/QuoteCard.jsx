@@ -78,6 +78,33 @@ function formatPrice(desiredPrice) {
   return `${numericPrice.toLocaleString()}원`;
 }
 
+function formatDistance(distanceKm) {
+  if (distanceKm === null || distanceKm === undefined || distanceKm === "") {
+    return "-";
+  }
+
+  const numeric = Number(distanceKm);
+  if (Number.isNaN(numeric)) return "-";
+  return `${numeric.toFixed(1)}km`;
+}
+
+function formatDuration(minutes) {
+  if (minutes === null || minutes === undefined || minutes === "") {
+    return "-";
+  }
+
+  const numeric = Number(minutes);
+  if (Number.isNaN(numeric)) return "-";
+
+  if (numeric < 60) {
+    return `${numeric}분`;
+  }
+
+  const hour = Math.floor(numeric / 60);
+  const minute = numeric % 60;
+  return minute === 0 ? `${hour}시간` : `${hour}시간 ${minute}분`;
+}
+
 export default function QuoteCard({ quote, onClickDetail }) {
   const {
     estimateName,
@@ -89,6 +116,8 @@ export default function QuoteCard({ quote, onClickDetail }) {
     cargoType,
     vehicleType,
     status,
+    estimatedDistanceKm,
+    estimatedMinutes,
   } = quote;
 
   const statusText = status || "입찰 진행중";
@@ -98,6 +127,8 @@ export default function QuoteCard({ quote, onClickDetail }) {
   const destinationSido = getRegionLabel(destinationAddress);
   const dDayText = formatDDay(transportDate);
   const priceText = formatPrice(desiredPrice);
+  const distanceText = formatDistance(estimatedDistanceKm);
+  const durationText = formatDuration(estimatedMinutes);
 
   return (
     <article className="quote-card">
@@ -165,7 +196,7 @@ export default function QuoteCard({ quote, onClickDetail }) {
           </div>
 
           <div className="quote-card__date-box">
-            <span>운송일</span>
+            <span>희망 도착일</span>
             <strong>{transportDate || "-"}</strong>
           </div>
         </div>

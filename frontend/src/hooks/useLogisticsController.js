@@ -2248,5 +2248,6 @@ export function useLogisticsController() {
     openReceipt,
     closeReceipt,
     routeParams,
+    setMessage,
   };
 }

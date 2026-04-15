@@ -1,6 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 import DaumPostcode from "react-daum-postcode";
 
+const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY || "";
+
+function loadKakaoSdk() {
+  if (window.kakao?.maps?.services) return Promise.resolve(window.kakao);
+
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-kakao="true"]');
+    if (existing) {
+      existing.addEventListener("load", () =>
+        window.kakao.maps.load(() => resolve(window.kakao)),
+      );
+      existing.addEventListener("error", reject);
+      return;
+    }
+
+    if (!KAKAO_APP_KEY) {
+      reject(new Error("NO_KAKAO_APP_KEY"));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.dataset.kakao = "true";
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services&appkey=${KAKAO_APP_KEY}`;
+    script.onload = () => window.kakao.maps.load(() => resolve(window.kakao));
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
 export default function AddressPanel({
   title,
   fieldName,
@@ -14,9 +44,9 @@ export default function AddressPanel({
   const [detailAddress, setDetailAddress] = useState("");
   const [floor, setFloor] = useState("");
   const [hasElevator, setHasElevator] = useState("");
+  const [resolvedCoords, setResolvedCoords] = useState({ lat: null, lng: null });
 
   useEffect(() => {
-    // 기존에 선택한 주소가 있으면 다시 열 때 상세주소 입력 화면부터 보여주기
     if (currentValue) {
       setSelectedBaseAddress(currentValue);
       setPanelStep("detail");
@@ -33,7 +63,6 @@ export default function AddressPanel({
     }
 
     const detailText = currentDetailValue;
-
     const floorMatch = detailText.match(/(\d+)\s*층/);
     const elevatorMatch = detailText.match(/엘리베이터\s*(있음|없음)/);
 
@@ -54,7 +83,32 @@ export default function AddressPanel({
     return "";
   };
 
-  const handleComplete = (data) => {
+  const getLatFieldName = () =>
+    fieldName === "originAddress" ? "originLat" : "destinationLat";
+
+  const getLngFieldName = () =>
+    fieldName === "originAddress" ? "originLng" : "destinationLng";
+
+  const resolveAddressCoords = async (fullAddress) => {
+    const kakao = await loadKakaoSdk();
+    const geocoder = new kakao.maps.services.Geocoder();
+
+    return new Promise((resolve, reject) => {
+      geocoder.addressSearch(fullAddress, (result, status) => {
+        if (status !== kakao.maps.services.Status.OK || !result?.[0]) {
+          reject(new Error("ADDRESS_GEOCODE_FAILED"));
+          return;
+        }
+
+        resolve({
+          lat: Number(result[0].y),
+          lng: Number(result[0].x),
+        });
+      });
+    });
+  };
+
+  const handleComplete = async (data) => {
     let fullAddress = data.address;
     let extraAddress = "";
 
@@ -64,9 +118,7 @@ export default function AddressPanel({
       }
 
       if (data.buildingName) {
-        extraAddress += extraAddress
-          ? `, ${data.buildingName}`
-          : data.buildingName;
+        extraAddress += extraAddress ? `, ${data.buildingName}` : data.buildingName;
       }
 
       if (extraAddress) {
@@ -77,6 +129,15 @@ export default function AddressPanel({
     updateField(fieldName, fullAddress);
     setSelectedBaseAddress(fullAddress);
     setPanelStep("detail");
+
+    try {
+      const coords = await resolveAddressCoords(fullAddress);
+      setResolvedCoords(coords);
+      updateField(getLatFieldName(), coords.lat);
+      updateField(getLngFieldName(), coords.lng);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const isValidFloor = useMemo(() => {
@@ -116,6 +177,12 @@ export default function AddressPanel({
     }
 
     updateField(detailFieldName, detailParts.join(" "));
+
+    if (resolvedCoords.lat !== null && resolvedCoords.lng !== null) {
+      updateField(getLatFieldName(), resolvedCoords.lat);
+      updateField(getLngFieldName(), resolvedCoords.lng);
+    }
+
     closePanel();
   };
 

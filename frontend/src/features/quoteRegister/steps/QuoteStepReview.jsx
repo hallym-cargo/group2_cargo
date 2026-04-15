@@ -1,5 +1,53 @@
 import { useEffect, useState } from "react";
 
+function getPreviewMeta(image, index) {
+  if (image instanceof File || image instanceof Blob) {
+    return {
+      key: `${image.name || "image"}-${index}`,
+      name: image.name || `image-${index + 1}`,
+      sizeText:
+        typeof image.size === "number"
+          ? `${(image.size / 1024 / 1024).toFixed(2)}MB`
+          : "",
+      objectUrlTarget: image,
+      fallbackUrl: null,
+    };
+  }
+
+  if (typeof image === "string") {
+    const trimmed = image.trim();
+    if (!trimmed) {
+      return {
+        key: `image-empty-${index}`,
+        name: `image-${index + 1}`,
+        sizeText: "",
+        objectUrlTarget: null,
+        fallbackUrl: "",
+      };
+    }
+
+    const isDataUrl = trimmed.startsWith("data:");
+    const isHttpUrl = /^https?:\/\//i.test(trimmed);
+    const isRelativeUrl = trimmed.startsWith("/");
+
+    return {
+      key: `${trimmed.slice(0, 30)}-${index}`,
+      name: `image-${index + 1}`,
+      sizeText: isDataUrl ? "저장된 이미지" : "등록된 이미지",
+      objectUrlTarget: null,
+      fallbackUrl: isDataUrl || isHttpUrl || isRelativeUrl ? trimmed : "",
+    };
+  }
+
+  return {
+    key: `image-unknown-${index}`,
+    name: `image-${index + 1}`,
+    sizeText: "",
+    objectUrlTarget: null,
+    fallbackUrl: "",
+  };
+}
+
 export default function QuoteStepReview({ formData = {} }) {
   const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
 
@@ -7,11 +55,26 @@ export default function QuoteStepReview({ formData = {} }) {
     const files = Array.isArray(formData.cargoImages)
       ? formData.cargoImages
       : [];
-    const nextUrls = files.map((file) => URL.createObjectURL(file));
+
+    const previewMetaList = files.map((image, index) =>
+      getPreviewMeta(image, index)
+    );
+
+    const nextUrls = previewMetaList.map((meta) => {
+      if (meta.objectUrlTarget) {
+        return URL.createObjectURL(meta.objectUrlTarget);
+      }
+      return meta.fallbackUrl;
+    });
+
     setImagePreviewUrls(nextUrls);
 
     return () => {
-      nextUrls.forEach((url) => URL.revokeObjectURL(url));
+      previewMetaList.forEach((meta, index) => {
+        if (meta.objectUrlTarget && nextUrls[index]) {
+          URL.revokeObjectURL(nextUrls[index]);
+        }
+      });
     };
   }, [formData.cargoImages]);
 
