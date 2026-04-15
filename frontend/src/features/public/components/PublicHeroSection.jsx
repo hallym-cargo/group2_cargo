@@ -102,10 +102,10 @@ export default function PublicHeroSection({ controller }) {
         <div className="landing-hero__inner">
           <div className="landing-hero__copy" data-reveal>
             <div className="landing-kicker">SMART LOGISTICS PLATFORM</div>
-            <h1>화주, 차주, 관리자 운영을 한 흐름으로 연결하는 운송 관리 플랫폼</h1>
+            <h1>원하는 가격으로<br /> 운송을 시작하세요</h1>
             <p>
-              배차 등록부터 입찰, 운행 추적, 정산, 운영 관리까지 하나의 서비스 경험으로 이어집니다.
-              첫 화면은 신뢰감 있게 넓고 단정하게, 운영 화면은 빠르고 실무적으로 설계했습니다.
+              여러 견적을 비교하고 가장 적합한 운송을 선택할 수 있습니다. <br />
+              조건에 맞는 운송을 지금 바로 시작하세요.
             </p>
             <div className="landing-hero__actions">
               <button className="landing-btn landing-btn--primary" onClick={() => document.getElementById('board')?.scrollIntoView({ behavior: 'smooth' })}>실시간 배차 보기</button>
@@ -162,21 +162,21 @@ export default function PublicHeroSection({ controller }) {
       <section className="landing-solution" id="landing-solution" data-reveal>
         <div className="landing-sectionHead">
           <span>PLATFORM FLOW</span>
-          <h2>메인 페이지는 넓고 단정하게, 운영 화면은 역할별로 빠르게</h2>
-          <p>공개 화면에서 서비스 신뢰를 전달하고, 로그인 이후에는 역할별 업무 흐름으로 곧바로 연결됩니다.</p>
+          <h2>배차부터 운영까지, <br /> 하나로 이어진 운송 흐름</h2>
+          <p>배차 등록부터 입찰 선택, 운송까지 각 단계가 자연스럽게 이어지며 전체 과정을 완성합니다</p>
         </div>
         <div className="landing-solutionGrid">
           <article>
-            <strong>01. 화주 등록</strong>
-            <p>출발지, 도착지, 화물 정보 입력 후 공개 배차 보드에 즉시 반영됩니다.</p>
+            <strong>01. 배차 등록  </strong>
+            <p>출발지와 도착지, 화물 정보를 입력하면 배차가 즉시 공개되고, 차주들의 입찰이 시작됩니다.</p>
           </article>
           <article>
-            <strong>02. 차주 입찰</strong>
-            <p>입찰가와 메시지를 비교하고, 확정 이후에는 운행 상태와 ETA가 이어집니다.</p>
+            <strong>02. 입찰 선택</strong>
+            <p>다양한 차주의 입찰가와 메시지를 비교하고, <br /> 최적의 운송 조건을 선택해 운행을 진행합니다.</p>
           </article>
           <article>
-            <strong>03. 관리자 운영</strong>
-            <p>회원 상태, 공지, 문의, 분쟁과 같은 운영 항목을 한 화면에서 관리합니다.</p>
+            <strong>03. 실시간 운송</strong>
+            <p>트럭의 이동 경로와 진행 상태를 실시간으로 확인하고, <br /> 운행 흐름을 한눈에 파악합니다.</p>
           </article>
         </div>
       </section>

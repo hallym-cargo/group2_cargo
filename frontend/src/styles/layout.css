@@ -84,6 +84,11 @@
 }
 
 /* 추가 */
+.bookmark-status {
+  margin-left: 3px;
+}
+
+/* 추가 */
 .penalty-item {
   padding: 12px;
   border-radius: 10px;

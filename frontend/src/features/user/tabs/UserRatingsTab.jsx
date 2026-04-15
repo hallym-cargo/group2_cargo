@@ -36,7 +36,7 @@ export default function UserRatingsTab({ controller }) {
         </div>
       </div>
       <div className="console-grid two">
-        <div className="surface">
+        <div className="surface ratings-pending">
           <SectionTitle title="평가 대기 목록" desc="완료된 거래에 대해 상대방을 평가할 수 있습니다." />
           <div className="list-stack">
             {(ratingsDashboard.pendingRatings || []).length ?

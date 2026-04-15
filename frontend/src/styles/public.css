@@ -123,6 +123,8 @@
   color: var(--text-sub);
   font-size: 12px;
   font-weight: 700;
+  /* 추가 */
+  white-space: nowrap;
 }
 
 .tag-dark {

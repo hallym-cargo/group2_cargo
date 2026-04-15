@@ -81,7 +81,7 @@ export default function UserBoardTab({ controller }) {
 
   return (
     <div className="page-stack">
-      <div className="surface table-surface">
+      <div className="surface table-surface shipment-table">
         <div className="table-head">
           <div className="table-head-row">
             <SectionTitle title="배차 목록" />
@@ -216,7 +216,7 @@ export default function UserBoardTab({ controller }) {
         </div>
       </div>
 
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      {/* <Pagination page={page} totalPages={totalPages} onPageChange={setPage} /> */}
 
       <div className="detail-layout">
         <div className="surface">

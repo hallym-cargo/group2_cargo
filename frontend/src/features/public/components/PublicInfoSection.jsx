@@ -8,8 +8,8 @@ export default function PublicInfoSection({ controller }) {
       <div className="landing-info__inner">
         <div className="landing-sectionHead" data-reveal>
           <span>NOTICE & SUPPORT</span>
-          <h2>운영 공지, 자주 묻는 질문, 도입 문의까지 한 곳에서 안내합니다.</h2>
-          <p>실제 서비스에 사용할 수 있도록 공지와 문의 흐름을 간결하고 읽기 쉬운 형태로 정리했습니다.</p>
+          <h2>서비스 이용 FAQ 및 도입 문의 안내</h2>
+          <p>자주 묻는 질문과 도입 문의를 통해 필요한 정보를 빠르게 확인할 수 있습니다.</p>
         </div>
 
         <div className="landing-infoGrid">

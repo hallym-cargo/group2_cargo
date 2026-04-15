@@ -1,9 +1,10 @@
 import ProfilePreviewCard from '../../../components/common/ProfilePreviewCard'
 import SectionTitle from '../../../components/common/SectionTitle'
 import VehicleTypeSelector from '../../../components/common/VehicleTypeSelector'
-import { formatCurrency, resolveMediaUrl, statusText } from '../../../utils/formatters'
-import { useRef } from 'react'
+// import { formatCurrency, resolveMediaUrl, statusText } from '../../../utils/formatters'
+import { useRef, useState } from 'react'
 import { parseVehicleTypeString, stringifyVehicleTypes } from '../../../constants/vehicleCatalog'
+import { formatCurrency, resolveMediaUrl, statusText, formatRatingSummary, roleText } from '../../../utils/formatters'
 
 function renderPenaltyStatus(profile) {
   if (!profile) return '정보 불러오는 중'
@@ -45,6 +46,8 @@ export default function UserOverviewTab({ controller }) {
   const cancelRate = Number(profile?.cancelRate || 0)
   const penaltyStatus = renderPenaltyStatus(profile)
   const selectedVehicles = parseVehicleTypeString(profileForm.vehicleType)
+
+  const [vehicleOpen, setVehicleOpen] = useState(false)
 
   return (
     <div className="page-stack">
@@ -235,35 +238,49 @@ export default function UserOverviewTab({ controller }) {
 
             {auth.role === 'DRIVER' && (
               <div className="form-stack">
-                <div>
-                  <strong style={{ display: 'block', marginBottom: 8 }}>보유 차량 선택</strong>
-                  <VehicleTypeSelector
-                    values={selectedVehicles}
-                    onChange={(values) =>
-                      setProfileForm({
-                        ...profileForm,
-                        vehicleType: stringifyVehicleTypes(values),
-                      })
-                    }
-                    inputClassName="login-input"
-                    placeholder="보유 차량을 검색하거나 아래 목록에서 선택해 주세요"
-                  />
-                  <small style={{ display: 'block', marginTop: 8, color: '#6f7b91' }}>
-                    여러 차량을 동시에 선택할 수 있습니다.
-                  </small>
-                </div>
+                <strong style={{ display: 'block' }}>보유 차량 선택</strong>
+
+                <input
+                  className="login-input vehicle-input-large"
+                  value={selectedVehicles.join(', ')}
+                  readOnly
+                  onClick={() => setVehicleOpen((prev) => !prev)}
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                />
+
+                {vehicleOpen && (
+                  <div className="vehicle-selector-wrap">
+                    <VehicleTypeSelector
+                      values={selectedVehicles}
+                      onChange={(values) =>
+                        setProfileForm({
+                          ...profileForm,
+                          vehicleType: stringifyVehicleTypes(values),
+                        })
+                      }
+                    />
+                  </div>
+                )}
+
+                <button className="btn btn-primary" onClick={handleSaveProfile}>
+                  회원정보 저장
+                </button>
+
+                {vehicleOpen && (
+                  <div style={{ marginTop: 12 }}>
+                    <small style={{ color: '#6f7b91' }}>
+                      여러 차량을 동시에 선택할 수 있습니다.
+                    </small>
+                  </div>
+                )}
               </div>
             )}
-
-            <button className="btn btn-primary" onClick={handleSaveProfile}>
-              회원정보 저장
-            </button>
           </div>
         </div>
 
-        <div className="surface profile-edit-surface">
+        <div className="surface profile-edit-surface profile-preview-box">
           <SectionTitle title="공개 프로필 미리보기" desc="거래 상대가 확인할 수 있는 공개 정보입니다." />
-          <ProfilePreviewCard
+          {/* <ProfilePreviewCard
             title="내 프로필"
             profile={
               profile
@@ -279,7 +296,69 @@ export default function UserOverviewTab({ controller }) {
                   completedCount: profile?.completedCount,
                 }
             }
-          />
+          /> */}
+
+
+          <article className="public-directory-card surface">
+            <div className="public-directory-card__head">
+              <div className="public-directory-card__profileTrigger">
+                <img
+                  src={
+                    resolveMediaUrl(profileForm.profileImageUrl) ||
+                    "/images/default-profile.png"
+                  }
+                  alt={auth.name}
+                  className="public-directory-card__avatar"
+                />
+                <div className="public-directory-card__profileText">
+                  <span>{roleText(auth.role)}</span>
+                  <h3>{auth.name}</h3>
+                </div>
+              </div>
+
+              <strong>
+                {formatRatingSummary(
+                  profile?.averageRating,
+                  profile?.ratingCount
+                )}
+              </strong>
+            </div>
+
+            <div className="public-directory-card__stats">
+              <div>
+                <span>{auth.role === "DRIVER" ? "차량 정보" : "회사명"}</span>
+                <strong>
+                  {auth.role === "DRIVER"
+                    ? profileForm.vehicleType || "-"
+                    : profileForm.companyName || signupForm.companyName || "-"}
+                </strong>
+              </div>
+              <div>
+                <span>완료 건수</span>
+                <strong>{profile?.completedCount || 0}건</strong>
+              </div>
+            </div>
+
+            <dl className="public-directory-card__info">
+              <div>
+                <dt>연락 이메일</dt>
+                <dd>{profileForm.contactEmail || "-"}</dd>
+              </div>
+              <div>
+                <dt>연락처</dt>
+                <dd>{profileForm.contactPhone || "-"}</dd>
+              </div>
+            </dl>
+
+            <p>
+              {profileForm.bio ||
+                (auth.role === "DRIVER"
+                  ? "등록된 차주 소개가 없습니다."
+                  : "등록된 화주 소개가 없습니다.")}
+            </p>
+          </article>
+
+
         </div>
       </div>
 
@@ -439,20 +518,33 @@ export default function UserOverviewTab({ controller }) {
           <SectionTitle title="관심 견적" />
           <div className="list-stack">
             {bookmarks.length ? (
-              bookmarks.slice(0, 5).map((item) => (
-                <button
-                  key={item.id}
-                  className="bookmark-item"
-                  onClick={() => {
-                    setSelectedId(item.id)
-                    setDashboardTab('board')
-                  }}
-                >
-                  <strong>{item.title}</strong>
+              // bookmarks.slice(0, 5).map((item) => (
+              bookmarks
+                .slice()
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 5)
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    className="bookmark-item"
+                    onClick={() => {
+                      setSelectedId(item.id)
+                      setDashboardTab('board')
+                    }}
+                  >
+                    {/* <strong>{item.title}</strong>
                   <small>{item.originAddress} → {item.destinationAddress}</small>
-                  <span>{statusText(item.status)}</span>
-                </button>
-              ))
+                  <span>{statusText(item.status)}</span> */}
+                    <div className="bookmark-top">
+                      <strong>{item.title}</strong>
+                      <span className="bookmark-status">{statusText(item.status)}</span>
+                    </div>
+
+                    <div className="bookmark-address">
+                      {item.originAddress} → {item.destinationAddress}
+                    </div>
+                  </button>
+                ))
             ) : (
               <div className="empty-box small">즐겨찾기한 배차가 없습니다.</div>
             )}

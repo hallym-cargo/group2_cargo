@@ -7,8 +7,8 @@ export default function ChatFloatingButton({
   onNotificationClick,
   onPlaceholderClick,
   onGameClick,
+  onAssistantClick,
 }) {
-export default function ChatFloatingButton({ unreadCount, notificationUnreadCount, onAssistantClick, onChatClick, onNotificationClick }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
 
@@ -33,6 +33,8 @@ export default function ChatFloatingButton({ unreadCount, notificationUnreadCoun
   return (
     <div className={`floating-quick-menu ${open ? 'is-open' : ''}`} ref={rootRef}>
       <div className="floating-quick-menu__actions">
+
+        {/* 준비중 */}
         <button
           className="floating-quick-menu__action floating-quick-menu__action--placeholder"
           type="button"
@@ -40,10 +42,19 @@ export default function ChatFloatingButton({ unreadCount, notificationUnreadCoun
           aria-label="추가 메뉴 1"
         >
           <span className="floating-quick-menu__action-label">준비중</span>
-        <button className="floating-quick-menu__action floating-quick-menu__action--assistant" type="button" onClick={() => handleAction(onAssistantClick, 'assistant')} aria-label="AI 비서 열기">
+        </button>
+
+        {/* AI */}
+        <button
+          className="floating-quick-menu__action floating-quick-menu__action--assistant"
+          type="button"
+          onClick={() => handleAction(onAssistantClick, 'assistant')}
+          aria-label="AI 비서 열기"
+        >
           <span className="floating-quick-menu__action-label">AI</span>
         </button>
 
+        {/* 게임 */}
         <button
           className="floating-quick-menu__action floating-quick-menu__action--game"
           type="button"
@@ -53,6 +64,7 @@ export default function ChatFloatingButton({ unreadCount, notificationUnreadCoun
           <span className="floating-quick-menu__action-label">게임</span>
         </button>
 
+        {/* 알림 */}
         <button
           className="floating-quick-menu__action floating-quick-menu__action--notification"
           type="button"
@@ -67,6 +79,7 @@ export default function ChatFloatingButton({ unreadCount, notificationUnreadCoun
           )}
         </button>
 
+        {/* 채팅 */}
         <button
           className="floating-quick-menu__action floating-quick-menu__action--chat"
           type="button"
@@ -80,6 +93,7 @@ export default function ChatFloatingButton({ unreadCount, notificationUnreadCoun
             </span>
           )}
         </button>
+
       </div>
 
       <button

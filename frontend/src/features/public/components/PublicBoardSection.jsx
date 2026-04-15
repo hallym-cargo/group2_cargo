@@ -15,8 +15,8 @@ export default function PublicBoardSection({ controller }) {
       <div className="landing-board__inner">
         <div className="landing-sectionHead" data-reveal>
           <span>LIVE BOARD</span>
-          <h2>실시간 배차 현황을 한눈에 볼 수 있는 공개 보드</h2>
-          <p>로그인 전에도 현재 운영 흐름을 이해할 수 있도록, 배차 상태와 핵심 지표를 투명하게 제공합니다.</p>
+          <h2>실시간 배차 상태와 <br /> 핵심 지표로 확인하는 운송 흐름</h2>
+          <p>배차 현황과 주요 지표를 실시간으로 제공해 전체 흐름을 한눈에 확인할 수 있습니다</p>
         </div>
 
         <div className="landing-filterRow" data-reveal>
