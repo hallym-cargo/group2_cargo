@@ -12,4 +12,5 @@ public interface ShipmentImageRepository extends JpaRepository<ShipmentImage, Lo
     List<ShipmentImage> findByShipmentOrderByCreatedAtAsc(Shipment shipment);
     List<ShipmentImage> findByShipmentAndTypeOrderByCreatedAtAsc(Shipment shipment, ShipmentImageType type);
     Optional<ShipmentImage> findTopByShipmentAndTypeOrderByCreatedAtDesc(Shipment shipment, ShipmentImageType type);
+    void deleteByShipmentAndType(Shipment shipment, ShipmentImageType type);
 }

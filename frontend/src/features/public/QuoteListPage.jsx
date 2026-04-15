@@ -1,38 +1,57 @@
 import { useEffect, useMemo, useState } from "react";
-import ShipperHeader from "./components/ShipperHeader";
+import QuotePageHeader from "./components/QuotePageHeader";
 import "./quoteList/quoteList.css";
 import QuoteListFilterBar from "./quoteList/components/QuoteListFilterBar";
 import QuoteListSummaryBar from "./quoteList/components/QuoteListSummaryBar";
 import QuoteCard from "./quoteList/components/QuoteCard";
 import QuoteListPagination from "./quoteList/components/QuoteListPagination";
-import { QUOTE_LIST_DUMMY_DATA } from "./quoteList/constants/quoteListDummyData";
+import { shipmentToQuote } from "./quoteUtils";
 
 export default function QuoteListPage({ controller }) {
   const [status, setStatus] = useState("전체");
   const [origin, setOrigin] = useState("전체");
   const [destination, setDestination] = useState("전체");
+  const [ownerFilter, setOwnerFilter] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortOrder, setSortOrder] = useState("최신 등록순");
 
-  const pageSize = 10;
+  const profileId = controller.profile?.id;
+  const mappedQuotes = useMemo(
+    () => (controller.shipments || []).map(shipmentToQuote),
+    [controller.shipments],
+  );
 
   const filteredQuotes = useMemo(() => {
-    return QUOTE_LIST_DUMMY_DATA.filter((quote) => {
-      const quoteStatus = quote.status || "입찰 진행중";
-      const quoteOrigin = quote.originAddress || "";
-      const quoteDestination = quote.destinationAddress || "";
+    return mappedQuotes
+      .filter((quote) => {
+        const quoteStatus = quote.status || "입찰 진행중";
+        const quoteOrigin = quote.originAddress || "";
+        const quoteDestination = quote.destinationAddress || "";
+        const isMine = profileId && quote.shipperId === profileId;
 
-      const matchStatus = status === "전체" || quoteStatus === status;
-      const matchOrigin = origin === "전체" || quoteOrigin.includes(origin);
-      const matchDestination =
-        destination === "전체" || quoteDestination.includes(destination);
+        const matchStatus = status === "전체" || quoteStatus === status;
+        const matchOrigin = origin === "전체" || quoteOrigin.includes(origin);
+        const matchDestination =
+          destination === "전체" || quoteDestination.includes(destination);
+        const matchOwner = ownerFilter === "전체" || isMine;
 
-      return matchStatus && matchOrigin && matchDestination;
-    });
-  }, [status, origin, destination]);
+        return matchStatus && matchOrigin && matchDestination && matchOwner;
+      })
+      .sort((a, b) => {
+        if (sortOrder === "높은 운임순") {
+          return Number(b.desiredPrice || 0) - Number(a.desiredPrice || 0);
+        }
+        if (sortOrder === "마감 임박순") {
+          return new Date(a.scheduledStartAt || a.transportDate || 0) - new Date(b.scheduledStartAt || b.transportDate || 0);
+        }
+        return new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0);
+      });
+  }, [mappedQuotes, status, origin, destination, ownerFilter, profileId, sortOrder]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [status, origin, destination]);
+  }, [status, origin, destination, ownerFilter, pageSize, sortOrder]);
 
   const totalCount = filteredQuotes.length;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -41,7 +60,7 @@ export default function QuoteListPage({ controller }) {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return filteredQuotes.slice(startIndex, endIndex);
-  }, [filteredQuotes, currentPage]);
+  }, [filteredQuotes, currentPage, pageSize]);
 
   useEffect(() => {
     if (totalPages > 0 && currentPage > totalPages) {
@@ -51,7 +70,7 @@ export default function QuoteListPage({ controller }) {
 
   return (
     <div className="public-shell">
-      <ShipperHeader controller={controller} />
+      <QuotePageHeader controller={controller} />
 
       <div className="quote-list-page">
         <section className="quote-list-hero">
@@ -66,14 +85,25 @@ export default function QuoteListPage({ controller }) {
           status={status}
           origin={origin}
           destination={destination}
+          ownerFilter={ownerFilter}
           onChangeStatus={setStatus}
           onChangeOrigin={setOrigin}
           onChangeDestination={setDestination}
+          onChangeOwnerFilter={setOwnerFilter}
+          isLoggedIn={controller.isLoggedIn}
+          isShipper={controller.auth?.role === "SHIPPER"}
         />
 
         <QuoteListSummaryBar
           totalCount={totalCount}
+          ownerFilter={ownerFilter}
+          onChangeOwnerFilter={setOwnerFilter}
+          pageSize={pageSize}
+          onChangePageSize={setPageSize}
+          sortOrder={sortOrder}
+          onChangeSortOrder={setSortOrder}
           onMoveToRegister={() => controller.setRoutePage("register")}
+          isShipper={controller.auth?.role === "SHIPPER"}
         />
 
         <section className="quote-list-card-section">

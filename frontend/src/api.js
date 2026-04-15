@@ -101,6 +101,9 @@ export const fetchBookmarks = async () =>
 export const createShipment = async (payload) =>
   (await api.post('/api/shipments', payload)).data;
 
+export const updateShipment = async (shipmentId, payload) =>
+  (await api.put(`/api/shipments/${shipmentId}`, payload)).data;
+
 export const createOffer = async (shipmentId, payload) =>
   (await api.post(`/api/shipments/${shipmentId}/offers`, payload)).data;
 
