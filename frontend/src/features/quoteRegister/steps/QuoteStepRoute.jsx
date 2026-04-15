@@ -6,6 +6,7 @@ export default function QuoteStepRoute({
   formData = {},
   errors = {},
   updateField,
+  setRouteAddress,
 }) {
   const [activePanel, setActivePanel] = useState(null);
 
@@ -113,6 +114,9 @@ export default function QuoteStepRoute({
           {errors?.transportDate && (
             <p className="error-text">{errors.transportDate}</p>
           )}
+          {errors?.transportTime && (
+            <p className="error-text">{errors.transportTime}</p>
+          )}
         </div>
       </div>
 
@@ -124,6 +128,7 @@ export default function QuoteStepRoute({
             currentValue={formData.originAddress}
             currentDetailValue={formData.originDetailAddress}
             updateField={updateField}
+            setRouteAddress={setRouteAddress}
             closePanel={closePanel}
           />
         )}
@@ -135,6 +140,7 @@ export default function QuoteStepRoute({
             currentValue={formData.destinationAddress}
             currentDetailValue={formData.destinationDetailAddress}
             updateField={updateField}
+            setRouteAddress={setRouteAddress}
             closePanel={closePanel}
           />
         )}

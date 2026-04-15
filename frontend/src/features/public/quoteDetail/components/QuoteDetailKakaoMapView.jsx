@@ -1,10 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Map, MapMarker, Polyline, useKakaoLoader } from "react-kakao-maps-sdk";
 
 const DEFAULT_CENTER = { lat: 36.3504, lng: 127.3845 };
+const MIN_VISIBLE_LEVEL = 5; // 너무 과확대되지 않도록 제한
 
 function makeFullAddress(baseAddress, detailAddress) {
   return [baseAddress, detailAddress].filter(Boolean).join(" ").trim();
+}
+
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 export default function QuoteDetailKakaoMapView({ shipment }) {
@@ -12,6 +31,8 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
     appkey: import.meta.env.VITE_KAKAO_MAP_APP_KEY,
     libraries: ["services"],
   });
+
+  const mapRef = useRef(null);
 
   const [originPosition, setOriginPosition] = useState(null);
   const [destinationPosition, setDestinationPosition] = useState(null);
@@ -84,8 +105,8 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
         setDestinationPosition(destination);
 
         setMapCenter({
-          lat: origin.lat,
-          lng: origin.lng,
+          lat: (origin.lat + destination.lat) / 2,
+          lng: (origin.lng + destination.lng) / 2,
         });
       } catch (e) {
         console.error(e);
@@ -102,6 +123,79 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
     destinationFullAddress,
     destinationBaseAddress,
   ]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    if (!window.kakao?.maps) return;
+
+    const map = mapRef.current;
+
+    // 출발/도착 둘 다 있는 경우
+    if (originPosition && destinationPosition) {
+      const bounds = new window.kakao.maps.LatLngBounds();
+
+      bounds.extend(
+        new window.kakao.maps.LatLng(originPosition.lat, originPosition.lng),
+      );
+      bounds.extend(
+        new window.kakao.maps.LatLng(
+          destinationPosition.lat,
+          destinationPosition.lng,
+        ),
+      );
+
+      map.setBounds(bounds);
+
+      const distanceKm = getDistanceKm(
+        originPosition.lat,
+        originPosition.lng,
+        destinationPosition.lat,
+        destinationPosition.lng,
+      );
+
+      // setBounds 적용 후 레벨 보정
+      window.kakao.maps.event.addListener(
+        map,
+        "bounds_changed",
+        function once() {
+          const currentLevel = map.getLevel();
+
+          // 가까운 거리일 때 너무 과확대되면 조금 넓게 보정
+          if (distanceKm < 3 && currentLevel < 5) {
+            map.setLevel(5);
+          } else if (distanceKm < 10 && currentLevel < 6) {
+            map.setLevel(6);
+          } else if (currentLevel < MIN_VISIBLE_LEVEL) {
+            map.setLevel(MIN_VISIBLE_LEVEL);
+          }
+
+          window.kakao.maps.event.removeListener(map, "bounds_changed", once);
+        },
+      );
+
+      return;
+    }
+
+    // 출발지만 있는 경우
+    if (originPosition) {
+      map.setCenter(
+        new window.kakao.maps.LatLng(originPosition.lat, originPosition.lng),
+      );
+      map.setLevel(5);
+      return;
+    }
+
+    // 도착지만 있는 경우
+    if (destinationPosition) {
+      map.setCenter(
+        new window.kakao.maps.LatLng(
+          destinationPosition.lat,
+          destinationPosition.lng,
+        ),
+      );
+      map.setLevel(5);
+    }
+  }, [originPosition, destinationPosition]);
 
   if (loading) {
     return (
@@ -128,7 +222,10 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
       <Map
         center={mapCenter}
         style={{ width: "100%", height: "100%" }}
-        level={12}
+        level={7}
+        onCreate={(map) => {
+          mapRef.current = map;
+        }}
       >
         {originPosition && (
           <MapMarker position={originPosition}>
