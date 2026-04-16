@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate, statusText } from '../../../utils/formatters'
+import { formatMinutesToHourMinute } from '../../../utils/formatters'
 
 export default function PublicBoardSection({ controller }) {
   const {
@@ -54,7 +55,8 @@ export default function PublicBoardSection({ controller }) {
                     <td>{item.destinationSummary}</td>
                     <td>{item.currentLocationSummary}</td>
                     <td>{item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}</td>
-                    <td>{item.estimatedMinutes}분</td>
+                    {/* <td>{item.estimatedMinutes}분</td> */}
+                    <td>{formatMinutesToHourMinute(item.estimatedMinutes)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -78,7 +80,12 @@ export default function PublicBoardSection({ controller }) {
                 </div>
 
                 <div className="landing-boardAside__list">
-                  <div><span>예상 거리 / 시간</span><strong>{selectedPublic.estimatedDistanceKm}km · {selectedPublic.estimatedMinutes}분</strong></div>
+                  <div><span>예상 거리 / 시간</span>
+                    {/* <strong>{selectedPublic.estimatedDistanceKm}km · {selectedPublic.estimatedMinutes}분</strong> */}
+                    <strong>
+                      {selectedPublic.estimatedDistanceKm}km · {formatMinutesToHourMinute(selectedPublic.estimatedMinutes)}
+                    </strong>
+                  </div>
                   <div><span>배정 차주</span><strong>{selectedPublic.assignedDriverName || '미확정'}</strong></div>
                   <div><span>최근 갱신</span><strong>{formatDate(selectedPublic.updatedAt)}</strong></div>
                 </div>
