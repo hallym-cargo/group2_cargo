@@ -558,6 +558,7 @@ export default function UserBoardTab({ controller }) {
         onSubmit={handleCancelShipment}
         selected={selected}
         isSubmitting={cancelSubmitting}
+        auth={auth}
       />
     </div>
   )

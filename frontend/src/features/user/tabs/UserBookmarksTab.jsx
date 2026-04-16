@@ -1,5 +1,5 @@
 import SectionTitle from '../../../components/common/SectionTitle'
-import { statusText } from '../../../utils/formatters'
+import { statusText, formatMinutesToHourMinute } from '../../../utils/formatters'
 
 export default function UserBookmarksTab({ controller }) {
   const { bookmarks, setSelectedId, setDashboardTab } = controller
@@ -28,7 +28,12 @@ export default function UserBookmarksTab({ controller }) {
                 <td>{item.title}</td>
                 <td>{item.originAddress} → {item.destinationAddress}</td>
                 <td>{item.assignedDriverName || '-'}</td>
-                <td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td>
+                {/* <td>{item.tracking?.remainingMinutes ?? item.estimatedMinutes}분</td> */}
+                <td>
+                  {formatMinutesToHourMinute(
+                    item.tracking?.remainingMinutes ?? item.estimatedMinutes
+                  )}
+                </td>
               </tr>
             )}
           </tbody>

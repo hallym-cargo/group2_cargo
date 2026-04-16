@@ -33,18 +33,18 @@ export const formatDate = (value, options = {}) => {
   const hasTime = !(typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.trim()))
   const defaultOptions = hasTime
     ? {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      }
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }
     : {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }
 
   return parsed.toLocaleString('ko-KR', { ...defaultOptions, ...options })
 }
@@ -68,4 +68,16 @@ export const resolveMediaUrl = (value) => {
   if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw
   if (raw.startsWith('/uploads/')) return `${MEDIA_BASE_URL}${raw}`
   return raw
+}
+
+// 추가
+export const formatMinutesToHourMinute = (minutes) => {
+  if (minutes == null) return '-'
+
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+
+  if (h === 0) return `${m}분`
+  if (m === 0) return `${h}시간`
+  return `${h}시간 ${m}분`
 }

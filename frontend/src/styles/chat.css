@@ -28,6 +28,18 @@
   z-index: 3;
 }
 
+/* 추가 */
+.profile-modal .modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+/* 추가 */
+.profile-modal .profile-modal__head {
+  border-bottom: none;
+}
+
 .chat-modal {
   width: min(560px, calc(100vw - 32px));
   max-height: min(760px, calc(100vh - 48px));
@@ -483,11 +495,9 @@
 .messages-page {
   min-height: 100vh;
   padding: 32px;
-  background: linear-gradient(
-    180deg,
-    rgba(248, 250, 252, 0.96),
-    rgba(241, 245, 249, 0.96)
-  );
+  background: linear-gradient(180deg,
+      rgba(248, 250, 252, 0.96),
+      rgba(241, 245, 249, 0.96));
 }
 
 .messages-page__head {
@@ -672,7 +682,7 @@
   margin-top: 22px;
 }
 
-.profile-modal__grid > div {
+.profile-modal__grid>div {
   padding: 16px 18px;
   border-radius: 18px;
   background: #f8fafc;
@@ -1049,11 +1059,9 @@
 .messages-page {
   min-height: 100vh;
   padding: 32px;
-  background: linear-gradient(
-    180deg,
-    rgba(248, 250, 252, 0.96),
-    rgba(241, 245, 249, 0.96)
-  );
+  background: linear-gradient(180deg,
+      rgba(248, 250, 252, 0.96),
+      rgba(241, 245, 249, 0.96));
 }
 
 .messages-page__head {
@@ -1149,6 +1157,7 @@
 /* 추가 */
 .cancel-reason-block select {
   margin-top: 6px;
+  appearance: none;
 }
 
 /* 추가 */
@@ -1211,7 +1220,7 @@
   margin-top: 22px;
 }
 
-.profile-modal__grid > div {
+.profile-modal__grid>div {
   padding: 16px 18px;
   border-radius: 18px;
   background: #f8fafc;
@@ -1350,4 +1359,126 @@
   .assistant-modal__composer {
     grid-template-columns: 1fr;
   }
+}
+
+/* 취소 사유 드롭다운 추가 */
+.custom-select {
+  position: relative;
+  cursor: pointer;
+}
+
+.selected {
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.cancel-reason-block .custom-select {
+  margin-top: 8px;
+}
+
+.options {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+}
+
+.option {
+  transition: background 0.15s ease;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.option:hover {
+  background: #f1f5f9;
+}
+
+.selected-option {
+  background: #eef2ff;
+  font-weight: 600;
+}
+
+.custom-select.shipper .selected-option {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.custom-select.driver .selected-option {
+  background: #eaf7f5;
+  color: #2f9e8f;
+}
+
+/* 평점 관리 점수 드롭다운 */
+.rating-select {
+  position: relative;
+  cursor: pointer;
+}
+
+/* 선택된 박스 */
+.shipper .rating-selected {
+  border-color: #c7d2fe;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  position: relative;
+}
+
+.driver .rating-selected {
+  border-color: #a7f3d0;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  position: relative;
+}
+
+/* 드롭다운 */
+.rating-options {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+}
+
+/* 옵션 */
+.rating-option {
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+/* hover */
+.rating-option:hover {
+  background: #f1f5f9;
+}
+
+/* 선택된 값 */
+.shipper .rating-option.active {
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.driver .rating-option.active {
+  background: #ecfdf5;
+  color: #059669;
+  font-weight: 600;
 }

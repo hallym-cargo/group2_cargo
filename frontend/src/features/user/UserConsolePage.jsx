@@ -12,7 +12,7 @@ import UserRegisterDriverTab from './tabs/UserRegisterDriverTab';
 import UserRegisterShipperTab from './tabs/UserRegisterShipperTab';
 import TransportStatus from '../../pages/TransportStatus';
 import QuoteListPage from '../public/QuoteListPage';  // 추가
-import CreateQuotePage from '../quoteRegister/QuoteRegisterContainer';  // 추가
+import CreateQuotePage from '../public/QuoteRegisterPage';  // 추가
 
 function resolveTitle(authRole, dashboardTab) {
   if (dashboardTab === 'register') {

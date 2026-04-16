@@ -49,6 +49,9 @@ export default function UserOverviewTab({ controller }) {
 
   const [vehicleOpen, setVehicleOpen] = useState(false)
 
+  // 추가
+  const [inquiryOpen, setInquiryOpen] = useState(false)
+
   return (
     <div className="page-stack">
       {!auth.profileCompleted && (
@@ -618,7 +621,7 @@ export default function UserOverviewTab({ controller }) {
               }
             />
 
-            <select
+            {/* <select
               value={controller.inquiryForm.inquiryType}
               onChange={(e) =>
                 controller.setInquiryForm({
@@ -631,7 +634,36 @@ export default function UserOverviewTab({ controller }) {
               <option>데모 요청</option>
               <option>요금 상담</option>
               <option>기술 협의</option>
-            </select>
+            </select> */}
+
+            <div className={`custom-select ${auth.role === 'DRIVER' ? 'driver' : 'shipper'}`}>
+              <div
+                className="selected"
+                onClick={() => setInquiryOpen(!inquiryOpen)}
+              >
+                {controller.inquiryForm.inquiryType || '문의 유형 선택'}
+              </div>
+
+              {inquiryOpen && (
+                <div className="options">
+                  {['도입 문의', '데모 요청', '요금 상담', '기술 협의'].map(option => (
+                    <div
+                      key={option}
+                      className={`option ${controller.inquiryForm.inquiryType === option ? 'selected-option' : ''}`}
+                      onClick={() => {
+                        controller.setInquiryForm({
+                          ...controller.inquiryForm,
+                          inquiryType: option,
+                        })
+                        setInquiryOpen(false)
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <textarea
               rows="6"
