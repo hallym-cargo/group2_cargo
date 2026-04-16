@@ -17,7 +17,7 @@ function getImageSrc(image) {
 
 export default function QuoteDetailCargoSection({
   quote,
-  isShipper,
+  canEdit,
   onClickEdit,
 }) {
   const images = Array.isArray(quote.cargoImages) ? quote.cargoImages : [];
@@ -49,7 +49,7 @@ export default function QuoteDetailCargoSection({
           </span>
         </div>
 
-        {isShipper && (
+        {canEdit && (
           <button
             type="button"
             className="quote-detail-section-edit-btn"

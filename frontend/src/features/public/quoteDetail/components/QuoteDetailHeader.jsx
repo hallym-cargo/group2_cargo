@@ -37,11 +37,15 @@ export default function QuoteDetailHeader({
   onToggleBookmark,
   isShipper,
   isDriver,
+  onClickBid,
   onClickDelete,
 }) {
   const rawStatus = quote.status || "BIDDING";
   const statusText = getStatusLabel(rawStatus);
   const statusClass = getStatusClass(rawStatus);
+
+  const canBid =
+    isDriver && (rawStatus === "BIDDING" || rawStatus === "입찰 진행중");
 
   return (
     <section className="quote-detail-header">
@@ -71,6 +75,16 @@ export default function QuoteDetailHeader({
         </div>
 
         <div className="quote-detail-header__actions">
+          {canBid && (
+            <button
+              type="button"
+              className="quote-detail-bid-btn"
+              onClick={onClickBid}
+            >
+              입찰하기
+            </button>
+          )}
+
           {isDriver && (
             <button
               type="button"

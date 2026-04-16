@@ -1,5 +1,17 @@
 import SimpleSelect from "./SimpleSelect";
 
+const PAGE_SIZE_OPTIONS = [
+  { value: 10, label: "10개씩 보기" },
+  { value: 20, label: "20개씩 보기" },
+  { value: 30, label: "30개씩 보기" },
+];
+
+const SORT_OPTIONS = [
+  { value: "최신 등록순", label: "최신 등록순" },
+  { value: "마감 임박순", label: "마감 임박순" },
+  { value: "높은 운임순", label: "높은 운임순" },
+];
+
 export default function QuoteListSummaryBar({
   totalCount,
   ownerFilter,
@@ -8,7 +20,7 @@ export default function QuoteListSummaryBar({
   onChangePageSize,
   sortOrder,
   onChangeSortOrder,
-  onMoveToRegister,
+  isLoggedIn,
   isShipper,
 }) {
   return (
@@ -17,53 +29,43 @@ export default function QuoteListSummaryBar({
         <strong>
           전체 <span>{totalCount}건</span>
         </strong>
+
+        {isLoggedIn && isShipper && (
+          <div className="quote-list-owner-toggle">
+            <button
+              type="button"
+              className={ownerFilter === "전체" ? "is-active" : ""}
+              onClick={() => onChangeOwnerFilter?.("전체")}
+            >
+              전체
+            </button>
+            <button
+              type="button"
+              className={ownerFilter === "내 견적만" ? "is-active" : ""}
+              onClick={() => onChangeOwnerFilter?.("내 견적만")}
+            >
+              내 견적만
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="quote-list-summary-bar__right">
-        <label>
-          <span className="sr-only">작성자 필터</span>
-          <select
-            value={ownerFilter}
-            onChange={(e) => onChangeOwnerFilter?.(e.target.value)}
-          >
-            <option value="전체">전체 보기</option>
-            <option value="내 견적만">내 견적만</option>
-          </select>
-        </label>
-
-        <label>
-          <span className="sr-only">정렬</span>
-          <select
-            value={sortOrder}
-            onChange={(e) => onChangeSortOrder(e.target.value)}
-          >
-            <option value="latest">최신 등록순</option>
-            <option value="transportSoon">마감 임박순</option>
-            <option value="priceHigh">높은 운임순</option>
-          </select>
-        </label>
-
-        <label>
-          <span className="sr-only">페이지 크기</span>
-          <select
+        <div className="quote-list-size-select">
+          <SimpleSelect
             value={pageSize}
-            onChange={(e) => onChangePageSize(Number(e.target.value))}
-          >
-            <option value={10}>10개씩 보기</option>
-            <option value={20}>20개씩 보기</option>
-            <option value={30}>30개씩 보기</option>
-          </select>
-        </label>
+            options={PAGE_SIZE_OPTIONS}
+            onChange={(value) => onChangePageSize?.(Number(value))}
+          />
+        </div>
 
-        {isShipper && (
-          <button
-            type="button"
-            className="primary-button"
-            onClick={onMoveToRegister}
-          >
-            견적 등록하기
-          </button>
-        )}
+        <div className="quote-list-sort-select">
+          <SimpleSelect
+            value={sortOrder}
+            options={SORT_OPTIONS}
+            onChange={onChangeSortOrder}
+          />
+        </div>
       </div>
     </section>
   );

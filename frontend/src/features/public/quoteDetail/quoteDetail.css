@@ -95,12 +95,34 @@
 
 .quote-detail-header__actions {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
   flex-shrink: 0;
-  padding-top: 0;
-  align-self: flex-end;
+  flex-wrap: wrap;
+}
+
+.quote-detail-bid-btn {
+  height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 12px;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.quote-detail-bid-btn:hover {
+  opacity: 0.92;
+}
+
+.quote-detail-bid-btn:active {
+  transform: translateY(1px);
 }
 
 .bookmark-btn {
@@ -557,6 +579,141 @@
   font-weight: 600;
 }
 
+/* 차주 입찰 모달 패널 */
+.driver-bid-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.driver-bid-panel__header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.driver-bid-panel__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+.driver-bid-panel__desc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #667085;
+  word-break: keep-all;
+}
+
+.driver-bid-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.driver-bid-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.driver-bid-panel__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #344054;
+}
+
+.driver-bid-panel__price-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.driver-bid-panel__price-unit {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  font-weight: 800;
+  color: #98a2b3;
+  pointer-events: none;
+}
+
+.driver-bid-panel__input,
+.driver-bid-panel__textarea {
+  width: 100%;
+  border: 1px solid #d7deea;
+  border-radius: 16px;
+  background: #f8fbff;
+  color: #111827;
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.driver-bid-panel__input {
+  height: 56px;
+  padding: 0 16px;
+}
+
+.driver-bid-panel__input--price {
+  padding-left: 42px;
+}
+
+.driver-bid-panel__textarea {
+  min-height: 132px;
+  padding: 14px 16px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.driver-bid-panel__input::placeholder,
+.driver-bid-panel__textarea::placeholder {
+  color: #98a2b3;
+}
+
+.driver-bid-panel__input:focus,
+.driver-bid-panel__textarea:focus {
+  border-color: #9db4ff;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(74, 108, 247, 0.12);
+}
+
+.driver-bid-panel__submit {
+  width: 100%;
+  height: 54px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2f5cf0 0%, #4463f0 100%);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 12px 24px rgba(47, 92, 240, 0.24);
+}
+
+.driver-bid-panel__submit:hover {
+  opacity: 0.95;
+}
+
+.driver-bid-panel__submit:active {
+  transform: translateY(1px);
+}
+
+/* 반응형 */
 /* 반응형 */
 @media (max-width: 1200px) {
   .quote-detail-page {
@@ -613,7 +770,8 @@
   }
 
   .quote-detail-header__actions {
-    justify-content: flex-end;
+    justify-content: flex-start;
+    gap: 8px;
   }
 
   .quote-detail-header__hero-badge-wrap {
@@ -707,6 +865,31 @@
   .quote-edit-modal__save-btn {
     width: 100%;
   }
+
+  .driver-bid-panel {
+    gap: 20px;
+  }
+
+  .driver-bid-panel__title {
+    font-size: 24px;
+  }
+
+  .driver-bid-panel__desc {
+    font-size: 14px;
+  }
+
+  .driver-bid-panel__input {
+    height: 52px;
+  }
+
+  .driver-bid-panel__textarea {
+    min-height: 120px;
+  }
+
+  .driver-bid-panel__submit {
+    height: 52px;
+    font-size: 15px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -768,19 +951,40 @@
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-}
 
+  .quote-detail-header__actions {
+    width: 100%;
+  }
 
-.quote-detail-map-real__route-notice {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  z-index: 3;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.78);
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
-  backdrop-filter: blur(6px);
+  .quote-detail-bid-btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .bookmark-btn {
+    flex-shrink: 0;
+  }
+
+  .driver-bid-panel__title {
+    font-size: 22px;
+  }
+
+  .driver-bid-panel__desc {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .driver-bid-panel__input,
+  .driver-bid-panel__textarea {
+    font-size: 14px;
+  }
+
+  .driver-bid-panel__price-unit {
+    left: 14px;
+    font-size: 16px;
+  }
+
+  .driver-bid-panel__input--price {
+    padding-left: 38px;
+  }
 }
