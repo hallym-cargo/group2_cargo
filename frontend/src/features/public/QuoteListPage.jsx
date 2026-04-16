@@ -16,52 +16,56 @@ export default function QuoteListPage({ controller }) {
   const [pageSize, setPageSize] = useState(10);
   const [sortOrder, setSortOrder] = useState("최신 등록순");
 
+  // 기존 JSX에서 loading / error를 쓰고 있으므로 선언 필요
+  const [loading] = useState(false);
+  const [error] = useState("");
+
   const profileId = controller.profile?.id;
+
   const mappedQuotes = useMemo(
     () => (controller.shipments || []).map(shipmentToQuote),
     [controller.shipments],
   );
 
   const filteredQuotes = useMemo(() => {
-    return mappedQuotes
-      .filter((quote) => {
-        const quoteStatus = quote.status || "입찰 진행중";
-        const quoteOrigin = quote.originAddress || "";
-        const quoteDestination = quote.destinationAddress || "";
-        const isMine = profileId && quote.shipperId === profileId;
+    return mappedQuotes.filter((quote) => {
+      const quoteStatus = quote.status || "입찰 진행중";
+      const quoteOrigin = quote.originAddress || "";
+      const quoteDestination = quote.destinationAddress || "";
+      const isMine = profileId && quote.shipperId === profileId;
 
-        const matchStatus = status === "전체" || quoteStatus === status;
-        const matchOrigin = origin === "전체" || quoteOrigin.includes(origin);
-        const matchDestination =
-          destination === "전체" || quoteDestination.includes(destination);
-        const matchOwner = ownerFilter === "전체" || isMine;
+      const matchStatus = status === "전체" || quoteStatus === status;
+      const matchOrigin = origin === "전체" || quoteOrigin.includes(origin);
+      const matchDestination =
+        destination === "전체" || quoteDestination.includes(destination);
+      const matchOwner =
+        ownerFilter === "전체" || (ownerFilter === "내 견적만" && isMine);
 
-        return matchStatus && matchOrigin && matchDestination && matchOwner;
-      })
-      .sort((a, b) => {
-        if (sortOrder === "높은 운임순") {
-          return Number(b.desiredPrice || 0) - Number(a.desiredPrice || 0);
-        }
-        if (sortOrder === "마감 임박순") {
-          return (
-            new Date(a.scheduledStartAt || a.transportDate || 0) -
-            new Date(b.scheduledStartAt || b.transportDate || 0)
-          );
-        }
+      return matchStatus && matchOrigin && matchDestination && matchOwner;
+    });
+  }, [mappedQuotes, status, origin, destination, ownerFilter, profileId]);
+
+  const sortedQuotes = useMemo(() => {
+    const copiedQuotes = [...filteredQuotes];
+
+    return copiedQuotes.sort((a, b) => {
+      if (sortOrder === "높은 운임순") {
+        return Number(b.desiredPrice || 0) - Number(a.desiredPrice || 0);
+      }
+
+      if (sortOrder === "마감 임박순") {
         return (
-          new Date(b.createdAt || b.updatedAt || 0) -
-          new Date(a.createdAt || a.updatedAt || 0)
+          new Date(a.scheduledStartAt || a.transportDate || 0) -
+          new Date(b.scheduledStartAt || b.transportDate || 0)
         );
-      });
-  }, [
-    mappedQuotes,
-    status,
-    origin,
-    destination,
-    ownerFilter,
-    profileId,
-    sortOrder,
-  ]);
+      }
+
+      return (
+        new Date(b.createdAt || b.updatedAt || 0) -
+        new Date(a.createdAt || a.updatedAt || 0)
+      );
+    });
+  }, [filteredQuotes, sortOrder]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -73,8 +77,8 @@ export default function QuoteListPage({ controller }) {
   const paginatedQuotes = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    return filteredQuotes.slice(startIndex, endIndex);
-  }, [filteredQuotes, currentPage, pageSize]);
+    return sortedQuotes.slice(startIndex, endIndex);
+  }, [sortedQuotes, currentPage, pageSize]);
 
   useEffect(() => {
     if (totalPages > 0 && currentPage > totalPages) {

@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 export default function ChatFloatingButton({
   unreadCount,
   notificationUnreadCount,
-  onAssistantClick,
   onChatClick,
   onNotificationClick,
   onPlaceholderClick,
