@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import QuotePageHeader from "./components/QuotePageHeader";
+import PublicHeader from "./components/PublicHeader";
+import ShipperHeader from "./components/ShipperHeader";
+import DriverHeader from "./components/DriverHeader";
 import "./quoteList/quoteList.css";
 import QuoteListFilterBar from "./quoteList/components/QuoteListFilterBar";
 import QuoteListSummaryBar from "./quoteList/components/QuoteListSummaryBar";
@@ -16,7 +18,6 @@ export default function QuoteListPage({ controller }) {
   const [pageSize, setPageSize] = useState(10);
   const [sortOrder, setSortOrder] = useState("최신 등록순");
 
-  // 기존 JSX에서 loading / error를 쓰고 있으므로 선언 필요
   const [loading] = useState(false);
   const [error] = useState("");
 
@@ -86,9 +87,35 @@ export default function QuoteListPage({ controller }) {
     }
   }, [currentPage, totalPages]);
 
+  const headerContent = controller.isLoggedIn ? (
+    controller.auth?.role === "DRIVER" ? (
+      <DriverHeader controller={controller} />
+    ) : controller.auth?.role === "SHIPPER" ? (
+      <ShipperHeader controller={controller} />
+    ) : (
+      <PublicHeader
+        isLoggedIn={controller.isLoggedIn}
+        authMode={controller.authMode}
+        setAuthMode={controller.setAuthMode}
+        setDashboardTab={controller.setDashboardTab}
+        logout={controller.logout}
+        controller={controller}
+      />
+    )
+  ) : (
+    <PublicHeader
+      isLoggedIn={controller.isLoggedIn}
+      authMode={controller.authMode}
+      setAuthMode={controller.setAuthMode}
+      setDashboardTab={controller.setDashboardTab}
+      logout={controller.logout}
+      controller={controller}
+    />
+  );
+
   return (
-    <div className="public-shell">
-      <QuotePageHeader controller={controller} />
+    <div className="public-shell landing-shell">
+      {headerContent}
 
       <div className="quote-list-page">
         <section className="quote-list-hero">
@@ -111,7 +138,6 @@ export default function QuoteListPage({ controller }) {
           isLoggedIn={controller.isLoggedIn}
           isShipper={controller.auth?.role === "SHIPPER"}
         />
-
         <QuoteListSummaryBar
           totalCount={totalCount}
           ownerFilter={ownerFilter}
@@ -120,7 +146,7 @@ export default function QuoteListPage({ controller }) {
           onChangePageSize={setPageSize}
           sortOrder={sortOrder}
           onChangeSortOrder={setSortOrder}
-          onMoveToRegister={() => controller.setRoutePage("register")}
+          isLoggedIn={controller.isLoggedIn}
           isShipper={controller.auth?.role === "SHIPPER"}
         />
 
