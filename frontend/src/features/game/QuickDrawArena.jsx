@@ -277,10 +277,10 @@ export default function QuickDrawArena({ controller }) {
           </button>
 
           <div className="quickdraw-title-wrap">
-            <p className="quickdraw-eyebrow">MINI GAME</p>
+            <p className="quickdraw-eyebrow">PLAYGROUND MODE</p>
             <h1 className="quickdraw-title">Quick Draw Duel</h1>
             <p className="quickdraw-subtitle">
-              우하단 메뉴 패널의 게임 버튼으로 들어오는 2인 온라인 반응속도 대결이야.
+              메인페이지와 같은 밝은 브랜드 톤 위에, 서부 결투장 느낌을 얹은 2인 반응속도 대결이야.
             </p>
           </div>
         </div>
@@ -378,6 +378,32 @@ export default function QuickDrawArena({ controller }) {
             </div>
 
             <div className={`quickdraw-arena ${room?.phase === 'DRAWABLE' ? 'is-draw' : ''}`}>
+              <div className="quickdraw-arena-sky" />
+              <div className="quickdraw-arena-sun" />
+              <div className="quickdraw-arena-mountain quickdraw-arena-mountain--left" />
+              <div className="quickdraw-arena-mountain quickdraw-arena-mountain--right" />
+              <div className="quickdraw-arena-town">
+                <span className="quickdraw-town-building quickdraw-town-building--saloon" />
+                <span className="quickdraw-town-building quickdraw-town-building--tower" />
+                <span className="quickdraw-town-building quickdraw-town-building--shed" />
+              </div>
+              <div className="quickdraw-arena-ground" />
+              <div className="quickdraw-duelist quickdraw-duelist--left">
+                <span className="quickdraw-duelist__aura" />
+                <span className="quickdraw-duelist__hat" />
+                <span className="quickdraw-duelist__core">
+                  <span className="quickdraw-duelist__face" />
+                  <span className="quickdraw-duelist__gun" />
+                </span>
+              </div>
+              <div className="quickdraw-duelist quickdraw-duelist--right">
+                <span className="quickdraw-duelist__aura" />
+                <span className="quickdraw-duelist__hat" />
+                <span className="quickdraw-duelist__core">
+                  <span className="quickdraw-duelist__face" />
+                  <span className="quickdraw-duelist__gun" />
+                </span>
+              </div>
               <div className="quickdraw-signal">
                 {room?.phase === 'COUNTDOWN' && <span>{countdownSeconds > 0 ? countdownSeconds : '...'}</span>}
                 {room?.phase === 'DRAWABLE' && <span>DRAW</span>}

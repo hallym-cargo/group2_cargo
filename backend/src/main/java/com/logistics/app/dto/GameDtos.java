@@ -48,7 +48,10 @@ public class GameDtos {
         private boolean left;
         private boolean right;
         private boolean jump;
+        private boolean drop;
         private boolean shoot;
+        private Double aimX;
+        private Double aimY;
     }
 
     @Data
@@ -73,6 +76,7 @@ public class GameDtos {
         private double width;
         private double height;
         private boolean facingRight;
+        private double aimAngleDeg;
         private List<String> selectedCards;
     }
 
