@@ -18,14 +18,24 @@ public class Shipment {
 
     private String title;
     private String cargoType;
+    private String cargoName;
+    private String vehicleType;
+    private Boolean vehicleNeedConsult;
     private Double weightKg;
+    private String weightUnit;
+    private Boolean weightNeedConsult;
     private String description;
+    private String requestNote;
+    private Integer desiredPrice;
+    private Boolean priceProposalAllowed;
 
     private String originAddress;
+    private String originDetailAddress;
     private Double originLat;
     private Double originLng;
 
     private String destinationAddress;
+    private String destinationDetailAddress;
     private Double destinationLat;
     private Double destinationLng;
 

@@ -1,156 +1,71 @@
 import { useEffect, useMemo, useState } from "react";
-import ShipperHeader from "./components/ShipperHeader";
-import DriverHeader from "./components/DriverHeader";
+import QuotePageHeader from "./components/QuotePageHeader";
 import "./quoteList/quoteList.css";
 import QuoteListFilterBar from "./quoteList/components/QuoteListFilterBar";
 import QuoteListSummaryBar from "./quoteList/components/QuoteListSummaryBar";
 import QuoteCard from "./quoteList/components/QuoteCard";
 import QuoteListPagination from "./quoteList/components/QuoteListPagination";
-import { fetchShipments } from "../../api";
-
-function formatDate(dateTimeString) {
-  if (!dateTimeString) return "";
-  const date = new Date(dateTimeString);
-  if (Number.isNaN(date.getTime())) return "";
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function formatTime(dateTimeString) {
-  if (!dateTimeString) return "";
-  const date = new Date(dateTimeString);
-  if (Number.isNaN(date.getTime())) return "";
-
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  return `${hours}:${minutes}`;
-}
-
-function mapShipmentToQuoteCard(shipment) {
-  return {
-    id: shipment.id,
-    estimateName: shipment.title,
-    originAddress: shipment.originAddress,
-    destinationAddress: shipment.destinationAddress,
-    transportDate: formatDate(shipment.scheduledStartAt),
-    transportTime: formatTime(shipment.scheduledStartAt),
-
-    desiredPrice: shipment.agreedPrice ?? shipment.bestOfferPrice ?? null,
-    priceProposalAllowed: false,
-    cargoType: shipment.cargoType,
-    vehicleType: shipment.vehicleType ?? null,
-
-    status: shipment.status,
-    cargoImages: shipment.cargoImageUrls ?? [],
-    createdAt: shipment.createdAt,
-  };
-}
+import { shipmentToQuote } from "./quoteUtils";
 
 export default function QuoteListPage({ controller }) {
   const [status, setStatus] = useState("전체");
   const [origin, setOrigin] = useState("전체");
   const [destination, setDestination] = useState("전체");
+  const [ownerFilter, setOwnerFilter] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
-
   const [pageSize, setPageSize] = useState(10);
-  const [sortOrder, setSortOrder] = useState("latest");
+  const [sortOrder, setSortOrder] = useState("최신 등록순");
 
-  const [quotes, setQuotes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const role = controller.auth?.role;
-  const isShipper = role === "SHIPPER";
-  const isDriver = role === "DRIVER";
-
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        setError("");
-
-        const data = await fetchShipments(0, 100);
-        const shipmentList = Array.isArray(data) ? data : (data?.content ?? []);
-
-        const mappedQuotes = shipmentList.map(mapShipmentToQuoteCard);
-        setQuotes(mappedQuotes);
-      } catch (err) {
-        console.error("견적 목록 조회 실패:", err);
-        setError("견적 목록을 불러오지 못했습니다.");
-        setQuotes([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, []);
-
-  const visibleQuotes = useMemo(() => {
-    return quotes.filter((quote) => {
-      return quote.status === "BIDDING" || quote.status === "CONFIRMED";
-    });
-  }, [quotes]);
+  const profileId = controller.profile?.id;
+  const mappedQuotes = useMemo(
+    () => (controller.shipments || []).map(shipmentToQuote),
+    [controller.shipments],
+  );
 
   const filteredQuotes = useMemo(() => {
-    return visibleQuotes.filter((quote) => {
-      const quoteStatus = quote.status || "BIDDING";
-      const quoteOrigin = quote.originAddress || "";
-      const quoteDestination = quote.destinationAddress || "";
+    return mappedQuotes
+      .filter((quote) => {
+        const quoteStatus = quote.status || "입찰 진행중";
+        const quoteOrigin = quote.originAddress || "";
+        const quoteDestination = quote.destinationAddress || "";
+        const isMine = profileId && quote.shipperId === profileId;
 
-      const matchStatus =
-        status === "전체" ||
-        (status === "입찰 진행중" && quoteStatus === "BIDDING") ||
-        (status === "배차 완료" && quoteStatus === "CONFIRMED");
+        const matchStatus = status === "전체" || quoteStatus === status;
+        const matchOrigin = origin === "전체" || quoteOrigin.includes(origin);
+        const matchDestination =
+          destination === "전체" || quoteDestination.includes(destination);
+        const matchOwner = ownerFilter === "전체" || isMine;
 
-      const matchOrigin = origin === "전체" || quoteOrigin.includes(origin);
-      const matchDestination =
-        destination === "전체" || quoteDestination.includes(destination);
-
-      return matchStatus && matchOrigin && matchDestination;
-    });
-  }, [visibleQuotes, status, origin, destination]);
-
-  const sortedQuotes = useMemo(() => {
-    const copiedQuotes = [...filteredQuotes];
-
-    if (sortOrder === "latest") {
-      return copiedQuotes.sort((a, b) => {
-        const aTime = new Date(a.createdAt || 0).getTime();
-        const bTime = new Date(b.createdAt || 0).getTime();
-        return bTime - aTime;
-      });
-    }
-
-    if (sortOrder === "transportSoon") {
-      return copiedQuotes.sort((a, b) => {
-        const aDate = new Date(
-          `${a.transportDate}T${a.transportTime || "00:00"}`,
+        return matchStatus && matchOrigin && matchDestination && matchOwner;
+      })
+      .sort((a, b) => {
+        if (sortOrder === "높은 운임순") {
+          return Number(b.desiredPrice || 0) - Number(a.desiredPrice || 0);
+        }
+        if (sortOrder === "마감 임박순") {
+          return (
+            new Date(a.scheduledStartAt || a.transportDate || 0) -
+            new Date(b.scheduledStartAt || b.transportDate || 0)
+          );
+        }
+        return (
+          new Date(b.createdAt || b.updatedAt || 0) -
+          new Date(a.createdAt || a.updatedAt || 0)
         );
-        const bDate = new Date(
-          `${b.transportDate}T${b.transportTime || "00:00"}`,
-        );
-        return aDate - bDate;
       });
-    }
-
-    if (sortOrder === "priceHigh") {
-      return copiedQuotes.sort(
-        (a, b) => Number(b.desiredPrice || 0) - Number(a.desiredPrice || 0),
-      );
-    }
-
-    return copiedQuotes;
-  }, [filteredQuotes, sortOrder]);
+  }, [
+    mappedQuotes,
+    status,
+    origin,
+    destination,
+    ownerFilter,
+    profileId,
+    sortOrder,
+  ]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [status, origin, destination, pageSize, sortOrder]);
+  }, [status, origin, destination, ownerFilter, pageSize, sortOrder]);
 
   const totalCount = sortedQuotes.length;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -158,8 +73,8 @@ export default function QuoteListPage({ controller }) {
   const paginatedQuotes = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    return sortedQuotes.slice(startIndex, endIndex);
-  }, [sortedQuotes, currentPage, pageSize]);
+    return filteredQuotes.slice(startIndex, endIndex);
+  }, [filteredQuotes, currentPage, pageSize]);
 
   useEffect(() => {
     if (totalPages > 0 && currentPage > totalPages) {
@@ -169,11 +84,7 @@ export default function QuoteListPage({ controller }) {
 
   return (
     <div className="public-shell">
-      {isDriver ? (
-        <DriverHeader controller={controller} />
-      ) : (
-        <ShipperHeader controller={controller} />
-      )}
+      <QuotePageHeader controller={controller} />
 
       <div className="quote-list-page">
         <section className="quote-list-hero">
@@ -188,20 +99,25 @@ export default function QuoteListPage({ controller }) {
           status={status}
           origin={origin}
           destination={destination}
+          ownerFilter={ownerFilter}
           onChangeStatus={setStatus}
           onChangeOrigin={setOrigin}
           onChangeDestination={setDestination}
+          onChangeOwnerFilter={setOwnerFilter}
+          isLoggedIn={controller.isLoggedIn}
+          isShipper={controller.auth?.role === "SHIPPER"}
         />
 
         <QuoteListSummaryBar
           totalCount={totalCount}
+          ownerFilter={ownerFilter}
+          onChangeOwnerFilter={setOwnerFilter}
           pageSize={pageSize}
-          sortOrder={sortOrder}
           onChangePageSize={setPageSize}
+          sortOrder={sortOrder}
           onChangeSortOrder={setSortOrder}
-          onMoveToRegister={
-            isShipper ? () => controller.setRoutePage("register") : undefined
-          }
+          onMoveToRegister={() => controller.setRoutePage("register")}
+          isShipper={controller.auth?.role === "SHIPPER"}
         />
 
         <section className="quote-list-card-section">

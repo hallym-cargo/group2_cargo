@@ -1,6 +1,37 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import DaumPostcode from "react-daum-postcode";
 
+const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY || "";
+
+function loadKakaoSdk() {
+  if (window.kakao?.maps?.services) return Promise.resolve(window.kakao);
+
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-kakao="true"]');
+
+    if (existing) {
+      existing.addEventListener("load", () =>
+        window.kakao.maps.load(() => resolve(window.kakao)),
+      );
+      existing.addEventListener("error", reject);
+      return;
+    }
+
+    if (!KAKAO_APP_KEY) {
+      reject(new Error("NO_KAKAO_APP_KEY"));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.dataset.kakao = "true";
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services&appkey=${KAKAO_APP_KEY}`;
+    script.onload = () => window.kakao.maps.load(() => resolve(window.kakao));
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
 export default function AddressPanel({
   title,
   fieldName,
@@ -16,6 +47,10 @@ export default function AddressPanel({
   const [floor, setFloor] = useState("");
   const [hasElevator, setHasElevator] = useState("");
   const [isClient, setIsClient] = useState(false);
+  const [resolvedCoords, setResolvedCoords] = useState({
+    lat: null,
+    lng: null,
+  });
 
   const mountedRef = useRef(false);
 
@@ -45,7 +80,6 @@ export default function AddressPanel({
     }
 
     const detailText = currentDetailValue;
-
     const floorMatch = detailText.match(/(\d+)\s*층/);
     const elevatorMatch = detailText.match(/엘리베이터\s*(있음|없음)/);
 
@@ -66,34 +100,20 @@ export default function AddressPanel({
     return "";
   };
 
-  const geocodeAddress = (address) => {
+  const getLatFieldName = () =>
+    fieldName === "originAddress" ? "originLat" : "destinationLat";
+
+  const getLngFieldName = () =>
+    fieldName === "originAddress" ? "originLng" : "destinationLng";
+
+  const resolveAddressCoords = async (fullAddress) => {
+    const kakao = await loadKakaoSdk();
+    const geocoder = new kakao.maps.services.Geocoder();
+
     return new Promise((resolve, reject) => {
-      if (typeof window === "undefined") {
-        reject(new Error("브라우저 환경이 아닙니다."));
-        return;
-      }
-
-      if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
-        reject(
-          new Error("카카오 지도 services 라이브러리가 로드되지 않았습니다."),
-        );
-        return;
-      }
-
-      if (!address || !address.trim()) {
-        reject(new Error("좌표 변환에 사용할 주소가 비어 있습니다."));
-        return;
-      }
-
-      const geocoder = new window.kakao.maps.services.Geocoder();
-
-      geocoder.addressSearch(address, (result, status) => {
-        if (
-          status !== window.kakao.maps.services.Status.OK ||
-          !result ||
-          result.length === 0
-        ) {
-          reject(new Error("주소를 좌표로 변환하지 못했습니다."));
+      geocoder.addressSearch(fullAddress, (result, status) => {
+        if (status !== kakao.maps.services.Status.OK || !result?.[0]) {
+          reject(new Error("ADDRESS_GEOCODE_FAILED"));
           return;
         }
 
@@ -107,8 +127,6 @@ export default function AddressPanel({
 
   const handleComplete = async (data) => {
     if (!mountedRef.current) return;
-
-    console.log("주소 선택 결과:", data);
 
     let fullAddress = data.address;
     let extraAddress = "";
@@ -129,35 +147,24 @@ export default function AddressPanel({
       }
     }
 
+    updateField(fieldName, fullAddress);
+
+    if (!mountedRef.current) return;
+    setSelectedBaseAddress(fullAddress);
+    setPanelStep("detail");
+
     try {
-      const addressForGeocoding = data.roadAddress || data.address;
-      const { lat, lng } = await geocodeAddress(addressForGeocoding);
+      const coords = await resolveAddressCoords(
+        data.roadAddress || data.address,
+      );
 
       if (!mountedRef.current) return;
 
-      const routeType =
-        fieldName === "originAddress" ? "origin" : "destination";
-
-      const isApplied = setRouteAddress({
-        type: routeType,
-        address: fullAddress,
-        detailAddress: currentDetailValue || "",
-        lat,
-        lng,
-      });
-
-      if (!isApplied) {
-        return;
-      }
-
-      setSelectedBaseAddress(fullAddress);
-      setPanelStep("detail");
+      setResolvedCoords(coords);
+      updateField(getLatFieldName(), coords.lat);
+      updateField(getLngFieldName(), coords.lng);
     } catch (error) {
       console.error("좌표 변환 실패:", error);
-
-      if (!mountedRef.current) return;
-
-      alert("주소 좌표를 가져오지 못했습니다. 다시 검색해주세요.");
     }
   };
 
@@ -198,6 +205,12 @@ export default function AddressPanel({
     }
 
     updateField(detailFieldName, detailParts.join(" "));
+
+    if (resolvedCoords.lat !== null && resolvedCoords.lng !== null) {
+      updateField(getLatFieldName(), resolvedCoords.lat);
+      updateField(getLngFieldName(), resolvedCoords.lng);
+    }
+
     closePanel();
   };
 

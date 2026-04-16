@@ -36,7 +36,7 @@ export default function DriverHeader({ controller }) {
         <nav className="landing-nav">
           <button
             type="button"
-            className={navButtonClass(currentRoute === "quotes")}
+            className={navButtonClass(currentRoute === "quotes" || currentRoute === "detail")}
             onClick={() => controller.setRoutePage("quotes")}
           >
             견적 목록 보기

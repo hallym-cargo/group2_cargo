@@ -1,29 +1,29 @@
 import { useState } from "react";
+import { createShipment } from "../../../api";
 import { QUOTE_REGISTER_INITIAL_STATE } from "../constants/quoteRegisterInitialState";
 import {
   validateQuoteStepRoute,
   validateQuoteStepCargo,
   validateAllSteps,
 } from "../utils/quoteRegisterValidation";
-import { createShipment } from "../../../api";
+import { quoteFormToShipmentPayload } from "../../public/quoteUtils";
 
-function convertFileToDataUrl(file) {
+function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
-    if (!(file instanceof File)) {
-      resolve(null);
-      return;
-    }
-
     const reader = new FileReader();
 
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
+    reader.onload = () =>
+      resolve({
+        dataUrl: typeof reader.result === "string" ? reader.result : "",
+        name: file.name,
+      });
 
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
-function useQuoteRegisterForm() {
+function useQuoteRegisterForm(controller) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(QUOTE_REGISTER_INITIAL_STATE);
   const [errors, setErrors] = useState({});
@@ -155,101 +155,6 @@ function useQuoteRegisterForm() {
     return true;
   };
 
-  const convertWeightToKg = (weight, unit, needConsult) => {
-    if (needConsult) return null;
-    if (weight === "" || weight === null || weight === undefined) return null;
-
-    const numericWeight = Number(weight);
-
-    if (Number.isNaN(numericWeight)) return null;
-
-    if (unit === "t") {
-      return numericWeight * 1000;
-    }
-
-    return numericWeight;
-  };
-
-  const buildScheduledStartAt = () => {
-    if (!formData.transportDate || !formData.transportTime) {
-      return null;
-    }
-
-    return `${formData.transportDate}T${formData.transportTime}:00`;
-  };
-
-  const buildImagePayload = async () => {
-    const cargoImages = Array.isArray(formData.cargoImages)
-      ? formData.cargoImages
-      : [];
-
-    const files = cargoImages.filter((image) => image instanceof File);
-
-    if (files.length === 0) {
-      return {
-        cargoImageDataUrls: [],
-        cargoImageNames: [],
-      };
-    }
-
-    const cargoImageDataUrls = await Promise.all(
-      files.map((file) => convertFileToDataUrl(file)),
-    );
-
-    const cargoImageNames = files.map((file) => file.name);
-
-    return {
-      cargoImageDataUrls,
-      cargoImageNames,
-    };
-  };
-
-  const buildSubmitPayload = async () => {
-    const convertedWeight = convertWeightToKg(
-      formData.weight,
-      formData.weightUnit,
-      formData.weightNeedConsult,
-    );
-
-    const { cargoImageDataUrls, cargoImageNames } = await buildImagePayload();
-
-    return {
-      title: formData.estimateName || "",
-      cargoType: formData.cargoType || "",
-      weightKg: convertedWeight,
-      description: formData.requestNote || "",
-      originAddress: formData.originAddress || "",
-      originLat:
-        formData.originLat === "" ||
-        formData.originLat === undefined ||
-        formData.originLat === null
-          ? null
-          : Number(formData.originLat),
-      originLng:
-        formData.originLng === "" ||
-        formData.originLng === undefined ||
-        formData.originLng === null
-          ? null
-          : Number(formData.originLng),
-      destinationAddress: formData.destinationAddress || "",
-      destinationLat:
-        formData.destinationLat === "" ||
-        formData.destinationLat === undefined ||
-        formData.destinationLat === null
-          ? null
-          : Number(formData.destinationLat),
-      destinationLng:
-        formData.destinationLng === "" ||
-        formData.destinationLng === undefined ||
-        formData.destinationLng === null
-          ? null
-          : Number(formData.destinationLng),
-      scheduledStartAt: buildScheduledStartAt(),
-      cargoImageDataUrls,
-      cargoImageNames,
-    };
-  };
-
   const submitForm = async () => {
     const finalErrors = validateAllSteps(formData);
     setErrors(finalErrors);
@@ -259,20 +164,30 @@ function useQuoteRegisterForm() {
     }
 
     try {
-      const payload = await buildSubmitPayload();
+      const files = Array.isArray(formData.cargoImages)
+        ? formData.cargoImages.filter((file) => file instanceof File)
+        : [];
 
-      console.log("입력용 formData:", formData);
-      console.log("서버 전송 payload:", payload);
+      const converted = await Promise.all(files.map(fileToDataUrl));
 
-      await createShipment(payload);
+      const payload = quoteFormToShipmentPayload(
+        formData,
+        converted.map((item) => item.dataUrl),
+        converted.map((item) => item.name),
+      );
 
-      return true;
-    } catch (error) {
-      console.error("견적 등록 실패:", error);
-      console.error("응답 데이터:", error.response?.data);
-      console.error("응답 상태:", error.response?.status);
-      console.error("전송 payload:", await buildSubmitPayload());
-      alert("견적 등록에 실패했습니다.");
+      const created = await createShipment(payload);
+
+      controller?.setMessage?.("견적이 등록되었습니다.");
+
+      setFormData(QUOTE_REGISTER_INITIAL_STATE);
+      setErrors({});
+      setCurrentStep(1);
+      setActivePanel(null);
+
+      return created;
+    } catch (err) {
+      controller?.setMessage?.(err.response?.data?.message || "견적 등록 실패");
       return false;
     }
   };

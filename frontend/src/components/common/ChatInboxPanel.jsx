@@ -9,15 +9,31 @@ export default function ChatInboxPanel({
 }) {
   if (!open) return null
 
+  const handleClose = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onClose?.()
+  }
+
   return (
     <div className="chat-inbox-backdrop" onClick={onClose}>
       <aside className="chat-inbox-panel" onClick={(e) => e.stopPropagation()}>
         <div className="chat-inbox-panel__head">
-          <div>
+          <div className="chat-inbox-panel__titleWrap">
             <strong>최근 대화</strong>
             <p>최근에 메시지를 주고받은 상대를 바로 확인할 수 있습니다.</p>
           </div>
-          <button className="modal-close" type="button" onClick={onClose}>×</button>
+
+          <button
+            className="modal-close"
+            type="button"
+            aria-label="채팅 팝업 닫기"
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={handleClose}
+          >
+            ×
+          </button>
         </div>
 
         <div className="chat-inbox-panel__body">

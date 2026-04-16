@@ -17,12 +17,50 @@ public class ShipmentDtos {
     public static class CreateShipmentRequest {
         @NotBlank private String title;
         @NotBlank private String cargoType;
+        private String cargoName;
+        private String vehicleType;
+        private Boolean vehicleNeedConsult;
         private Double weightKg;
+        private String weightUnit;
+        private Boolean weightNeedConsult;
         private String description;
+        private String requestNote;
+        private Integer desiredPrice;
+        private Boolean priceProposalAllowed;
         @NotBlank private String originAddress;
+        private String originDetailAddress;
         @NotNull private Double originLat;
         @NotNull private Double originLng;
         @NotBlank private String destinationAddress;
+        private String destinationDetailAddress;
+        @NotNull private Double destinationLat;
+        @NotNull private Double destinationLng;
+        @NotNull private LocalDateTime scheduledStartAt;
+        private List<String> cargoImageDataUrls;
+        private List<String> cargoImageNames;
+    }
+
+
+    @Data
+    public static class UpdateShipmentRequest {
+        @NotBlank private String title;
+        @NotBlank private String cargoType;
+        private String cargoName;
+        private String vehicleType;
+        private Boolean vehicleNeedConsult;
+        private Double weightKg;
+        private String weightUnit;
+        private Boolean weightNeedConsult;
+        private String description;
+        private String requestNote;
+        private Integer desiredPrice;
+        private Boolean priceProposalAllowed;
+        @NotBlank private String originAddress;
+        private String originDetailAddress;
+        @NotNull private Double originLat;
+        @NotNull private Double originLng;
+        @NotBlank private String destinationAddress;
+        private String destinationDetailAddress;
         @NotNull private Double destinationLat;
         @NotNull private Double destinationLng;
         @NotNull private LocalDateTime scheduledStartAt;
@@ -62,12 +100,22 @@ public class ShipmentDtos {
         private Long id;
         private String title;
         private String cargoType;
+        private String cargoName;
+        private String vehicleType;
+        private Boolean vehicleNeedConsult;
         private Double weightKg;
+        private String weightUnit;
+        private Boolean weightNeedConsult;
         private String description;
+        private String requestNote;
+        private Integer desiredPrice;
+        private Boolean priceProposalAllowed;
         private String originAddress;
+        private String originDetailAddress;
         private Double originLat;
         private Double originLng;
         private String destinationAddress;
+        private String destinationDetailAddress;
         private Double destinationLat;
         private Double destinationLng;
         private Integer estimatedMinutes;

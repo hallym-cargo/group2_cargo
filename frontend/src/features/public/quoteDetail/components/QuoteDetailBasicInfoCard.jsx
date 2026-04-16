@@ -58,7 +58,7 @@ export default function QuoteDetailBasicInfoCard({
         </div>
 
         <div className="quote-detail-info-table__row">
-          <div className="quote-detail-info-table__label">운송일시</div>
+          <div className="quote-detail-info-table__label">희망 도착일시</div>
           <div className="quote-detail-info-table__content">
             <strong>{transportDateTime}</strong>
           </div>

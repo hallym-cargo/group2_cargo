@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Map, MapMarker, Polyline, useKakaoLoader } from "react-kakao-maps-sdk";
+import { fetchDrivingRoute } from "../../../../api";
 
 const DEFAULT_CENTER = { lat: 36.3504, lng: 127.3845 };
 const MIN_VISIBLE_LEVEL = 5; // 너무 과확대되지 않도록 제한
@@ -8,6 +9,7 @@ function makeFullAddress(baseAddress, detailAddress) {
   return [baseAddress, detailAddress].filter(Boolean).join(" ").trim();
 }
 
+<<<<<<< HEAD
 function getDistanceKm(lat1, lng1, lat2, lng2) {
   const toRad = (deg) => (deg * Math.PI) / 180;
   const R = 6371;
@@ -24,6 +26,10 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+=======
+function isValidCoordinate(lat, lng) {
+  return Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
+>>>>>>> main
 }
 
 export default function QuoteDetailKakaoMapView({ shipment }) {
@@ -32,12 +38,18 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
     libraries: ["services"],
   });
 
+<<<<<<< HEAD
   const mapRef = useRef(null);
 
+=======
+  const [map, setMap] = useState(null);
+>>>>>>> main
   const [originPosition, setOriginPosition] = useState(null);
   const [destinationPosition, setDestinationPosition] = useState(null);
+  const [routePath, setRoutePath] = useState([]);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const [mapError, setMapError] = useState("");
+  const [routeNotice, setRouteNotice] = useState("");
 
   const originBaseAddress = shipment?.originAddress || "";
   const originFullAddress = useMemo(() => {
@@ -95,19 +107,68 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
     const loadPositions = async () => {
       try {
         setMapError("");
+        setRouteNotice("");
 
-        const [origin, destination] = await Promise.all([
-          geocodeWithFallback(originFullAddress, originBaseAddress),
-          geocodeWithFallback(destinationFullAddress, destinationBaseAddress),
-        ]);
+        const origin = isValidCoordinate(shipment?.originLat, shipment?.originLng)
+          ? {
+              lat: Number(shipment.originLat),
+              lng: Number(shipment.originLng),
+            }
+          : await geocodeWithFallback(originFullAddress, originBaseAddress);
+
+        const destination = isValidCoordinate(
+          shipment?.destinationLat,
+          shipment?.destinationLng,
+        )
+          ? {
+              lat: Number(shipment.destinationLat),
+              lng: Number(shipment.destinationLng),
+            }
+          : await geocodeWithFallback(
+              destinationFullAddress,
+              destinationBaseAddress,
+            );
 
         setOriginPosition(origin);
         setDestinationPosition(destination);
+        setMapCenter(origin);
 
+<<<<<<< HEAD
         setMapCenter({
           lat: (origin.lat + destination.lat) / 2,
           lng: (origin.lng + destination.lng) / 2,
         });
+=======
+        try {
+          const route = await fetchDrivingRoute({
+            startLat: origin.lat,
+            startLng: origin.lng,
+            endLat: destination.lat,
+            endLng: destination.lng,
+          });
+
+          const coords = Array.isArray(route?.routeCoords)
+            ? route.routeCoords
+                .filter((coord) => isValidCoordinate(coord?.lat, coord?.lng))
+                .map((coord) => ({
+                  lat: Number(coord.lat),
+                  lng: Number(coord.lng),
+                }))
+            : [];
+
+          if (coords.length >= 2) {
+            setRoutePath(coords);
+            return;
+          }
+
+          setRoutePath([origin, destination]);
+          setRouteNotice("실제 경로 좌표가 없어 직선 경로로 표시했습니다.");
+        } catch (routeError) {
+          console.error(routeError);
+          setRoutePath([origin, destination]);
+          setRouteNotice("Tmap 경로를 불러오지 못해 직선으로 표시했습니다.");
+        }
+>>>>>>> main
       } catch (e) {
         console.error(e);
         setMapError("주소를 좌표로 변환하지 못했습니다.");
@@ -118,6 +179,10 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
   }, [
     loading,
     error,
+    shipment?.originLat,
+    shipment?.originLng,
+    shipment?.destinationLat,
+    shipment?.destinationLng,
     originFullAddress,
     originBaseAddress,
     destinationFullAddress,
@@ -125,6 +190,7 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
   ]);
 
   useEffect(() => {
+<<<<<<< HEAD
     if (!mapRef.current) return;
     if (!window.kakao?.maps) return;
 
@@ -196,6 +262,27 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
       map.setLevel(5);
     }
   }, [originPosition, destinationPosition]);
+=======
+    if (!map || !window.kakao?.maps) return;
+
+    const points = routePath.length
+      ? routePath
+      : [originPosition, destinationPosition].filter(Boolean);
+
+    if (!points.length) return;
+
+    if (points.length === 1) {
+      map.setCenter(new window.kakao.maps.LatLng(points[0].lat, points[0].lng));
+      return;
+    }
+
+    const bounds = new window.kakao.maps.LatLngBounds();
+    points.forEach((point) => {
+      bounds.extend(new window.kakao.maps.LatLng(point.lat, point.lng));
+    });
+    map.setBounds(bounds, 60, 60, 60, 60);
+  }, [map, routePath, originPosition, destinationPosition]);
+>>>>>>> main
 
   if (loading) {
     return (
@@ -222,10 +309,15 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
       <Map
         center={mapCenter}
         style={{ width: "100%", height: "100%" }}
+<<<<<<< HEAD
         level={7}
         onCreate={(map) => {
           mapRef.current = map;
         }}
+=======
+        level={12}
+        onCreate={setMap}
+>>>>>>> main
       >
         {originPosition && (
           <MapMarker position={originPosition}>
@@ -239,16 +331,20 @@ export default function QuoteDetailKakaoMapView({ shipment }) {
           </MapMarker>
         )}
 
-        {originPosition && destinationPosition && (
+        {routePath.length >= 2 && (
           <Polyline
-            path={[originPosition, destinationPosition]}
-            strokeWeight={4}
+            path={routePath}
+            strokeWeight={5}
             strokeColor="#3d63f2"
-            strokeOpacity={0.85}
+            strokeOpacity={0.9}
             strokeStyle="solid"
           />
         )}
       </Map>
+
+      {routeNotice ? (
+        <div className="quote-detail-map-real__route-notice">{routeNotice}</div>
+      ) : null}
     </div>
   );
 }

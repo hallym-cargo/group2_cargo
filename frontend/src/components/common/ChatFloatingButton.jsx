@@ -3,13 +3,13 @@ import { useEffect, useRef, useState } from "react";
 export default function ChatFloatingButton({
   unreadCount,
   notificationUnreadCount,
+  onAssistantClick,
   onChatClick,
   onNotificationClick,
   onPlaceholderClick,
   onGameClick,
   onAssistantClick,
 }) {
-
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
 
@@ -37,7 +37,6 @@ export default function ChatFloatingButton({
       ref={rootRef}
     >
       <div className="floating-quick-menu__actions">
-
         {/* 준비중 */}
         <button
           className="floating-quick-menu__action floating-quick-menu__action--placeholder"
@@ -97,7 +96,6 @@ export default function ChatFloatingButton({
             </span>
           )}
         </button>
-
       </div>
 
       <button

@@ -436,6 +436,15 @@ export default function RoundsLiteArena({ controller }) {
                   방 만들기
                 </button>
 
+                <button
+                  type="button"
+                  className="rounds-lite-secondary"
+                  onClick={handleMatchmaking}
+                  disabled={loading || room?.matchmakingQueued}
+                >
+                  {room?.matchmakingQueued ? '자동 매칭 대기 중' : '자동 매칭'}
+                </button>
+
                 <div className="rounds-lite-join-row">
                   <input
                     type="text"
