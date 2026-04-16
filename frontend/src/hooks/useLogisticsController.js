@@ -317,6 +317,38 @@ export function useLogisticsController() {
   const [receipt, setReceipt] = useState(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [penaltyBlockedModal, setPenaltyBlockedModal] = useState({
+    open: false,
+    message: "",
+  });
+
+  const openPenaltyBlockedModal = (message = "패널티 상태입니다.") => {
+    setPenaltyBlockedModal({
+      open: true,
+      message,
+    });
+  };
+
+  const closePenaltyBlockedModal = () => {
+    setPenaltyBlockedModal({
+      open: false,
+      message: "",
+    });
+  };
+
+  const getPenaltyBlockedMessage = (shipment = selected) => {
+    if (!shipment) return "패널티 상태입니다.";
+
+    if (shipment.viewerTradingBlockedUntil) {
+      return `패널티 상태입니다.\n현재 거래가 불가능합니다.\n거래 금지 해제 시각: ${shipment.viewerTradingBlockedUntil}`;
+    }
+
+    if (shipment.viewerMatchingBlockedUntil) {
+      return `패널티 상태입니다.\n현재 거래가 불가능합니다.\n매칭 제한 해제 시각: ${shipment.viewerMatchingBlockedUntil}`;
+    }
+
+    return "패널티 상태입니다.";
+  };
   // const [authMode, setAuthMode] = useState('login');
   const [authMode, setAuthMode] = useState("");
 
@@ -1008,7 +1040,7 @@ export function useLogisticsController() {
       );
       setMessage(
         err.response?.data?.message ||
-          "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
+        "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
       );
     } finally {
       setAssistantSending(false);
@@ -1481,7 +1513,7 @@ export function useLogisticsController() {
   };
 
   useEffect(() => {
-    loadPublic().catch(() => {});
+    loadPublic().catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -1514,19 +1546,19 @@ export function useLogisticsController() {
       loadAdmin().catch((err) =>
         setMessage(err.response?.data?.message || "관리자 데이터 로드 실패"),
       );
-      loadFinance().catch(() => {});
-      loadRatings().catch(() => {});
+      loadFinance().catch(() => { });
+      loadRatings().catch(() => { });
     } else {
       loadShipments().catch((err) =>
         setMessage(err.response?.data?.message || "목록 로드 실패"),
       );
-      loadBookmarks().catch(() => {});
-      loadFinance().catch(() => {});
-      loadRatings().catch(() => {});
-      loadProfile().catch(() => {});
-      loadChatRooms().catch(() => {});
-      loadNotifications().catch(() => {});
-      loadAllNotifications().catch(() => {});
+      loadBookmarks().catch(() => { });
+      loadFinance().catch(() => { });
+      loadRatings().catch(() => { });
+      loadProfile().catch(() => { });
+      loadChatRooms().catch(() => { });
+      loadNotifications().catch(() => { });
+      loadAllNotifications().catch(() => { });
     }
   }, [isLoggedIn, isAdmin]);
 
@@ -1559,28 +1591,28 @@ export function useLogisticsController() {
       reconnectDelay: 4000,
       onConnect: () => {
         client.subscribe("/topic/shipments", () => {
-          loadPublic().catch(() => {});
+          loadPublic().catch(() => { });
 
           if (isAdmin) {
-            loadAdmin().catch(() => {});
-            loadFinance().catch(() => {});
-            loadRatings().catch(() => {});
+            loadAdmin().catch(() => { });
+            loadFinance().catch(() => { });
+            loadRatings().catch(() => { });
           } else if (isLoggedIn) {
-            loadShipments().catch(() => {});
-            loadBookmarks().catch(() => {});
-            loadFinance().catch(() => {});
-            loadRatings().catch(() => {});
-            loadChatRooms().catch(() => {});
-            loadNotifications().catch(() => {});
-            loadAllNotifications().catch(() => {});
-            if (selectedId) loadDetail(selectedId).catch(() => {});
+            loadShipments().catch(() => { });
+            loadBookmarks().catch(() => { });
+            loadFinance().catch(() => { });
+            loadRatings().catch(() => { });
+            loadChatRooms().catch(() => { });
+            loadNotifications().catch(() => { });
+            loadAllNotifications().catch(() => { });
+            if (selectedId) loadDetail(selectedId).catch(() => { });
           }
         });
 
         if (selectedId) {
           client.subscribe(`/topic/shipments/${selectedId}`, () => {
             if (!isAdmin && isLoggedIn && selectedId) {
-              loadDetail(selectedId).catch(() => {});
+              loadDetail(selectedId).catch(() => { });
             }
           });
         }
@@ -1671,6 +1703,13 @@ export function useLogisticsController() {
   };
 
   const handleCreateOffer = async () => {
+    const blockedMessage = getPenaltyBlockedMessage();
+
+    if (selected?.viewerTradingBlockedUntil || selected?.viewerMatchingBlockedUntil) {
+      openPenaltyBlockedModal(blockedMessage);
+      return;
+    }
+
     try {
       await createOffer(selectedId, {
         price: Number(offerForm.price),
@@ -1681,7 +1720,17 @@ export function useLogisticsController() {
 
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "입찰 제안 실패");
+      const serverMessage = err.response?.data?.message || "입찰 제안 실패";
+
+      if (
+        serverMessage.includes("거래 금지 상태") ||
+        serverMessage.includes("매칭 제한 상태")
+      ) {
+        openPenaltyBlockedModal(`패널티 상태입니다.\n${serverMessage}`);
+        return;
+      }
+
+      setMessage(serverMessage);
     }
   };
 
@@ -1744,6 +1793,13 @@ export function useLogisticsController() {
   };
 
   const handleAcceptOffer = async (offerId) => {
+    const blockedMessage = getPenaltyBlockedMessage();
+
+    if (selected?.viewerTradingBlockedUntil || selected?.viewerMatchingBlockedUntil) {
+      openPenaltyBlockedModal(blockedMessage);
+      return;
+    }
+
     try {
       const response = await acceptOffer(offerId);
       const shipmentId = response?.id || selectedId;
@@ -1757,7 +1813,17 @@ export function useLogisticsController() {
       await openPaymentModal(shipmentId);
       setMessage("차주가 확정되었습니다. 결제를 진행해 주세요.");
     } catch (err) {
-      setMessage(err.response?.data?.message || "차주 확정 실패");
+      const serverMessage = err.response?.data?.message || "차주 확정 실패";
+
+      if (
+        serverMessage.includes("거래 금지 상태") ||
+        serverMessage.includes("매칭 제한 상태")
+      ) {
+        openPenaltyBlockedModal(`패널티 상태입니다.\n${serverMessage}`);
+        return;
+      }
+
+      setMessage(serverMessage);
     }
   };
 
@@ -2249,5 +2315,8 @@ export function useLogisticsController() {
     closeReceipt,
     routeParams,
     setMessage,
+    penaltyBlockedModal,
+    openPenaltyBlockedModal,
+    closePenaltyBlockedModal,
   };
 }

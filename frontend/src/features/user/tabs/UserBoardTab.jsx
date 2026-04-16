@@ -4,9 +4,10 @@ import ProfilePreviewCard from '../../../components/common/ProfilePreviewCard'
 import SectionTitle from '../../../components/common/SectionTitle'
 import ShipmentCancelModal from '../../../components/common/ShipmentCancelModal'
 import { formatCurrency, formatDate, formatRatingSummary, roleText, statusText } from '../../../utils/formatters'
+import PenaltyBlockedModal from '../../../components/common/PenaltyBlockedModal'
 
 export default function UserBoardTab({ controller }) {
-  const {
+    const {
     auth,
     filteredShipments,
     selectedId,
@@ -33,6 +34,8 @@ export default function UserBoardTab({ controller }) {
     setCancelForm,
     handleCancelShipment,
     cancelSubmitting,
+    penaltyBlockedModal,
+    closePenaltyBlockedModal,
   } = controller
 
   const showCancelButton =
@@ -481,7 +484,7 @@ export default function UserBoardTab({ controller }) {
         </div>
       </div>
 
-      <ShipmentCancelModal
+            <ShipmentCancelModal
         open={cancelModalOpen}
         form={cancelForm}
         setForm={setCancelForm}
@@ -489,6 +492,12 @@ export default function UserBoardTab({ controller }) {
         onSubmit={handleCancelShipment}
         selected={selected}
         isSubmitting={cancelSubmitting}
+      />
+
+      <PenaltyBlockedModal
+        open={penaltyBlockedModal.open}
+        message={penaltyBlockedModal.message}
+        onClose={closePenaltyBlockedModal}
       />
     </div>
   )
