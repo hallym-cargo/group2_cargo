@@ -17,8 +17,8 @@ const LAST_ROOM_KEY = 'roundsLite:lastRoomCode'
 const POLL_INTERVAL = 55
 const INPUT_INTERVAL = 45
 const VISUAL_LERP = 0.28
-const ARENA_WIDTH = 960
-const ARENA_HEIGHT = 540
+const ARENA_WIDTH = 1280
+const ARENA_HEIGHT = 680
 
 const phaseText = {
   WAITING: '상대를 기다리는 중',
@@ -29,10 +29,15 @@ const phaseText = {
 }
 
 const platforms = [
-  { x: 0, y: 500, w: 960, h: 40, kind: 'floor' },
-  { x: 200, y: 360, w: 180, h: 18, kind: 'platform' },
-  { x: 580, y: 300, w: 180, h: 18, kind: 'platform' },
-  { x: 390, y: 420, w: 180, h: 18, kind: 'platform' },
+  { x: 0, y: 620, w: 1280, h: 60, kind: 'floor' },
+  { x: 110, y: 500, w: 210, h: 18, kind: 'platform' },
+  { x: 380, y: 430, w: 200, h: 18, kind: 'platform' },
+  { x: 700, y: 470, w: 190, h: 18, kind: 'platform' },
+  { x: 990, y: 390, w: 180, h: 18, kind: 'platform' },
+  { x: 500, y: 320, w: 250, h: 18, kind: 'platform' },
+  { x: 250, y: 560, w: 38, h: 60, kind: 'wall' },
+  { x: 612, y: 520, w: 56, h: 100, kind: 'wall' },
+  { x: 940, y: 545, w: 42, h: 75, kind: 'wall' },
 ]
 
 function getErrorMessage(error, fallback) {
@@ -627,17 +632,23 @@ export default function RoundsLiteArena({ controller }) {
                   <div className="rounds-lite-arena-grid" />
                   <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--one" />
                   <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--two" />
+                  <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--three" />
                   <div className="rounds-lite-cityline">
                     <span className="rounds-lite-building rounds-lite-building--a" />
                     <span className="rounds-lite-building rounds-lite-building--b" />
                     <span className="rounds-lite-building rounds-lite-building--c" />
                     <span className="rounds-lite-building rounds-lite-building--d" />
                     <span className="rounds-lite-building rounds-lite-building--e" />
+                    <span className="rounds-lite-building rounds-lite-building--f" />
+                    <span className="rounds-lite-building rounds-lite-building--g" />
                   </div>
                   <div className="rounds-lite-foreground">
                     <span className="rounds-lite-foreground-rock rounds-lite-foreground-rock--left" />
                     <span className="rounds-lite-foreground-rock rounds-lite-foreground-rock--right" />
                     <span className="rounds-lite-foreground-light" />
+                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--left" />
+                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--center" />
+                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--right" />
                   </div>
 
                   {platforms.map((platform, index) => (
