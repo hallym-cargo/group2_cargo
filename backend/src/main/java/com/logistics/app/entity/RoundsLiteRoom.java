@@ -54,6 +54,9 @@ public class RoundsLiteRoom {
     @Builder.Default
     private Boolean matchmakingRoom = false;
 
+    @Column(length = 64)
+    private String currentMapKey;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -75,6 +78,9 @@ public class RoundsLiteRoom {
         }
         if (matchmakingRoom == null) {
             matchmakingRoom = false;
+        }
+        if (currentMapKey == null || currentMapKey.isBlank()) {
+            currentMapKey = "sky-bridges";
         }
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();

@@ -4,7 +4,13 @@ export default function PenaltyBlockedModal({ open, message, onClose }) {
   return (
     <div className="overlay-backdrop" onClick={onClose}>
       <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>×</button>
+        <button
+          className="modal-close"
+          onClick={onClose}
+          style={{ position: "absolute", top: 20, right: 20, left: "auto" }}
+        >
+          ×
+        </button>
 
         <div className="profile-modal__head">
           <div>
