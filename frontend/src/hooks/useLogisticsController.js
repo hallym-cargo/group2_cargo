@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs";
+//추가
+import { kakaoLogin } from "../api.js";
 
 import {
   API_BASE_URL,
@@ -365,7 +367,6 @@ export function useLogisticsController() {
   const [driverBoardTag, setDriverBoardTag] = useState("ALL");
   const [shipmentKeyword, setShipmentKeyword] = useState("");
 
-  /* 134~141 변경, 추가함 */
   const [routePage, setRoutePageState] = useState("main");
   const [routeParams, setRouteParams] = useState({});
   const [pendingScrollTarget, setPendingScrollTarget] = useState("");
@@ -1008,7 +1009,7 @@ export function useLogisticsController() {
       );
       setMessage(
         err.response?.data?.message ||
-          "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
+        "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
       );
     } finally {
       setAssistantSending(false);
@@ -2047,6 +2048,35 @@ export function useLogisticsController() {
     }
   };
 
+  // 추가
+  const handleKakaoLogin = async (kakaoUser) => {
+    try {
+      console.log("카카오 로그인 처리:", kakaoUser);
+
+      // 백엔드로 보내기
+      const res = await kakaoLogin(kakaoUser);
+
+      console.log("서버 응답:", res);
+
+      // 서버에서 JWT 받아야 함
+      const userData = {
+        token: res.accessToken, // 서버 JWT
+        email: res.email,
+        name: res.name,
+        role: res.role,
+        profileCompleted: res.profileCompleted,
+      };
+
+      // 진짜 로그인 처리
+      syncAuth(userData);
+
+      setRoutePage("main");
+    } catch (err) {
+      console.error("카카오 로그인 실패:", err);
+    }
+  };
+  //
+
   return {
     API_BASE_URL,
     auth,
@@ -2249,5 +2279,6 @@ export function useLogisticsController() {
     closeReceipt,
     routeParams,
     setMessage,
+    handleKakaoLogin, // 추가
   };
 }
