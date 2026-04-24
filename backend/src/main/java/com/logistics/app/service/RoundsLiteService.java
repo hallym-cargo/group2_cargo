@@ -36,6 +36,63 @@ public class RoundsLiteService {
     private static final double MAX_SIM_SECONDS = 1.0d;
     private static final int TARGET_WINS = 3;
 
+    private static final List<MapDefinition> MAPS = List.of(
+            new MapDefinition(
+                    "sky-bridges",
+                    List.of(
+                            platform(0, FLOOR_Y, ARENA_WIDTH, 60, false, false, "ground"),
+                            platform(130, 540, 260, 28, true, false, "stone"),
+                            platform(970, 540, 260, 28, true, false, "stone"),
+                            platform(500, 420, 360, 26, true, false, "bridge"),
+                            platform(260, 320, 220, 24, true, false, "ice"),
+                            platform(880, 320, 220, 24, true, false, "ice"),
+                            platform(640, 250, 100, 110, false, true, "tower")
+                    )
+            ),
+            new MapDefinition(
+                    "split-core",
+                    List.of(
+                            platform(0, FLOOR_Y, 520, 60, false, false, "ground"),
+                            platform(840, FLOOR_Y, 520, 60, false, false, "ground"),
+                            platform(160, 555, 260, 28, true, false, "stone"),
+                            platform(940, 555, 260, 28, true, false, "stone"),
+                            platform(525, 520, 310, 24, true, false, "bridge"),
+                            platform(570, 385, 220, 24, true, false, "ice"),
+                            platform(90, 410, 170, 22, true, false, "ledge"),
+                            platform(1100, 410, 170, 22, true, false, "ledge"),
+                            platform(668, 575, 24, 130, false, true, "wall")
+                    )
+            ),
+            new MapDefinition(
+                    "tower-fall",
+                    List.of(
+                            platform(0, FLOOR_Y, ARENA_WIDTH, 60, false, false, "ground"),
+                            platform(180, 590, 230, 26, true, false, "stone"),
+                            platform(950, 590, 230, 26, true, false, "stone"),
+                            platform(470, 505, 420, 24, true, false, "bridge"),
+                            platform(305, 405, 250, 22, true, false, "ice"),
+                            platform(805, 405, 250, 22, true, false, "ice"),
+                            platform(610, 300, 140, 24, true, false, "crown"),
+                            platform(90, 260, 170, 22, true, false, "ledge"),
+                            platform(1100, 260, 170, 22, true, false, "ledge")
+                    )
+            ),
+            new MapDefinition(
+                    "crossfire-lab",
+                    List.of(
+                            platform(0, FLOOR_Y, ARENA_WIDTH, 60, false, false, "ground"),
+                            platform(120, 560, 300, 28, true, false, "stone"),
+                            platform(940, 560, 300, 28, true, false, "stone"),
+                            platform(500, 575, 360, 24, true, false, "bridge"),
+                            platform(500, 405, 360, 24, true, false, "bridge"),
+                            platform(220, 350, 200, 22, true, false, "ice"),
+                            platform(940, 350, 200, 22, true, false, "ice"),
+                            platform(190, 470, 70, 120, false, true, "wall"),
+                            platform(1100, 470, 70, 120, false, true, "wall")
+                    )
+            )
+    );
+
     private final RoundsLiteRoomRepository roomRepository;
     private final RoundsLitePlayerRepository playerRepository;
     private final ObjectMapper objectMapper;
@@ -883,6 +940,10 @@ public class RoundsLiteService {
                 .projectiles(projectiles)
                 .cardOptions(cardOptions)
                 .build();
+    }
+
+    private static Platform platform(double x, double y, double w, double h, boolean oneWay, boolean bulletOnly, String kind) {
+        return new Platform(x, y, w, h, oneWay, bulletOnly, kind);
     }
 
     private double resolveAimAngleDeg(RoundsLitePlayer player) {
