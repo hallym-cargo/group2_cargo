@@ -675,6 +675,7 @@
   margin: 0;
   color: #64748b;
   font-size: 14px;
+  line-height: 1.55;
 }
 
 .profile-modal__grid {
@@ -838,15 +839,17 @@
 
 .assistant-modal {
   position: fixed;
-  width: min(420px, calc(100vw - 24px));
-  max-height: min(720px, calc(100vh - 32px));
-  background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+  width: min(432px, calc(100vw - 24px));
+  max-height: min(740px, calc(100vh - 32px));
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.22);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   pointer-events: auto;
+  backdrop-filter: blur(18px);
 }
 
 .assistant-modal.is-dragging {
@@ -867,91 +870,152 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 22px 14px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 22px 22px 16px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(255, 255, 255, 0.86));
 }
 
 .assistant-modal__head strong {
   display: block;
   font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: #0f172a;
 }
 
 .assistant-modal__head p {
-  margin: 6px 0 0;
+  margin: 7px 0 0;
   color: #64748b;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .assistant-modal__quickActions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
-  padding: 14px 22px 0;
+  padding: 16px 22px 0;
 }
 
 .assistant-modal__quickActions button {
-  border: none;
+  border: 1px solid rgba(99, 102, 241, 0.12);
   border-radius: 999px;
-  background: #eef2ff;
-  color: #4338ca;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  color: #334155;
   font-weight: 700;
-  padding: 10px 14px;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  padding: 10px 15px;
   cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.assistant-modal__quickActions button:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, #f8fbff, #eef2ff);
+  border-color: rgba(99, 102, 241, 0.24);
+  color: #4338ca;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.12);
 }
 
 .assistant-modal__messages {
   flex: 1;
   overflow: auto;
-  padding: 18px 22px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  background: #f8fafc;
+  gap: 14px;
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.05), transparent 28%),
+    linear-gradient(180deg, #f8fafc 0%, #f3f6fb 100%);
 }
 
 .assistant-bubble {
   max-width: 88%;
   align-self: flex-start;
-  background: #fff;
-  border-radius: 18px 18px 18px 6px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px 20px 20px 8px;
   padding: 14px 16px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
 }
 
+.assistant-bubble--user,
 .assistant-bubble--mine {
   align-self: flex-end;
-  background: #111827;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(15, 23, 42, 0.92);
   color: #fff;
-  border-radius: 18px 18px 6px 18px;
+  border-radius: 20px 20px 8px 20px;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.16);
 }
 
 .assistant-bubble p {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.assistant-bubble__role {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: #6366f1;
+}
+
+.assistant-bubble--user .assistant-bubble__role,
+.assistant-bubble--mine .assistant-bubble__role {
+  color: rgba(255, 255, 255, 0.68);
 }
 
 .assistant-bubble__actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .assistant-bubble__actions button {
-  border: none;
+  border: 1px solid rgba(99, 102, 241, 0.14);
   border-radius: 999px;
-  background: #111827;
-  color: #fff;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  color: #334155;
   font-weight: 700;
-  padding: 9px 14px;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  padding: 9px 13px;
   cursor: pointer;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
+.assistant-bubble__actions button:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, #f8fbff, #eef2ff);
+  border-color: rgba(99, 102, 241, 0.24);
+  color: #4338ca;
+  box-shadow: 0 10px 22px rgba(99, 102, 241, 0.12);
+}
+
+.assistant-bubble--user .assistant-bubble__actions button,
 .assistant-bubble--mine .assistant-bubble__actions button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+}
+
+.assistant-bubble--user .assistant-bubble__actions button:hover,
+.assistant-bubble--mine .assistant-bubble__actions button:hover {
   background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
 }
 
 .assistant-modal__composer {
@@ -959,13 +1023,94 @@
   grid-template-columns: 1fr auto;
   gap: 12px;
   padding: 16px 22px 20px;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
-  background: #fff;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .assistant-modal__composer textarea {
   min-height: 88px;
   resize: none;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.6;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.assistant-modal__composer textarea:focus {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+}
+
+.assistant-chip {
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  color: #334155;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  padding: 10px 15px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.assistant-chip:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, #f8fbff, #eef2ff);
+  border-color: rgba(99, 102, 241, 0.24);
+  color: #4338ca;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.12);
+}
+
+.assistant-chip--inline {
+  background: rgba(248, 250, 252, 0.96);
+  color: #334155;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.assistant-chip--inline:hover {
+  background: linear-gradient(180deg, #f8fbff, #eef2ff);
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.24);
+}
+
+.assistant-action-button {
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  padding: 0 18px;
+  min-width: 84px;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(79, 70, 229, 0.22);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
+}
+
+.assistant-action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.24);
+  filter: saturate(1.05);
+}
+
+.assistant-action-button:active {
+  transform: translateY(0);
+}
+
+.assistant-action-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: none;
+  filter: none;
 }
 
 .chat-inbox-panel__foot {
@@ -1372,10 +1517,31 @@
 @media (max-width: 640px) {
   .assistant-modal {
     width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+    border-radius: 24px;
+  }
+
+  .assistant-modal__head {
+    padding: 18px 18px 14px;
+  }
+
+  .assistant-modal__quickActions {
+    padding: 14px 18px 0;
+    gap: 8px;
+  }
+
+  .assistant-modal__messages {
+    padding: 16px 18px;
   }
 
   .assistant-modal__composer {
     grid-template-columns: 1fr;
+    padding: 14px 18px 18px;
+  }
+
+  .assistant-action-button {
+    min-height: 48px;
+    border-radius: 14px;
   }
 }
 

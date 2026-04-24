@@ -17,8 +17,8 @@ const LAST_ROOM_KEY = 'roundsLite:lastRoomCode'
 const POLL_INTERVAL = 55
 const INPUT_INTERVAL = 45
 const VISUAL_LERP = 0.28
-const ARENA_WIDTH = 960
-const ARENA_HEIGHT = 540
+const ARENA_WIDTH = 1280
+const ARENA_HEIGHT = 680
 
 const phaseText = {
   WAITING: '상대를 기다리는 중',
@@ -29,10 +29,15 @@ const phaseText = {
 }
 
 const platforms = [
-  { x: 0, y: 500, w: 960, h: 40, kind: 'floor' },
-  { x: 200, y: 360, w: 180, h: 18, kind: 'platform' },
-  { x: 580, y: 300, w: 180, h: 18, kind: 'platform' },
-  { x: 390, y: 420, w: 180, h: 18, kind: 'platform' },
+  { x: 0, y: 620, w: 1280, h: 60, kind: 'floor' },
+  { x: 110, y: 500, w: 210, h: 18, kind: 'platform' },
+  { x: 380, y: 430, w: 200, h: 18, kind: 'platform' },
+  { x: 700, y: 470, w: 190, h: 18, kind: 'platform' },
+  { x: 990, y: 390, w: 180, h: 18, kind: 'platform' },
+  { x: 500, y: 320, w: 250, h: 18, kind: 'platform' },
+  { x: 250, y: 560, w: 38, h: 60, kind: 'wall' },
+  { x: 612, y: 520, w: 56, h: 100, kind: 'wall' },
+  { x: 940, y: 545, w: 42, h: 75, kind: 'wall' },
 ]
 
 function getErrorMessage(error, fallback) {
@@ -93,7 +98,8 @@ export default function RoundsLiteArena({ controller }) {
   const [tick, setTick] = useState(Date.now())
   const [copied, setCopied] = useState(false)
 
-  const inputRef = useRef({ left: false, right: false, jump: false, shoot: false })
+  const inputRef = useRef({ left: false, right: false, jump: false, drop: false, shoot: false, aimX: ARENA_WIDTH / 2, aimY: ARENA_HEIGHT / 2 })
+  const arenaRef = useRef(null)
   const pollRef = useRef(null)
   const inputLoopRef = useRef(null)
   const animationRef = useRef(null)
@@ -155,11 +161,11 @@ export default function RoundsLiteArena({ controller }) {
 
       if (event.key === 'a' || event.key === 'ArrowLeft') next.left = true
       if (event.key === 'd' || event.key === 'ArrowRight') next.right = true
-      if (event.key === 'w' || event.key === 'ArrowUp') next.jump = true
       if (event.code === 'Space') {
         event.preventDefault()
-        next.shoot = true
+        next.jump = true
       }
+      if (event.key === 'ArrowDown') next.drop = true
 
       inputRef.current = next
     }
@@ -169,8 +175,8 @@ export default function RoundsLiteArena({ controller }) {
 
       if (event.key === 'a' || event.key === 'ArrowLeft') next.left = false
       if (event.key === 'd' || event.key === 'ArrowRight') next.right = false
-      if (event.key === 'w' || event.key === 'ArrowUp') next.jump = false
-      if (event.code === 'Space') next.shoot = false
+      if (event.code === 'Space') next.jump = false
+      if (event.key === 'ArrowDown') next.drop = false
 
       inputRef.current = next
     }
@@ -399,6 +405,17 @@ export default function RoundsLiteArena({ controller }) {
     }
   }
 
+  function updateAim(clientX, clientY) {
+    const arena = arenaRef.current
+    if (!arena) return
+    const rect = arena.getBoundingClientRect()
+    inputRef.current = {
+      ...inputRef.current,
+      aimX: Math.max(0, Math.min(ARENA_WIDTH, ((clientX - rect.left) / rect.width) * ARENA_WIDTH)),
+      aimY: Math.max(0, Math.min(ARENA_HEIGHT, ((clientY - rect.top) / rect.height) * ARENA_HEIGHT)),
+    }
+  }
+
   const countdownMs = room?.countdownEndsAt
     ? Math.max(new Date(room.countdownEndsAt).getTime() - tick, 0)
     : 0
@@ -409,10 +426,10 @@ export default function RoundsLiteArena({ controller }) {
       <div className="rounds-lite-shell">
         <div className="rounds-lite-hero">
           <div>
-            <p className="rounds-lite-eyebrow">MINI GAME</p>
+            <p className="rounds-lite-eyebrow">PLAYGROUND MODE</p>
             <h1 className="rounds-lite-title">Rounds Lite Duel</h1>
             <p className="rounds-lite-subtitle">
-              2인 대전, 이동, 점프, 발사, 체력, 라운드 승리, 카드 선택까지 넣은 웹용 Lite 버전이야.
+              메인페이지 톤과 맞춘 밝은 글래스 UI 위에, 아레나 액션과 카드 선택을 얹은 2인용 웹 대전 모드야.
             </p>
           </div>
 
@@ -515,8 +532,9 @@ export default function RoundsLiteArena({ controller }) {
               <h2>조작법</h2>
               <ul className="rounds-lite-help">
                 <li>A / D 또는 ← / → : 좌우 이동</li>
-                <li>W 또는 ↑ : 점프</li>
-                <li>Space : 발사</li>
+                <li>Space : 점프</li>
+                <li>↓ : 공중 발판 아래로 내려가기</li>
+                <li>마우스 좌클릭 : 커서 방향 발사</li>
                 <li>라운드 승리 시 카드 1장 선택</li>
               </ul>
             </section>
@@ -591,13 +609,56 @@ export default function RoundsLiteArena({ controller }) {
                   </div>
                 )}
 
-                <div className="rounds-lite-arena" style={{ width: ARENA_WIDTH, height: ARENA_HEIGHT }}>
+                <div
+                  ref={arenaRef}
+                  className="rounds-lite-arena"
+                  style={{ width: ARENA_WIDTH, height: ARENA_HEIGHT }}
+                  onMouseMove={(event) => updateAim(event.clientX, event.clientY)}
+                  onMouseDown={(event) => {
+                    if (event.button !== 0) return
+                    updateAim(event.clientX, event.clientY)
+                    inputRef.current = { ...inputRef.current, shoot: true }
+                  }}
+                  onMouseUp={(event) => {
+                    if (event.button !== 0) return
+                    inputRef.current = { ...inputRef.current, shoot: false }
+                  }}
+                  onMouseLeave={() => {
+                    inputRef.current = { ...inputRef.current, shoot: false }
+                  }}
+                >
+                  <div className="rounds-lite-sky-glow rounds-lite-sky-glow--left" />
+                  <div className="rounds-lite-sky-glow rounds-lite-sky-glow--right" />
+                  <div className="rounds-lite-arena-grid" />
+                  <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--one" />
+                  <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--two" />
+                  <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--three" />
+                  <div className="rounds-lite-cityline">
+                    <span className="rounds-lite-building rounds-lite-building--a" />
+                    <span className="rounds-lite-building rounds-lite-building--b" />
+                    <span className="rounds-lite-building rounds-lite-building--c" />
+                    <span className="rounds-lite-building rounds-lite-building--d" />
+                    <span className="rounds-lite-building rounds-lite-building--e" />
+                    <span className="rounds-lite-building rounds-lite-building--f" />
+                    <span className="rounds-lite-building rounds-lite-building--g" />
+                  </div>
+                  <div className="rounds-lite-foreground">
+                    <span className="rounds-lite-foreground-rock rounds-lite-foreground-rock--left" />
+                    <span className="rounds-lite-foreground-rock rounds-lite-foreground-rock--right" />
+                    <span className="rounds-lite-foreground-light" />
+                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--left" />
+                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--center" />
+                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--right" />
+                  </div>
+
                   {platforms.map((platform, index) => (
                     <div
                       key={`${platform.kind}-${index}`}
                       className={`rounds-lite-platform rounds-lite-platform--${platform.kind}`}
                       style={{ left: platform.x, top: platform.y, width: platform.w, height: platform.h }}
-                    />
+                    >
+                      {platform.kind === 'platform' && <span className="rounds-lite-platform-vine" />}
+                    </div>
                   ))}
 
                   {currentRoom?.projectiles?.map((projectile) => (
@@ -622,9 +683,11 @@ export default function RoundsLiteArena({ controller }) {
                         transform: `translate3d(${player.x}px, ${player.y}px, 0) scaleX(${player.facingRight ? 1 : -1})`,
                       }}
                     >
-                      <div className="rounds-lite-player-head" />
-                      <div className="rounds-lite-player-body" />
-                      <div className="rounds-lite-player-gun" />
+                      <div className="rounds-lite-player-aura" />
+                      <div className="rounds-lite-player-core">
+                        <span className="rounds-lite-player-face" />
+                        <span className="rounds-lite-player-gun" />
+                      </div>
                       <div className="rounds-lite-player-name">{player.name}</div>
                       <div className="rounds-lite-health-bar">
                         <div

@@ -319,6 +319,38 @@ export function useLogisticsController() {
   const [receipt, setReceipt] = useState(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [penaltyBlockedModal, setPenaltyBlockedModal] = useState({
+    open: false,
+    message: "",
+  });
+
+  const openPenaltyBlockedModal = (message = "패널티 상태입니다.") => {
+    setPenaltyBlockedModal({
+      open: true,
+      message,
+    });
+  };
+
+  const closePenaltyBlockedModal = () => {
+    setPenaltyBlockedModal({
+      open: false,
+      message: "",
+    });
+  };
+
+  const getPenaltyBlockedMessage = (shipment = selected) => {
+    if (!shipment) return "패널티 상태입니다.";
+
+    if (shipment.viewerTradingBlockedUntil) {
+      return `패널티 상태입니다.\n현재 거래가 불가능합니다.\n거래 금지 해제 시각: ${shipment.viewerTradingBlockedUntil}`;
+    }
+
+    if (shipment.viewerMatchingBlockedUntil) {
+      return `패널티 상태입니다.\n현재 거래가 불가능합니다.\n매칭 제한 해제 시각: ${shipment.viewerMatchingBlockedUntil}`;
+    }
+
+    return "패널티 상태입니다.";
+  };
   // const [authMode, setAuthMode] = useState('login');
   const [authMode, setAuthMode] = useState("");
 
@@ -1726,6 +1758,16 @@ export function useLogisticsController() {
   };
 
   const handleCreateOffer = async () => {
+    const blockedMessage = getPenaltyBlockedMessage();
+
+    if (
+      selected?.viewerTradingBlockedUntil ||
+      selected?.viewerMatchingBlockedUntil
+    ) {
+      openPenaltyBlockedModal(blockedMessage);
+      return;
+    }
+
     try {
       await createOffer(selectedId, {
         price: Number(offerForm.price),
@@ -1736,7 +1778,17 @@ export function useLogisticsController() {
 
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "입찰 제안 실패");
+      const serverMessage = err.response?.data?.message || "입찰 제안 실패";
+
+      if (
+        serverMessage.includes("거래 금지 상태") ||
+        serverMessage.includes("매칭 제한 상태")
+      ) {
+        openPenaltyBlockedModal(`패널티 상태입니다.\n${serverMessage}`);
+        return;
+      }
+
+      setMessage(serverMessage);
     }
   };
 
@@ -1799,6 +1851,16 @@ export function useLogisticsController() {
   };
 
   const handleAcceptOffer = async (offerId) => {
+    const blockedMessage = getPenaltyBlockedMessage();
+
+    if (
+      selected?.viewerTradingBlockedUntil ||
+      selected?.viewerMatchingBlockedUntil
+    ) {
+      openPenaltyBlockedModal(blockedMessage);
+      return;
+    }
+
     try {
       const response = await acceptOffer(offerId);
       const shipmentId = response?.id || selectedId;
@@ -1812,7 +1874,17 @@ export function useLogisticsController() {
       await openPaymentModal(shipmentId);
       setMessage("차주가 확정되었습니다. 결제를 진행해 주세요.");
     } catch (err) {
-      setMessage(err.response?.data?.message || "차주 확정 실패");
+      const serverMessage = err.response?.data?.message || "차주 확정 실패";
+
+      if (
+        serverMessage.includes("거래 금지 상태") ||
+        serverMessage.includes("매칭 제한 상태")
+      ) {
+        openPenaltyBlockedModal(`패널티 상태입니다.\n${serverMessage}`);
+        return;
+      }
+
+      setMessage(serverMessage);
     }
   };
 
@@ -1893,12 +1965,9 @@ export function useLogisticsController() {
         return;
       }
 
-
-
-      console.log("내 ID:", localStorage.getItem('userId'))
-      console.log("shipperId:", selected.shipperId)
-      console.log("driverId:", selected.assignedDriverId)
-
+      console.log("내 ID:", localStorage.getItem("userId"));
+      console.log("shipperId:", selected.shipperId);
+      console.log("driverId:", selected.assignedDriverId);
 
       setCancelSubmitting(true);
 
@@ -2343,5 +2412,8 @@ export function useLogisticsController() {
     routeParams,
     setMessage,
     handleKakaoLogin, // 추가
+    penaltyBlockedModal,
+    openPenaltyBlockedModal,
+    closePenaltyBlockedModal,
   };
 }

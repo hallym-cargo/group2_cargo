@@ -48,7 +48,10 @@ public class GameDtos {
         private boolean left;
         private boolean right;
         private boolean jump;
+        private boolean drop;
         private boolean shoot;
+        private Double aimX;
+        private Double aimY;
     }
 
     @Data
@@ -73,6 +76,7 @@ public class GameDtos {
         private double width;
         private double height;
         private boolean facingRight;
+        private double aimAngleDeg;
         private List<String> selectedCards;
     }
 
@@ -96,6 +100,16 @@ public class GameDtos {
 
     @Data
     @Builder
+    public static class RoundsLitePlatformView {
+        private double x;
+        private double y;
+        private double w;
+        private double h;
+        private String kind;
+    }
+
+    @Data
+    @Builder
     public static class RoundsLiteRoomResponse {
         private String roomCode;
         private String phase;
@@ -109,6 +123,10 @@ public class GameDtos {
         private LocalDateTime countdownEndsAt;
         private boolean matchmakingRoom;
         private boolean matchmakingQueued;
+        private String mapKey;
+        private Double arenaWidth;
+        private Double arenaHeight;
+        private List<RoundsLitePlatformView> platforms;
         private List<RoundsLitePlayerView> players;
         private List<RoundsLiteProjectileView> projectiles;
         private List<RoundsLiteCardOptionView> cardOptions;
