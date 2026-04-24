@@ -343,10 +343,36 @@ export function useLogisticsController() {
   const [transportDetailLoading, setTransportDetailLoading] = useState(false);
 
   const [shipments, setShipments] = useState([]);
+
   const [bookmarks, setBookmarks] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
+
+  const [selectedId, setSelectedIdState] = useState(() => {
+    const savedSelectedId = localStorage.getItem("selectedId");
+    return savedSelectedId ? Number(savedSelectedId) : null;
+  });
+
+  const setSelectedId = (id) => {
+    if (id === null || id === undefined || id === "") {
+      localStorage.removeItem("selectedId");
+      setSelectedIdState(null);
+      return;
+    }
+
+    localStorage.setItem("selectedId", String(id));
+    setSelectedIdState(Number(id));
+  };
+
   const [selected, setSelected] = useState(null);
-  const [dashboardTab, setDashboardTab] = useState("home");
+
+  const [dashboardTab, setDashboardTabState] = useState(() => {
+    return localStorage.getItem("dashboardTab") || "home";
+  });
+
+  const setDashboardTab = (tab) => {
+    localStorage.setItem("dashboardTab", tab);
+    setDashboardTabState(tab);
+  };
+
   const [profile, setProfile] = useState(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
@@ -366,12 +392,25 @@ export function useLogisticsController() {
   const [shipmentFilter, setShipmentFilter] = useState("ALL");
   const [driverBoardTag, setDriverBoardTag] = useState("ALL");
   const [shipmentKeyword, setShipmentKeyword] = useState("");
+  const [routePage, setRoutePageState] = useState(() => {
+    return localStorage.getItem("routePage") || "main";
+  });
 
-  const [routePage, setRoutePageState] = useState("main");
-  const [routeParams, setRouteParams] = useState({});
+  const [routeParams, setRouteParams] = useState(() => {
+    try {
+      const savedParams = localStorage.getItem("routeParams");
+      return savedParams ? JSON.parse(savedParams) : {};
+    } catch {
+      return {};
+    }
+  });
+
   const [pendingScrollTarget, setPendingScrollTarget] = useState("");
 
   const setRoutePage = (page, params = {}) => {
+    localStorage.setItem("routePage", page);
+    localStorage.setItem("routeParams", JSON.stringify(params));
+
     setRoutePageState(page);
     setRouteParams(params);
   };
@@ -698,6 +737,17 @@ export function useLogisticsController() {
     }
   };
 
+  useEffect(() => {
+    if (routePage !== "shippers" && routePage !== "drivers") return;
+
+    const role = routePage === "shippers" ? "SHIPPER" : "DRIVER";
+
+    searchPublicUsers(role, publicUserKeyword).catch((err) => {
+      console.error(err);
+      setMessage("회원 목록을 불러오지 못했습니다.");
+    });
+  }, [routePage]);
+
   const resetPublicUserSearch = async (role) => {
     await searchPublicUsers(role, "");
   };
@@ -1009,7 +1059,7 @@ export function useLogisticsController() {
       );
       setMessage(
         err.response?.data?.message ||
-        "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
+          "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
       );
     } finally {
       setAssistantSending(false);
@@ -1137,6 +1187,10 @@ export function useLogisticsController() {
 
   const logout = () => {
     localStorage.clear();
+    localStorage.removeItem("routePage");
+    localStorage.removeItem("routeParams");
+    localStorage.removeItem("dashboardTab");
+    localStorage.removeItem("selectedId");
     stompClientRef.current?.deactivate();
     stompClientRef.current = null;
 
@@ -1482,7 +1536,7 @@ export function useLogisticsController() {
   };
 
   useEffect(() => {
-    loadPublic().catch(() => { });
+    loadPublic().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1515,19 +1569,19 @@ export function useLogisticsController() {
       loadAdmin().catch((err) =>
         setMessage(err.response?.data?.message || "관리자 데이터 로드 실패"),
       );
-      loadFinance().catch(() => { });
-      loadRatings().catch(() => { });
+      loadFinance().catch(() => {});
+      loadRatings().catch(() => {});
     } else {
       loadShipments().catch((err) =>
         setMessage(err.response?.data?.message || "목록 로드 실패"),
       );
-      loadBookmarks().catch(() => { });
-      loadFinance().catch(() => { });
-      loadRatings().catch(() => { });
-      loadProfile().catch(() => { });
-      loadChatRooms().catch(() => { });
-      loadNotifications().catch(() => { });
-      loadAllNotifications().catch(() => { });
+      loadBookmarks().catch(() => {});
+      loadFinance().catch(() => {});
+      loadRatings().catch(() => {});
+      loadProfile().catch(() => {});
+      loadChatRooms().catch(() => {});
+      loadNotifications().catch(() => {});
+      loadAllNotifications().catch(() => {});
     }
   }, [isLoggedIn, isAdmin]);
 
@@ -1560,28 +1614,28 @@ export function useLogisticsController() {
       reconnectDelay: 4000,
       onConnect: () => {
         client.subscribe("/topic/shipments", () => {
-          loadPublic().catch(() => { });
+          loadPublic().catch(() => {});
 
           if (isAdmin) {
-            loadAdmin().catch(() => { });
-            loadFinance().catch(() => { });
-            loadRatings().catch(() => { });
+            loadAdmin().catch(() => {});
+            loadFinance().catch(() => {});
+            loadRatings().catch(() => {});
           } else if (isLoggedIn) {
-            loadShipments().catch(() => { });
-            loadBookmarks().catch(() => { });
-            loadFinance().catch(() => { });
-            loadRatings().catch(() => { });
-            loadChatRooms().catch(() => { });
-            loadNotifications().catch(() => { });
-            loadAllNotifications().catch(() => { });
-            if (selectedId) loadDetail(selectedId).catch(() => { });
+            loadShipments().catch(() => {});
+            loadBookmarks().catch(() => {});
+            loadFinance().catch(() => {});
+            loadRatings().catch(() => {});
+            loadChatRooms().catch(() => {});
+            loadNotifications().catch(() => {});
+            loadAllNotifications().catch(() => {});
+            if (selectedId) loadDetail(selectedId).catch(() => {});
           }
         });
 
         if (selectedId) {
           client.subscribe(`/topic/shipments/${selectedId}`, () => {
             if (!isAdmin && isLoggedIn && selectedId) {
-              loadDetail(selectedId).catch(() => { });
+              loadDetail(selectedId).catch(() => {});
             }
           });
         }
@@ -1806,10 +1860,11 @@ export function useLogisticsController() {
         completionImageDataUrl: completionProof.dataUrl,
         completionImageName: completionProof.name,
       });
+
       setCompletionProof({ dataUrl: "", name: "" });
 
-      setRoutePage("main");
       setMessage("운반이 완료되었습니다.");
+
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
       setMessage(err.response?.data?.message || "완료 처리 실패");

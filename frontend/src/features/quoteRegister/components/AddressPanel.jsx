@@ -304,6 +304,11 @@ export default function AddressPanel({
               <span className="floor-unit">층</span>
             </div>
 
+            <p className="helper-text">
+              지하, 단독주택, 야외 상차/하차처럼 층수로 표현하기 어려운 경우
+              1층으로 입력하고 상세 주소 또는 요청사항에 실제 위치를 적어주세요.
+            </p>
+
             {!floor && <p className="error-text">층수를 입력해주세요.</p>}
 
             {floor && !isValidFloor && (
