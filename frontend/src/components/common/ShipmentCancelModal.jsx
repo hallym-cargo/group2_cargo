@@ -41,6 +41,21 @@ export default function ShipmentCancelModal({
   }, [selected])
 
   // 추가
+  const handleSubmit = () => {
+    if (!form.reason) {
+      alert('취소 사유를 선택해주세요.')
+      return
+    }
+
+    if (!form.detail || !form.detail.trim()) {
+      alert('상세 설명을 작성해주세요.')
+      return
+    }
+
+    onSubmit()
+  }
+
+  // 추가
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   if (!open || !selected) return null
@@ -130,7 +145,14 @@ export default function ShipmentCancelModal({
             </div>
           </div>
 
-          <button className="btn btn-primary" onClick={onSubmit} disabled={isSubmitting}>
+          {/* <button className="btn btn-primary" onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting ? '취소 처리 중...' : '거래 취소 확정'}
+          </button> */}
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
             {isSubmitting ? '취소 처리 중...' : '거래 취소 확정'}
           </button>
         </div>

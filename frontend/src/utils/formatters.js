@@ -50,7 +50,7 @@ export const formatDate = (value, options = {}) => {
 }
 export const transactionTypeText = (type) => ({ SPEND: '지출', EARN: '수익', FEE: '수수료' }[type] || type)
 export const renderStars = (score = 0) => '★'.repeat(score) + '☆'.repeat(Math.max(0, 5 - score))
-export const formatRatingSummary = (avg, count) => count ? `${Number(avg || 0).toFixed(1)}점 (${count}명)` : '평점 없음'
+export const formatRatingSummary = (avg, count) => count ? `${Number(avg || 0).toFixed(1)}점 (${count}명)` : '없음'
 
 export const fileToDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader()

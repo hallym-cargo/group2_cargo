@@ -1,13 +1,19 @@
 import { formatRatingSummary, resolveMediaUrl, roleText } from '../../utils/formatters'
 
-export default function ProfilePreviewCard({ title, profile }) {
+export default function ProfilePreviewCard({ title, profile, onImageClick }) {
   if (!profile) return null
 
   return (
     <div className="surface-sub">
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         {profile.profileImageUrl ? (
-          <img src={resolveMediaUrl(profile.profileImageUrl)} alt={title} className="image-preview-thumb" style={{ width: 64, height: 64, objectFit: 'cover' }} />
+          <img
+            src={resolveMediaUrl(profile.profileImageUrl)}
+            alt={title}
+            className="image-preview-thumb"
+            style={{ width: 64, height: 64, objectFit: 'cover', cursor: 'pointer' }}
+            onClick={() => onImageClick?.(resolveMediaUrl(profile.profileImageUrl))}
+          />
         ) : (
           <div className="identity-mark" style={{ width: 56, height: 56 }}>{(profile.name || '?').slice(0, 1)}</div>
         )}

@@ -337,7 +337,7 @@ export default function UserOverviewTab({ controller }) {
                 </strong>
               </div>
               <div>
-                <span>완료 건수</span>
+                <span>{auth.role === "DRIVER" ? "완료 건수" : "이용 횟수"}</span>
                 <strong>{profile?.completedCount || 0}건</strong>
               </div>
             </div>
@@ -518,7 +518,10 @@ export default function UserOverviewTab({ controller }) {
         </div>
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="관심 견적" />
+          <SectionTitle
+            title="관심 견적"
+            desc="최신순"
+          />
           <div className="list-stack">
             {bookmarks.length ? (
               // bookmarks.slice(0, 5).map((item) => (

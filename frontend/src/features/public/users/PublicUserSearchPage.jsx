@@ -205,7 +205,7 @@ export default function PublicUserSearchPage({ controller, role }) {
                         </strong>
                       </div>
                       <div>
-                        <span>완료 건수</span>
+                        <span>{isDriver ? "완료 건수" : "이용 횟수"}</span>
                         <strong>{user.completedCount || 0}건</strong>
                       </div>
                     </div>

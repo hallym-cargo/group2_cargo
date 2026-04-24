@@ -1,11 +1,63 @@
 import SectionTitle from '../../../components/common/SectionTitle'
 import { statusText, formatMinutesToHourMinute } from '../../../utils/formatters'
+import { useState, useMemo } from 'react'
 
 export default function UserBookmarksTab({ controller }) {
   const { bookmarks, setSelectedId, setDashboardTab } = controller
+
+  const [statusFilter, setStatusFilter] = useState('ALL')
+
+  const filteredBookmarks = useMemo(() => {
+    return bookmarks.filter(item => {
+      if (statusFilter === 'ALL') return true
+      return item.status === statusFilter
+    })
+  }, [bookmarks, statusFilter])
+
   return (
     <div className="surface table-surface">
-      <SectionTitle title="관심 화물 목록" />
+      <div className="table-head">
+        <div className="table-head-row">
+          <SectionTitle title="관심 화물 목록" />
+
+          <div className="board-filter driver">
+            <button
+              className={statusFilter === 'ALL' ? 'active' : ''}
+              onClick={() => setStatusFilter('ALL')}
+            >
+              전체
+            </button>
+
+            <button
+              className={statusFilter === 'BIDDING' ? 'active' : ''}
+              onClick={() => setStatusFilter('BIDDING')}
+            >
+              입찰중
+            </button>
+
+            <button
+              className={statusFilter === 'IN_TRANSIT' ? 'active' : ''}
+              onClick={() => setStatusFilter('IN_TRANSIT')}
+            >
+              운반중
+            </button>
+
+            <button
+              className={statusFilter === 'CONFIRMED' ? 'active' : ''}
+              onClick={() => setStatusFilter('CONFIRMED')}
+            >
+              확정
+            </button>
+
+            <button
+              className={statusFilter === 'COMPLETED' ? 'active' : ''}
+              onClick={() => setStatusFilter('COMPLETED')}
+            >
+              완료
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="bookmark-table-wrap">
         <table className="board-table">
           <thead>
@@ -18,7 +70,7 @@ export default function UserBookmarksTab({ controller }) {
             </tr>
           </thead>
           <tbody>
-            {bookmarks.map(item =>
+            {filteredBookmarks.map(item =>
               <tr key={item.id} onClick={() => { setSelectedId(item.id); setDashboardTab('board') }}>
                 <td>
                   <span className={`badge badge-${item.status.toLowerCase()}`}>
