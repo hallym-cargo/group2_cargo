@@ -25,6 +25,8 @@ import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ReceiptPdfBridge from "./components/common/ReceiptPdfBridge";
 import QuoteDetailPage from "./features/public/QuoteDetailPage";
+// 추가
+import React, { useEffect } from "react";
 
 export default function App() {
   const hasReceiptPdfQuery =
@@ -36,6 +38,15 @@ export default function App() {
   }
 
   const controller = useLogisticsController();
+
+  // 추가
+  useEffect(() => {
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init("407fb7380c789fe40575dd71b72a5b4e");
+      console.log("Kakao initialized");
+    }
+  }, []);
+  //
 
   let page = null;
 

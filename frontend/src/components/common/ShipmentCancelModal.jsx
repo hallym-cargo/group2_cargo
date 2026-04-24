@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 const cancelReasonOptions = [
   { value: 'SIMPLE_CHANGE_OF_MIND', label: '단순 변심' },
@@ -25,6 +25,7 @@ export default function ShipmentCancelModal({
   onSubmit,
   selected,
   isSubmitting,
+  auth,
 }) {
   const predictedPenalty = useMemo(() => {
     if (!selected?.scheduledStartAt) return 1
@@ -38,6 +39,24 @@ export default function ShipmentCancelModal({
     if (diffMinutes <= 24 * 60) return 2
     return 1
   }, [selected])
+
+  // 추가
+  const handleSubmit = () => {
+    if (!form.reason) {
+      alert('취소 사유를 선택해주세요.')
+      return
+    }
+
+    if (!form.detail || !form.detail.trim()) {
+      alert('상세 설명을 작성해주세요.')
+      return
+    }
+
+    onSubmit()
+  }
+
+  // 추가
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   if (!open || !selected) return null
 
@@ -55,7 +74,7 @@ export default function ShipmentCancelModal({
         </div>
 
         <div className="form-stack">
-          <div className="surface-sub">
+          {/* <div className="surface-sub cancel-reason-block">
             <strong>취소 사유</strong>
             <select
               value={form.reason}
@@ -66,13 +85,43 @@ export default function ShipmentCancelModal({
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
+          </div> */}
+
+          <div className="surface-sub cancel-reason-block">
+            <strong>취소 사유</strong>
+
+            <div className={`custom-select ${auth.role === 'DRIVER' ? 'driver' : 'shipper'}`}>
+              <div
+                className="selected"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                {cancelReasonOptions.find(o => o.value === form.reason)?.label || '취소 사유를 선택하세요'}
+              </div>
+
+              {isDropdownOpen && (
+                <div className="options">
+                  {cancelReasonOptions.map(option => (
+                    <div
+                      key={option.value}
+                      className={`option ${form.reason === option.value ? 'selected-option' : ''}`}
+                      onClick={() => {
+                        setForm((prev) => ({ ...prev, reason: option.value }))
+                        setIsDropdownOpen(false)
+                      }}
+                    >
+                      {option.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="surface-sub">
+          <div className="surface-sub cancel-detail-block">
             <strong>상세 설명</strong>
-            {form.reason === 'OTHER' && (
+            {/* {form.reason === 'OTHER' && (
               <p className="section-desc">기타 사유를 구체적으로 입력해 주세요. 상세 설명은 필수입니다.</p>
-            )}
+            )} */}
             <textarea
               rows="5"
               value={form.detail}
@@ -96,7 +145,14 @@ export default function ShipmentCancelModal({
             </div>
           </div>
 
-          <button className="btn btn-primary" onClick={onSubmit} disabled={isSubmitting}>
+          {/* <button className="btn btn-primary" onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting ? '취소 처리 중...' : '거래 취소 확정'}
+          </button> */}
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
             {isSubmitting ? '취소 처리 중...' : '거래 취소 확정'}
           </button>
         </div>

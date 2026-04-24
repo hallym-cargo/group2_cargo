@@ -1,46 +1,73 @@
 export function mapShipmentStatusToQuoteStatus(status) {
   switch (status) {
-    case 'BIDDING':
-    case 'REQUESTED':
-      return '입찰 진행중';
-    case 'CONFIRMED':
-    case 'IN_TRANSIT':
-    case 'COMPLETED':
-      return '입찰 완료';
-    case 'CANCELLED':
-      return '취소됨';
+    case "BIDDING":
+    case "REQUESTED":
+      return "입찰 진행중";
+
+    case "CONFIRMED":
+    case "IN_TRANSIT":
+    case "COMPLETED":
+      return "입찰 완료";
+
+    case "CANCELLED":
+      return "취소됨";
+
     default:
-      return '입찰 진행중';
+      return "입찰 진행중";
   }
 }
 
 export function formatTransportDate(dateTime) {
-  if (!dateTime) return '';
+  if (!dateTime) return "";
+
   const value = String(dateTime);
-  if (value.length >= 10) return value.slice(0, 10);
+
+  if (value.length >= 10) {
+    return value.slice(0, 10);
+  }
+
   return value;
 }
 
 export function formatTransportTime(dateTime) {
-  if (!dateTime || !String(dateTime).includes('T')) return '';
+  if (!dateTime || !String(dateTime).includes("T")) return "";
+
   return String(dateTime).slice(11, 16);
 }
 
 export function normalizeWeight(weightKg, weightUnit, weightNeedConsult) {
-  if (weightNeedConsult || weightKg === null || weightKg === undefined || weightKg === '') {
-    return { weight: '', weightUnit: weightUnit || 'kg' };
+  if (
+    weightNeedConsult ||
+    weightKg === null ||
+    weightKg === undefined ||
+    weightKg === ""
+  ) {
+    return {
+      weight: "",
+      weightUnit: weightUnit || "kg",
+    };
   }
 
   const numeric = Number(weightKg);
+
   if (Number.isNaN(numeric)) {
-    return { weight: '', weightUnit: weightUnit || 'kg' };
+    return {
+      weight: "",
+      weightUnit: weightUnit || "kg",
+    };
   }
 
-  if ((weightUnit || 'kg') === 't') {
-    return { weight: String(Number((numeric / 1000).toFixed(1))), weightUnit: 't' };
+  if ((weightUnit || "kg") === "t") {
+    return {
+      weight: String(Number((numeric / 1000).toFixed(1))),
+      weightUnit: "t",
+    };
   }
 
-  return { weight: String(Number(numeric.toFixed(2))), weightUnit: 'kg' };
+  return {
+    weight: String(Number(numeric.toFixed(2))),
+    weightUnit: "kg",
+  };
 }
 
 export function shipmentToQuote(shipment) {
@@ -52,32 +79,32 @@ export function shipmentToQuote(shipment) {
 
   return {
     id: shipment?.id,
-    estimateName: shipment?.title || '',
-    title: shipment?.title || '',
-    originAddress: shipment?.originAddress || '',
-    originDetailAddress: shipment?.originDetailAddress || '',
-    originLat: shipment?.originLat ?? '',
-    originLng: shipment?.originLng ?? '',
-    destinationAddress: shipment?.destinationAddress || '',
-    destinationDetailAddress: shipment?.destinationDetailAddress || '',
-    destinationLat: shipment?.destinationLat ?? '',
-    destinationLng: shipment?.destinationLng ?? '',
+    estimateName: shipment?.title || "",
+    title: shipment?.title || "",
+    originAddress: shipment?.originAddress || "",
+    originDetailAddress: shipment?.originDetailAddress || "",
+    originLat: shipment?.originLat ?? "",
+    originLng: shipment?.originLng ?? "",
+    destinationAddress: shipment?.destinationAddress || "",
+    destinationDetailAddress: shipment?.destinationDetailAddress || "",
+    destinationLat: shipment?.destinationLat ?? "",
+    destinationLng: shipment?.destinationLng ?? "",
     transportDate: formatTransportDate(shipment?.scheduledStartAt),
     transportTime: formatTransportTime(shipment?.scheduledStartAt),
-    scheduledStartAt: shipment?.scheduledStartAt || '',
-    vehicleType: shipment?.vehicleType || '',
+    scheduledStartAt: shipment?.scheduledStartAt || "",
+    vehicleType: shipment?.vehicleType || "",
     vehicleNeedConsult: !!shipment?.vehicleNeedConsult,
-    cargoType: shipment?.cargoType || '',
-    cargoName: shipment?.cargoName || '',
+    cargoType: shipment?.cargoType || "",
+    cargoName: shipment?.cargoName || "",
     weight: weightInfo.weight,
     weightKg: shipment?.weightKg,
     weightUnit: weightInfo.weightUnit,
     weightNeedConsult: !!shipment?.weightNeedConsult,
-    requestNote: shipment?.requestNote || '',
-    description: shipment?.description || '',
+    requestNote: shipment?.requestNote || "",
+    description: shipment?.description || "",
     desiredPrice:
       shipment?.desiredPrice === null || shipment?.desiredPrice === undefined
-        ? ''
+        ? ""
         : String(shipment.desiredPrice),
     priceProposalAllowed: !!shipment?.priceProposalAllowed,
     cargoImages: shipment?.cargoImageUrls || [],
@@ -86,55 +113,77 @@ export function shipmentToQuote(shipment) {
     estimatedDistanceKm: shipment?.estimatedDistanceKm ?? null,
     tracking: shipment?.tracking || null,
     status: mapShipmentStatusToQuoteStatus(shipment?.status),
-    rawStatus: shipment?.status || 'BIDDING',
+    rawStatus: shipment?.status || "BIDDING",
     shipperId: shipment?.shipperId,
-    shipperName: shipment?.shipperName || '',
+    shipperName: shipment?.shipperName || "",
     bookmarked: !!shipment?.bookmarked,
     offerCount: shipment?.offerCount || 0,
-    createdAt: shipment?.createdAt || '',
-    updatedAt: shipment?.updatedAt || '',
+    createdAt: shipment?.createdAt || "",
+    updatedAt: shipment?.updatedAt || "",
   };
 }
 
-export function quoteFormToShipmentPayload(formData, imageDataUrls = [], imageNames = []) {
-  const date = (formData?.transportDate || '').trim();
-  const time = (formData?.transportTime || '').trim() || '09:00';
+export function quoteFormToShipmentPayload(
+  formData,
+  imageDataUrls = [],
+  imageNames = [],
+) {
+  const date = (formData?.transportDate || "").trim();
+  const time = (formData?.transportTime || "").trim() || "09:00";
 
-  let scheduledStartAt = '';
+  let scheduledStartAt = "";
+
   if (date) {
     scheduledStartAt = `${date}T${time}:00`;
   }
 
   let weightKg = null;
-  if (!formData?.weightNeedConsult && formData?.weight !== '' && formData?.weight !== null && formData?.weight !== undefined) {
+
+  if (
+    !formData?.weightNeedConsult &&
+    formData?.weight !== "" &&
+    formData?.weight !== null &&
+    formData?.weight !== undefined
+  ) {
     const numericWeight = Number(formData.weight);
+
     if (!Number.isNaN(numericWeight)) {
-      weightKg = formData?.weightUnit === 't' ? numericWeight * 1000 : numericWeight;
+      weightKg =
+        formData?.weightUnit === "t" ? numericWeight * 1000 : numericWeight;
     }
   }
 
   return {
-    title: (formData?.estimateName || '').trim(),
-    cargoType: (formData?.cargoType || '').trim(),
-    cargoName: (formData?.cargoName || '').trim(),
-    vehicleType: formData?.vehicleNeedConsult ? '' : (formData?.vehicleType || '').trim(),
+    title: (formData?.estimateName || "").trim(),
+    cargoType: (formData?.cargoType || "").trim(),
+    cargoName: (formData?.cargoName || "").trim(),
+    vehicleType: formData?.vehicleNeedConsult
+      ? ""
+      : (formData?.vehicleType || "").trim(),
     vehicleNeedConsult: !!formData?.vehicleNeedConsult,
     weightKg,
-    weightUnit: formData?.weightNeedConsult ? null : (formData?.weightUnit || 'kg'),
+    weightUnit: formData?.weightNeedConsult
+      ? null
+      : formData?.weightUnit || "kg",
     weightNeedConsult: !!formData?.weightNeedConsult,
-    description: [formData?.requestNote, formData?.cargoName].filter(Boolean).join('\n').trim(),
-    requestNote: (formData?.requestNote || '').trim(),
+    description: [formData?.requestNote, formData?.cargoName]
+      .filter(Boolean)
+      .join("\n")
+      .trim(),
+    requestNote: (formData?.requestNote || "").trim(),
     desiredPrice:
-      formData?.desiredPrice === '' || formData?.desiredPrice === null || formData?.desiredPrice === undefined
+      formData?.desiredPrice === "" ||
+      formData?.desiredPrice === null ||
+      formData?.desiredPrice === undefined
         ? null
         : Number(formData.desiredPrice),
     priceProposalAllowed: !!formData?.priceProposalAllowed,
-    originAddress: (formData?.originAddress || '').trim(),
-    originDetailAddress: (formData?.originDetailAddress || '').trim(),
+    originAddress: (formData?.originAddress || "").trim(),
+    originDetailAddress: (formData?.originDetailAddress || "").trim(),
     originLat: Number(formData?.originLat),
     originLng: Number(formData?.originLng),
-    destinationAddress: (formData?.destinationAddress || '').trim(),
-    destinationDetailAddress: (formData?.destinationDetailAddress || '').trim(),
+    destinationAddress: (formData?.destinationAddress || "").trim(),
+    destinationDetailAddress: (formData?.destinationDetailAddress || "").trim(),
     destinationLat: Number(formData?.destinationLat),
     destinationLng: Number(formData?.destinationLng),
     scheduledStartAt,

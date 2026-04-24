@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs";
+//추가
+import { kakaoLogin } from "../api.js";
 
 import {
   API_BASE_URL,
@@ -373,10 +375,36 @@ export function useLogisticsController() {
   const [transportDetailLoading, setTransportDetailLoading] = useState(false);
 
   const [shipments, setShipments] = useState([]);
+
   const [bookmarks, setBookmarks] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
+
+  const [selectedId, setSelectedIdState] = useState(() => {
+    const savedSelectedId = localStorage.getItem("selectedId");
+    return savedSelectedId ? Number(savedSelectedId) : null;
+  });
+
+  const setSelectedId = (id) => {
+    if (id === null || id === undefined || id === "") {
+      localStorage.removeItem("selectedId");
+      setSelectedIdState(null);
+      return;
+    }
+
+    localStorage.setItem("selectedId", String(id));
+    setSelectedIdState(Number(id));
+  };
+
   const [selected, setSelected] = useState(null);
-  const [dashboardTab, setDashboardTab] = useState("home");
+
+  const [dashboardTab, setDashboardTabState] = useState(() => {
+    return localStorage.getItem("dashboardTab") || "home";
+  });
+
+  const setDashboardTab = (tab) => {
+    localStorage.setItem("dashboardTab", tab);
+    setDashboardTabState(tab);
+  };
+
   const [profile, setProfile] = useState(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
@@ -396,13 +424,25 @@ export function useLogisticsController() {
   const [shipmentFilter, setShipmentFilter] = useState("ALL");
   const [driverBoardTag, setDriverBoardTag] = useState("ALL");
   const [shipmentKeyword, setShipmentKeyword] = useState("");
+  const [routePage, setRoutePageState] = useState(() => {
+    return localStorage.getItem("routePage") || "main";
+  });
 
-  /* 134~141 변경, 추가함 */
-  const [routePage, setRoutePageState] = useState("main");
-  const [routeParams, setRouteParams] = useState({});
+  const [routeParams, setRouteParams] = useState(() => {
+    try {
+      const savedParams = localStorage.getItem("routeParams");
+      return savedParams ? JSON.parse(savedParams) : {};
+    } catch {
+      return {};
+    }
+  });
+
   const [pendingScrollTarget, setPendingScrollTarget] = useState("");
 
   const setRoutePage = (page, params = {}) => {
+    localStorage.setItem("routePage", page);
+    localStorage.setItem("routeParams", JSON.stringify(params));
+
     setRoutePageState(page);
     setRouteParams(params);
   };
@@ -729,6 +769,17 @@ export function useLogisticsController() {
     }
   };
 
+  useEffect(() => {
+    if (routePage !== "shippers" && routePage !== "drivers") return;
+
+    const role = routePage === "shippers" ? "SHIPPER" : "DRIVER";
+
+    searchPublicUsers(role, publicUserKeyword).catch((err) => {
+      console.error(err);
+      setMessage("회원 목록을 불러오지 못했습니다.");
+    });
+  }, [routePage]);
+
   const resetPublicUserSearch = async (role) => {
     await searchPublicUsers(role, "");
   };
@@ -1040,7 +1091,7 @@ export function useLogisticsController() {
       );
       setMessage(
         err.response?.data?.message ||
-        "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
+          "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
       );
     } finally {
       setAssistantSending(false);
@@ -1168,6 +1219,10 @@ export function useLogisticsController() {
 
   const logout = () => {
     localStorage.clear();
+    localStorage.removeItem("routePage");
+    localStorage.removeItem("routeParams");
+    localStorage.removeItem("dashboardTab");
+    localStorage.removeItem("selectedId");
     stompClientRef.current?.deactivate();
     stompClientRef.current = null;
 
@@ -1513,7 +1568,7 @@ export function useLogisticsController() {
   };
 
   useEffect(() => {
-    loadPublic().catch(() => { });
+    loadPublic().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1546,19 +1601,19 @@ export function useLogisticsController() {
       loadAdmin().catch((err) =>
         setMessage(err.response?.data?.message || "관리자 데이터 로드 실패"),
       );
-      loadFinance().catch(() => { });
-      loadRatings().catch(() => { });
+      loadFinance().catch(() => {});
+      loadRatings().catch(() => {});
     } else {
       loadShipments().catch((err) =>
         setMessage(err.response?.data?.message || "목록 로드 실패"),
       );
-      loadBookmarks().catch(() => { });
-      loadFinance().catch(() => { });
-      loadRatings().catch(() => { });
-      loadProfile().catch(() => { });
-      loadChatRooms().catch(() => { });
-      loadNotifications().catch(() => { });
-      loadAllNotifications().catch(() => { });
+      loadBookmarks().catch(() => {});
+      loadFinance().catch(() => {});
+      loadRatings().catch(() => {});
+      loadProfile().catch(() => {});
+      loadChatRooms().catch(() => {});
+      loadNotifications().catch(() => {});
+      loadAllNotifications().catch(() => {});
     }
   }, [isLoggedIn, isAdmin]);
 
@@ -1591,28 +1646,28 @@ export function useLogisticsController() {
       reconnectDelay: 4000,
       onConnect: () => {
         client.subscribe("/topic/shipments", () => {
-          loadPublic().catch(() => { });
+          loadPublic().catch(() => {});
 
           if (isAdmin) {
-            loadAdmin().catch(() => { });
-            loadFinance().catch(() => { });
-            loadRatings().catch(() => { });
+            loadAdmin().catch(() => {});
+            loadFinance().catch(() => {});
+            loadRatings().catch(() => {});
           } else if (isLoggedIn) {
-            loadShipments().catch(() => { });
-            loadBookmarks().catch(() => { });
-            loadFinance().catch(() => { });
-            loadRatings().catch(() => { });
-            loadChatRooms().catch(() => { });
-            loadNotifications().catch(() => { });
-            loadAllNotifications().catch(() => { });
-            if (selectedId) loadDetail(selectedId).catch(() => { });
+            loadShipments().catch(() => {});
+            loadBookmarks().catch(() => {});
+            loadFinance().catch(() => {});
+            loadRatings().catch(() => {});
+            loadChatRooms().catch(() => {});
+            loadNotifications().catch(() => {});
+            loadAllNotifications().catch(() => {});
+            if (selectedId) loadDetail(selectedId).catch(() => {});
           }
         });
 
         if (selectedId) {
           client.subscribe(`/topic/shipments/${selectedId}`, () => {
             if (!isAdmin && isLoggedIn && selectedId) {
-              loadDetail(selectedId).catch(() => { });
+              loadDetail(selectedId).catch(() => {});
             }
           });
         }
@@ -1642,8 +1697,8 @@ export function useLogisticsController() {
       setDashboardTab(data.profileCompleted ? "home" : "overview");
       setMessage(
         data.profileCompleted
-          ? "로그인되었습니다. 공개 메인 페이지에서도 역할별 기능으로 이동할 수 있습니다."
-          : "첫 로그인입니다. 선택 정보만 입력해도 되니 회원정보를 한 번 확인해 주세요.",
+          ? "로그인되었습니다. 필요한 기능을 편하게 이용해보세요."
+          : "첫 로그인입니다. 간단한 정보 확인 후 모든 기능을 바로 이용할 수 있어요.",
       );
       return true; // 로그인 성공 시 true 반환
     } catch (err) {
@@ -1659,7 +1714,7 @@ export function useLogisticsController() {
       setSignupForm(emptySignup);
       setDashboardTab("overview");
       setMessage(
-        "회원가입이 완료되었습니다. 첫 로그인이라 회원정보 수정 페이지로 안내합니다.",
+        "회원가입이 완료되었습니다. 첫 로그인이므로 회원정보 수정 페이지로 안내합니다.",
       );
     } catch (err) {
       setMessage(err.response?.data?.message || "회원가입 실패");
@@ -1705,7 +1760,10 @@ export function useLogisticsController() {
   const handleCreateOffer = async () => {
     const blockedMessage = getPenaltyBlockedMessage();
 
-    if (selected?.viewerTradingBlockedUntil || selected?.viewerMatchingBlockedUntil) {
+    if (
+      selected?.viewerTradingBlockedUntil ||
+      selected?.viewerMatchingBlockedUntil
+    ) {
       openPenaltyBlockedModal(blockedMessage);
       return;
     }
@@ -1795,7 +1853,10 @@ export function useLogisticsController() {
   const handleAcceptOffer = async (offerId) => {
     const blockedMessage = getPenaltyBlockedMessage();
 
-    if (selected?.viewerTradingBlockedUntil || selected?.viewerMatchingBlockedUntil) {
+    if (
+      selected?.viewerTradingBlockedUntil ||
+      selected?.viewerMatchingBlockedUntil
+    ) {
       openPenaltyBlockedModal(blockedMessage);
       return;
     }
@@ -1871,10 +1932,11 @@ export function useLogisticsController() {
         completionImageDataUrl: completionProof.dataUrl,
         completionImageName: completionProof.name,
       });
+
       setCompletionProof({ dataUrl: "", name: "" });
 
-      setRoutePage("main");
       setMessage("운반이 완료되었습니다.");
+
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
       setMessage(err.response?.data?.message || "완료 처리 실패");
@@ -1903,7 +1965,12 @@ export function useLogisticsController() {
         return;
       }
 
+      console.log("내 ID:", localStorage.getItem("userId"));
+      console.log("shipperId:", selected.shipperId);
+      console.log("driverId:", selected.assignedDriverId);
+
       setCancelSubmitting(true);
+
       await cancelShipment(selectedId, {
         reason: cancelForm.reason,
         detail: cancelForm.detail.trim(),
@@ -2113,6 +2180,35 @@ export function useLogisticsController() {
     }
   };
 
+  // 추가
+  const handleKakaoLogin = async (kakaoUser) => {
+    try {
+      console.log("카카오 로그인 처리:", kakaoUser);
+
+      // 백엔드로 보내기
+      const res = await kakaoLogin(kakaoUser);
+
+      console.log("서버 응답:", res);
+
+      // 서버에서 JWT 받아야 함
+      const userData = {
+        token: res.accessToken, // 서버 JWT
+        email: res.email,
+        name: res.name,
+        role: res.role,
+        profileCompleted: res.profileCompleted,
+      };
+
+      // 진짜 로그인 처리
+      syncAuth(userData);
+
+      setRoutePage("main");
+    } catch (err) {
+      console.error("카카오 로그인 실패:", err);
+    }
+  };
+  //
+
   return {
     API_BASE_URL,
     auth,
@@ -2315,6 +2411,7 @@ export function useLogisticsController() {
     closeReceipt,
     routeParams,
     setMessage,
+    handleKakaoLogin, // 추가
     penaltyBlockedModal,
     openPenaltyBlockedModal,
     closePenaltyBlockedModal,

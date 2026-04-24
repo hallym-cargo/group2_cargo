@@ -11,16 +11,19 @@ import { quoteFormToShipmentPayload } from "../../public/quoteUtils";
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve({
-      dataUrl: typeof reader.result === "string" ? reader.result : "",
-      name: file.name,
-    });
+
+    reader.onload = () =>
+      resolve({
+        dataUrl: typeof reader.result === "string" ? reader.result : "",
+        name: file.name,
+      });
+
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
-export default function useQuoteRegisterForm(controller) {
+function useQuoteRegisterForm(controller) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(QUOTE_REGISTER_INITIAL_STATE);
   const [errors, setErrors] = useState({});
@@ -36,6 +39,86 @@ export default function useQuoteRegisterForm(controller) {
       ...prev,
       [name]: "",
     }));
+  };
+
+  const setRouteAddress = ({
+    type,
+    address,
+    detailAddress = "",
+    lat = "",
+    lng = "",
+  }) => {
+    const nextAddress = (address || "").trim();
+
+    let isBlocked = false;
+
+    setFormData((prev) => {
+      const currentOrigin = (prev.originAddress || "").trim();
+      const currentDestination = (prev.destinationAddress || "").trim();
+
+      if (
+        type === "destination" &&
+        nextAddress &&
+        currentOrigin &&
+        nextAddress === currentOrigin
+      ) {
+        isBlocked = true;
+        return prev;
+      }
+
+      if (
+        type === "origin" &&
+        nextAddress &&
+        currentDestination &&
+        nextAddress === currentDestination
+      ) {
+        isBlocked = true;
+        return prev;
+      }
+
+      return {
+        ...prev,
+        ...(type === "origin"
+          ? {
+              originAddress: address,
+              originDetailAddress: detailAddress,
+              originLat: lat,
+              originLng: lng,
+            }
+          : {
+              destinationAddress: address,
+              destinationDetailAddress: detailAddress,
+              destinationLat: lat,
+              destinationLng: lng,
+            }),
+      };
+    });
+
+    if (isBlocked) {
+      setErrors((prev) => ({
+        ...prev,
+        ...(type === "origin"
+          ? {
+              originAddress: "출발지와 도착지는 서로 다른 주소여야 합니다.",
+            }
+          : {
+              destinationAddress:
+                "출발지와 도착지는 서로 다른 주소여야 합니다.",
+            }),
+      }));
+
+      alert("출발지와 도착지는 같은 주소로 설정할 수 없습니다.");
+      return false;
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      ...(type === "origin"
+        ? { originAddress: "" }
+        : { destinationAddress: "" }),
+    }));
+
+    return true;
   };
 
   const openPanel = (panelName) => {
@@ -81,8 +164,12 @@ export default function useQuoteRegisterForm(controller) {
     }
 
     try {
-      const files = Array.isArray(formData.cargoImages) ? formData.cargoImages : [];
+      const files = Array.isArray(formData.cargoImages)
+        ? formData.cargoImages.filter((file) => file instanceof File)
+        : [];
+
       const converted = await Promise.all(files.map(fileToDataUrl));
+
       const payload = quoteFormToShipmentPayload(
         formData,
         converted.map((item) => item.dataUrl),
@@ -90,11 +177,14 @@ export default function useQuoteRegisterForm(controller) {
       );
 
       const created = await createShipment(payload);
+
       controller?.setMessage?.("견적이 등록되었습니다.");
+
       setFormData(QUOTE_REGISTER_INITIAL_STATE);
       setErrors({});
       setCurrentStep(1);
       setActivePanel(null);
+
       return created;
     } catch (err) {
       controller?.setMessage?.(err.response?.data?.message || "견적 등록 실패");
@@ -115,6 +205,7 @@ export default function useQuoteRegisterForm(controller) {
     errors,
     activePanel,
     updateField,
+    setRouteAddress,
     openPanel,
     closePanel,
     goPrevStep,
@@ -123,3 +214,5 @@ export default function useQuoteRegisterForm(controller) {
     resetForm,
   };
 }
+
+export default useQuoteRegisterForm;

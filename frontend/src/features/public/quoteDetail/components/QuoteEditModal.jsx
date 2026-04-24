@@ -8,8 +8,6 @@ export default function QuoteEditModal({ title, isOpen, onClose, children }) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="quote-edit-modal__header">
-          <h2 className="quote-edit-modal__title">{title}</h2>
-
           <button
             type="button"
             className="quote-edit-modal__close"

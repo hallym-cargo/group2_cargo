@@ -4,7 +4,7 @@ export default function UserTopbar({ auth, title, roleTheme, shipmentKeyword, se
       <div>
         <div className="eyebrow">USER OPERATIONS</div>
         <h1>{title}</h1>
-        <p className="section-desc">{roleTheme?.tone}을 적용해 {auth.role === 'SHIPPER' ? '요청과 확정' : '주행과 ETA'}를 더 빠르게 읽을 수 있도록 조정했습니다.</p>
+        {/* <p className="section-desc">{roleTheme?.tone}을 적용해 {auth.role === 'SHIPPER' ? '요청과 확정' : '주행과 ETA'}를 더 빠르게 읽을 수 있도록 조정했습니다.</p> */}
       </div>
       {/* <div className="toolbar-inline">
         <span className={`role-chip role-chip-${roleTheme?.accent || 'shipper'}`}>{roleTheme?.label}</span>

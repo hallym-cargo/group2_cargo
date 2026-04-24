@@ -18,8 +18,14 @@ export default function UserSidebar({
     ["finance", "정산 내역"],
     ["penalty", "패널티 관리"],
     ["ratings", "평점 관리"],
-    ["bookmarks", "즐겨찾기"],
+    // ["bookmarks", "즐겨찾기"],
   ];
+
+  // 추가
+  if (auth.role === "DRIVER") {
+    navItems.splice(2, 0, ["register", "입찰 가이드"]);
+    navItems.push(["bookmarks", "즐겨찾기"])
+  }
 
   const isRouteActive = (page) => controllerRoutePage === page; // 추가
 
@@ -62,6 +68,15 @@ export default function UserSidebar({
         >
           견적 목록 보기
         </button>
+
+        {auth.role === "SHIPPER" && (
+          <button
+            className={routePage === "createQuote" ? "nav-link active" : "nav-link"}
+            onClick={() => setRoutePage("createQuote")}
+          >
+            견적 등록
+          </button>
+        )}
 
         {/* <button
           className={dashboardTab === "transport" ? "nav-link active" : "nav-link"}

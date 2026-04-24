@@ -123,6 +123,8 @@
   color: var(--text-sub);
   font-size: 12px;
   font-weight: 700;
+  /* 추가 */
+  white-space: nowrap;
 }
 
 .tag-dark {
@@ -287,7 +289,12 @@
 
 .kpi-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 16px;
+  /* margin-top: 16px; */
+}
+
+/* 추가 */
+.penalty-kpi-wrap {
+  margin-top: 12px;
 }
 
 /* 추가 */

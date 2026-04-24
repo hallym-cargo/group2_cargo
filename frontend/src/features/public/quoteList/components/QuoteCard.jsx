@@ -1,9 +1,24 @@
+function getStatusLabel(status) {
+  switch (status) {
+    case "BIDDING":
+    case "입찰 진행중":
+      return "입찰 진행중";
+    case "CONFIRMED":
+    case "입찰 완료":
+      return "입찰 완료";
+    default:
+      return status || "입찰 진행중";
+  }
+}
+
 function getStatusClass(status) {
   switch (status) {
+    case "BIDDING":
     case "입찰 진행중":
       return "is-bidding";
-    case "배차 완료":
-      return "is-matched";
+    case "CONFIRMED":
+    case "입찰 완료":
+      return "is-confirmed";
     default:
       return "is-default";
   }
@@ -78,33 +93,6 @@ function formatPrice(desiredPrice) {
   return `${numericPrice.toLocaleString()}원`;
 }
 
-function formatDistance(distanceKm) {
-  if (distanceKm === null || distanceKm === undefined || distanceKm === "") {
-    return "-";
-  }
-
-  const numeric = Number(distanceKm);
-  if (Number.isNaN(numeric)) return "-";
-  return `${numeric.toFixed(1)}km`;
-}
-
-function formatDuration(minutes) {
-  if (minutes === null || minutes === undefined || minutes === "") {
-    return "-";
-  }
-
-  const numeric = Number(minutes);
-  if (Number.isNaN(numeric)) return "-";
-
-  if (numeric < 60) {
-    return `${numeric}분`;
-  }
-
-  const hour = Math.floor(numeric / 60);
-  const minute = numeric % 60;
-  return minute === 0 ? `${hour}시간` : `${hour}시간 ${minute}분`;
-}
-
 export default function QuoteCard({ quote, onClickDetail }) {
   const {
     estimateName,
@@ -116,19 +104,15 @@ export default function QuoteCard({ quote, onClickDetail }) {
     cargoType,
     vehicleType,
     status,
-    estimatedDistanceKm,
-    estimatedMinutes,
   } = quote;
 
-  const statusText = status || "입찰 진행중";
-  const statusClass = getStatusClass(statusText);
+  const statusText = getStatusLabel(status);
+  const statusClass = getStatusClass(status);
 
   const originSido = getRegionLabel(originAddress);
   const destinationSido = getRegionLabel(destinationAddress);
   const dDayText = formatDDay(transportDate);
   const priceText = formatPrice(desiredPrice);
-  const distanceText = formatDistance(estimatedDistanceKm);
-  const durationText = formatDuration(estimatedMinutes);
 
   return (
     <article className="quote-card">
@@ -138,6 +122,7 @@ export default function QuoteCard({ quote, onClickDetail }) {
             <span className={`quote-card__status-badge ${statusClass}`}>
               {statusText}
             </span>
+
             {priceProposalAllowed && (
               <span className="quote-card__price-badge">가격 상담 가능</span>
             )}
@@ -175,13 +160,15 @@ export default function QuoteCard({ quote, onClickDetail }) {
 
               <div className="quote-card__cargo-row">
                 <strong className="quote-card__cargo-value">
-                  {cargoType || "-"} · {vehicleType || "-"}
+                  {vehicleType
+                    ? `${cargoType || "-"} · ${vehicleType}`
+                    : `${cargoType || "-"}`}
                 </strong>
               </div>
             </div>
 
             <div className="quote-card__price-wrap">
-              <span className="quote-card__info-label">희망 운임 </span>
+              <span className="quote-card__info-label">희망 운임</span>
               <strong className="quote-card__price">{priceText}</strong>
             </div>
           </div>

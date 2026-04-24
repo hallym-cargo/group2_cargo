@@ -216,3 +216,16 @@
 .vehicle-selector__tabs--quad .vehicle-selector__tab {
   width: 100%;
 }
+
+
+/* 추가 */
+.vehicle-selector-wrap input {
+  display: none;
+}
+
+.form-stack input.vehicle-input-large {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block;
+  box-sizing: border-box;
+}

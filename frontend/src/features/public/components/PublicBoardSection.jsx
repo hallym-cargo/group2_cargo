@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate, statusText } from '../../../utils/formatters'
+import { formatMinutesToHourMinute } from '../../../utils/formatters'
 
 export default function PublicBoardSection({ controller }) {
   const {
@@ -15,8 +16,8 @@ export default function PublicBoardSection({ controller }) {
       <div className="landing-board__inner">
         <div className="landing-sectionHead" data-reveal>
           <span>LIVE BOARD</span>
-          <h2>실시간 배차 현황을 한눈에 볼 수 있는 공개 보드</h2>
-          <p>로그인 전에도 현재 운영 흐름을 이해할 수 있도록, 배차 상태와 핵심 지표를 투명하게 제공합니다.</p>
+          <h2>실시간 배차 상태와 <br /> 핵심 지표로 확인하는 운송 흐름</h2>
+          <p>배차 현황과 주요 지표를 실시간으로 제공해 전체 흐름을 한눈에 확인할 수 있습니다</p>
         </div>
 
         <div className="landing-filterRow" data-reveal>
@@ -54,7 +55,8 @@ export default function PublicBoardSection({ controller }) {
                     <td>{item.destinationSummary}</td>
                     <td>{item.currentLocationSummary}</td>
                     <td>{item.offerCount}건 / {formatCurrency(item.bestOfferPrice)}</td>
-                    <td>{item.estimatedMinutes}분</td>
+                    {/* <td>{item.estimatedMinutes}분</td> */}
+                    <td>{formatMinutesToHourMinute(item.estimatedMinutes)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -78,7 +80,12 @@ export default function PublicBoardSection({ controller }) {
                 </div>
 
                 <div className="landing-boardAside__list">
-                  <div><span>예상 거리 / 시간</span><strong>{selectedPublic.estimatedDistanceKm}km · {selectedPublic.estimatedMinutes}분</strong></div>
+                  <div><span>예상 거리 / 시간</span>
+                    {/* <strong>{selectedPublic.estimatedDistanceKm}km · {selectedPublic.estimatedMinutes}분</strong> */}
+                    <strong>
+                      {selectedPublic.estimatedDistanceKm}km · {formatMinutesToHourMinute(selectedPublic.estimatedMinutes)}
+                    </strong>
+                  </div>
                   <div><span>배정 차주</span><strong>{selectedPublic.assignedDriverName || '미확정'}</strong></div>
                   <div><span>최근 갱신</span><strong>{formatDate(selectedPublic.updatedAt)}</strong></div>
                 </div>

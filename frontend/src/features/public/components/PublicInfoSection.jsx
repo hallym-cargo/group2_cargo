@@ -1,15 +1,20 @@
 import { formatDate } from '../../../utils/formatters'
+import { useState } from 'react'
 
 export default function PublicInfoSection({ controller }) {
   const { publicData, inquiryForm, setInquiryForm, handleInquiry } = controller
+
+  // 추가
+  const [inquiryOpen, setInquiryOpen] = useState(false)
+  const role = controller.auth?.role
 
   return (
     <section className="landing-info" id="notice-faq">
       <div className="landing-info__inner">
         <div className="landing-sectionHead" data-reveal>
           <span>NOTICE & SUPPORT</span>
-          <h2>운영 공지, 자주 묻는 질문, 도입 문의까지 한 곳에서 안내합니다.</h2>
-          <p>실제 서비스에 사용할 수 있도록 공지와 문의 흐름을 간결하고 읽기 쉬운 형태로 정리했습니다.</p>
+          <h2>서비스 이용 FAQ 및 도입 문의 안내</h2>
+          <p>자주 묻는 질문과 도입 문의를 통해 필요한 정보를 빠르게 확인할 수 있습니다.</p>
         </div>
 
         <div className="landing-infoGrid">
@@ -33,10 +38,10 @@ export default function PublicInfoSection({ controller }) {
             </div>
           </article> */}
 
-          <article className="landing-infoPanel" data-reveal>
+          {/* <article className="landing-infoPanel" data-reveal> */}
+          <article className="landing-infoPanel landing-infoPanel--faq">
             <div className="landing-infoPanel__top">
-              <span>자주 묻는 질문</span>
-              <strong>FAQ</strong>
+              <strong>자주 묻는 질문</strong>
             </div>
             <div className="landing-faqList">
               {(publicData.faqs || []).map((faq) => (
@@ -50,8 +55,7 @@ export default function PublicInfoSection({ controller }) {
 
           <article className="landing-infoPanel landing-infoPanel--form" data-reveal>
             <div className="landing-infoPanel__top">
-              <span>도입 문의</span>
-              <strong>상담 요청</strong>
+              <strong>문의하기</strong>
             </div>
             <div className="landing-formStack">
               <input placeholder="회사명" value={inquiryForm.companyName} onChange={(e) => setInquiryForm({ ...inquiryForm, companyName: e.target.value })} />
@@ -60,12 +64,40 @@ export default function PublicInfoSection({ controller }) {
                 <input placeholder="연락처" value={inquiryForm.phone} onChange={(e) => setInquiryForm({ ...inquiryForm, phone: e.target.value })} />
               </div>
               <input placeholder="이메일" value={inquiryForm.email} onChange={(e) => setInquiryForm({ ...inquiryForm, email: e.target.value })} />
-              <select value={inquiryForm.inquiryType} onChange={(e) => setInquiryForm({ ...inquiryForm, inquiryType: e.target.value })}>
+              {/* <select value={inquiryForm.inquiryType} onChange={(e) => setInquiryForm({ ...inquiryForm, inquiryType: e.target.value })}>
                 <option>도입 문의</option>
                 <option>데모 요청</option>
                 <option>요금 상담</option>
                 <option>기술 협의</option>
-              </select>
+              </select> */}
+              <div className={`custom-select ${role === 'DRIVER' ? 'driver' : 'shipper'}`}>
+                <div
+                  className="selected"
+                  onClick={() => setInquiryOpen(!inquiryOpen)}
+                >
+                  {inquiryForm.inquiryType || '문의 유형 선택'}
+                </div>
+
+                {inquiryOpen && (
+                  <div className="options">
+                    {['도입 문의', '데모 요청', '요금 상담', '기술 협의'].map(option => (
+                      <div
+                        key={option}
+                        className={`option ${inquiryForm.inquiryType === option ? 'selected-option' : ''}`}
+                        onClick={() => {
+                          setInquiryForm({
+                            ...inquiryForm,
+                            inquiryType: option,
+                          })
+                          setInquiryOpen(false)
+                        }}
+                      >
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <textarea rows="6" placeholder="도입 목적, 필요한 기능, 운영 방식 등을 남겨주세요." value={inquiryForm.message} onChange={(e) => setInquiryForm({ ...inquiryForm, message: e.target.value })} />
               <button className="landing-btn landing-btn--primary landing-btn--full" onClick={handleInquiry}>문의 접수</button>
             </div>

@@ -22,10 +22,12 @@ export default function SimpleSelect({
     };
   }, []);
 
-  const handleSelect = (option) => {
-    onChange(option);
+  const handleSelect = (optionValue) => {
+    onChange(optionValue);
     setOpen(false);
   };
+
+  const selectedOption = options.find((option) => option.value === value);
 
   return (
     <div className={`simple-select ${className}`.trim()} ref={containerRef}>
@@ -34,7 +36,7 @@ export default function SimpleSelect({
         className="simple-select-trigger"
         onClick={() => setOpen((prev) => !prev)}
       >
-        <span>{value}</span>
+        <span>{selectedOption ? selectedOption.label : ""}</span>
         <span className="simple-select-arrow">{open ? "▴" : "▾"}</span>
       </button>
 
@@ -43,13 +45,13 @@ export default function SimpleSelect({
           {options.map((option) => (
             <button
               type="button"
-              key={option}
+              key={option.value}
               className={`simple-select-option ${
-                value === option ? "active" : ""
+                value === option.value ? "active" : ""
               }`}
-              onClick={() => handleSelect(option)}
+              onClick={() => handleSelect(option.value)}
             >
-              {option}
+              {option.label}
             </button>
           ))}
         </div>

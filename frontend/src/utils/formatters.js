@@ -33,24 +33,24 @@ export const formatDate = (value, options = {}) => {
   const hasTime = !(typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.trim()))
   const defaultOptions = hasTime
     ? {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      }
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }
     : {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }
 
   return parsed.toLocaleString('ko-KR', { ...defaultOptions, ...options })
 }
 export const transactionTypeText = (type) => ({ SPEND: '지출', EARN: '수익', FEE: '수수료' }[type] || type)
 export const renderStars = (score = 0) => '★'.repeat(score) + '☆'.repeat(Math.max(0, 5 - score))
-export const formatRatingSummary = (avg, count) => count ? `${Number(avg || 0).toFixed(1)}점 (${count}명)` : '평점 없음'
+export const formatRatingSummary = (avg, count) => count ? `${Number(avg || 0).toFixed(1)}점 (${count}명)` : '없음'
 
 export const fileToDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader()
@@ -68,4 +68,16 @@ export const resolveMediaUrl = (value) => {
   if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw
   if (raw.startsWith('/uploads/')) return `${MEDIA_BASE_URL}${raw}`
   return raw
+}
+
+// 추가
+export const formatMinutesToHourMinute = (minutes) => {
+  if (minutes == null) return '-'
+
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+
+  if (h === 0) return `${m}분`
+  if (m === 0) return `${h}시간`
+  return `${h}시간 ${m}분`
 }

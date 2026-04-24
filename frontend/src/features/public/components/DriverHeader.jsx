@@ -8,9 +8,11 @@ function moveToMain(controller, targetId = null) {
 
   controller.setRoutePage("main");
   controller.setDashboardTab("home");
+
   if (!controller.isLoggedIn) {
     controller.setAuthMode("signup");
   }
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -67,6 +69,7 @@ export default function DriverHeader({ controller }) {
 
         <div className="landing-header__actions">
           <button
+            type="button"
             className="landing-btn landing-btn--light"
             onClick={() => {
               controller.setRoutePage("dashboard");
@@ -77,6 +80,7 @@ export default function DriverHeader({ controller }) {
           </button>
 
           <button
+            type="button"
             className="landing-btn landing-btn--primary"
             onClick={controller.logout}
           >

@@ -1,9 +1,10 @@
 import ProfilePreviewCard from '../../../components/common/ProfilePreviewCard'
 import SectionTitle from '../../../components/common/SectionTitle'
 import VehicleTypeSelector from '../../../components/common/VehicleTypeSelector'
-import { formatCurrency, resolveMediaUrl, statusText } from '../../../utils/formatters'
-import { useRef } from 'react'
+// import { formatCurrency, resolveMediaUrl, statusText } from '../../../utils/formatters'
+import { useRef, useState } from 'react'
 import { parseVehicleTypeString, stringifyVehicleTypes } from '../../../constants/vehicleCatalog'
+import { formatCurrency, resolveMediaUrl, statusText, formatRatingSummary, roleText } from '../../../utils/formatters'
 
 function renderPenaltyStatus(profile) {
   if (!profile) return '정보 불러오는 중'
@@ -45,6 +46,11 @@ export default function UserOverviewTab({ controller }) {
   const cancelRate = Number(profile?.cancelRate || 0)
   const penaltyStatus = renderPenaltyStatus(profile)
   const selectedVehicles = parseVehicleTypeString(profileForm.vehicleType)
+
+  const [vehicleOpen, setVehicleOpen] = useState(false)
+
+  // 추가
+  const [inquiryOpen, setInquiryOpen] = useState(false)
 
   return (
     <div className="page-stack">
@@ -92,7 +98,7 @@ export default function UserOverviewTab({ controller }) {
 
           <SectionTitle
             title="회원정보 수정"
-            desc="현재 회원가입 필수 정보는 유지하고, 아래 정보는 선택으로 추가할 수 있습니다."
+            desc="기본 정보는 그대로 유지되며, 추가 정보는 자유롭게 입력할 수 있습니다."
           />
 
           <div className="form-stack">
@@ -235,35 +241,49 @@ export default function UserOverviewTab({ controller }) {
 
             {auth.role === 'DRIVER' && (
               <div className="form-stack">
-                <div>
-                  <strong style={{ display: 'block', marginBottom: 8 }}>보유 차량 선택</strong>
-                  <VehicleTypeSelector
-                    values={selectedVehicles}
-                    onChange={(values) =>
-                      setProfileForm({
-                        ...profileForm,
-                        vehicleType: stringifyVehicleTypes(values),
-                      })
-                    }
-                    inputClassName="login-input"
-                    placeholder="보유 차량을 검색하거나 아래 목록에서 선택해 주세요"
-                  />
-                  <small style={{ display: 'block', marginTop: 8, color: '#6f7b91' }}>
-                    여러 차량을 동시에 선택할 수 있습니다.
-                  </small>
-                </div>
+                <strong style={{ display: 'block' }}>보유 차량 선택</strong>
+
+                <input
+                  className="login-input vehicle-input-large"
+                  value={selectedVehicles.join(', ')}
+                  readOnly
+                  onClick={() => setVehicleOpen((prev) => !prev)}
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                />
+
+                {vehicleOpen && (
+                  <div className="vehicle-selector-wrap">
+                    <VehicleTypeSelector
+                      values={selectedVehicles}
+                      onChange={(values) =>
+                        setProfileForm({
+                          ...profileForm,
+                          vehicleType: stringifyVehicleTypes(values),
+                        })
+                      }
+                    />
+                  </div>
+                )}
+
+                <button className="btn btn-primary" onClick={handleSaveProfile}>
+                  회원정보 저장
+                </button>
+
+                {vehicleOpen && (
+                  <div style={{ marginTop: 12 }}>
+                    <small style={{ color: '#6f7b91' }}>
+                      여러 차량을 동시에 선택할 수 있습니다.
+                    </small>
+                  </div>
+                )}
               </div>
             )}
-
-            <button className="btn btn-primary" onClick={handleSaveProfile}>
-              회원정보 저장
-            </button>
           </div>
         </div>
 
-        <div className="surface profile-edit-surface">
-          <SectionTitle title="내 공개 프로필 미리보기" desc="거래 상대가 거래 전에 볼 수 있는 정보입니다." />
-          <ProfilePreviewCard
+        <div className="surface profile-edit-surface profile-preview-box">
+          <SectionTitle title="공개 프로필 미리보기" desc="거래 상대가 확인할 수 있는 공개 정보입니다." />
+          {/* <ProfilePreviewCard
             title="내 프로필"
             profile={
               profile
@@ -279,7 +299,69 @@ export default function UserOverviewTab({ controller }) {
                   completedCount: profile?.completedCount,
                 }
             }
-          />
+          /> */}
+
+
+          <article className="public-directory-card surface">
+            <div className="public-directory-card__head">
+              <div className="public-directory-card__profileTrigger">
+                <img
+                  src={
+                    resolveMediaUrl(profileForm.profileImageUrl) ||
+                    "/images/default-profile.png"
+                  }
+                  alt={auth.name}
+                  className="public-directory-card__avatar"
+                />
+                <div className="public-directory-card__profileText">
+                  <span>{roleText(auth.role)}</span>
+                  <h3>{auth.name}</h3>
+                </div>
+              </div>
+
+              <strong>
+                {formatRatingSummary(
+                  profile?.averageRating,
+                  profile?.ratingCount
+                )}
+              </strong>
+            </div>
+
+            <div className="public-directory-card__stats">
+              <div>
+                <span>{auth.role === "DRIVER" ? "차량 정보" : "회사명"}</span>
+                <strong>
+                  {auth.role === "DRIVER"
+                    ? profileForm.vehicleType || "-"
+                    : profileForm.companyName || signupForm.companyName || "-"}
+                </strong>
+              </div>
+              <div>
+                <span>{auth.role === "DRIVER" ? "완료 건수" : "이용 횟수"}</span>
+                <strong>{profile?.completedCount || 0}건</strong>
+              </div>
+            </div>
+
+            <dl className="public-directory-card__info">
+              <div>
+                <dt>연락 이메일</dt>
+                <dd>{profileForm.contactEmail || "-"}</dd>
+              </div>
+              <div>
+                <dt>연락처</dt>
+                <dd>{profileForm.contactPhone || "-"}</dd>
+              </div>
+            </dl>
+
+            <p>
+              {profileForm.bio ||
+                (auth.role === "DRIVER"
+                  ? "등록된 차주 소개가 없습니다."
+                  : "등록된 화주 소개가 없습니다.")}
+            </p>
+          </article>
+
+
         </div>
       </div>
 
@@ -292,26 +374,28 @@ export default function UserOverviewTab({ controller }) {
 
       <div className="surface">
         <SectionTitle
-          title="패널티 요약"
-          desc="패널티 상세 정보는 별도 탭에서 보고, 마이페이지에는 현재 상태만 간단히 표시합니다."
+          title="패널티 현황"
+          desc="현재 패널티 상태를 간단히 확인할 수 있습니다."
         />
 
-        <div className="kpi-grid">
-          <div className="kpi-card">
-            <span>현재 상태</span>
-            <strong>{penaltyStatus}</strong>
-          </div>
-          <div className="kpi-card">
-            <span>최근 30일 패널티 점수</span>
-            <strong>{penaltyScore}점</strong>
-          </div>
-          <div className="kpi-card">
-            <span>최근 취소율</span>
-            <strong>{cancelRate.toFixed(1)}%</strong>
-          </div>
-          <div className="kpi-card">
-            <span>취소율 높음 뱃지</span>
-            <strong>{profile?.highCancelBadge ? '표시 중' : '없음'}</strong>
+        <div className="penalty-kpi-wrap">
+          <div className="kpi-grid">
+            <div className="kpi-card">
+              <span>현재 상태</span>
+              <strong>{penaltyStatus}</strong>
+            </div>
+            <div className="kpi-card">
+              <span>최근 30일 패널티 점수</span>
+              <strong>{penaltyScore}점</strong>
+            </div>
+            <div className="kpi-card">
+              <span>최근 취소율</span>
+              <strong>{cancelRate.toFixed(1)}%</strong>
+            </div>
+            <div className="kpi-card">
+              <span>취소율 높음 뱃지</span>
+              <strong>{profile?.highCancelBadge ? '표시 중' : '없음'}</strong>
+            </div>
           </div>
         </div>
 
@@ -434,23 +518,39 @@ export default function UserOverviewTab({ controller }) {
         </div>
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="관심 견적" />
+          <SectionTitle
+            title="관심 견적"
+            desc="최신순"
+          />
           <div className="list-stack">
             {bookmarks.length ? (
-              bookmarks.slice(0, 5).map((item) => (
-                <button
-                  key={item.id}
-                  className="bookmark-item"
-                  onClick={() => {
-                    setSelectedId(item.id)
-                    setDashboardTab('board')
-                  }}
-                >
-                  <strong>{item.title}</strong>
+              // bookmarks.slice(0, 5).map((item) => (
+              bookmarks
+                .slice()
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 5)
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    className="bookmark-item"
+                    onClick={() => {
+                      setSelectedId(item.id)
+                      setDashboardTab('board')
+                    }}
+                  >
+                    {/* <strong>{item.title}</strong>
                   <small>{item.originAddress} → {item.destinationAddress}</small>
-                  <span>{statusText(item.status)}</span>
-                </button>
-              ))
+                  <span>{statusText(item.status)}</span> */}
+                    <div className="bookmark-top">
+                      <strong>{item.title}</strong>
+                      <span className="bookmark-status">{statusText(item.status)}</span>
+                    </div>
+
+                    <div className="bookmark-address">
+                      {item.originAddress} → {item.destinationAddress}
+                    </div>
+                  </button>
+                ))
             ) : (
               <div className="empty-box small">즐겨찾기한 배차가 없습니다.</div>
             )}
@@ -462,7 +562,7 @@ export default function UserOverviewTab({ controller }) {
       <div className="admin-grid-2">
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="FAQ" desc="자주 묻는 질문" />
+          <SectionTitle title="자주 묻는 질문" desc="서비스 이용 중 자주 묻는 질문을 확인할 수 있습니다." />
           <div className="faq-section">
             <div className="landing-faqList">
               {(controller.publicData?.faqs || []).map((faq) => (
@@ -476,7 +576,7 @@ export default function UserOverviewTab({ controller }) {
         </div>
 
         <div className="surface profile-edit-surface">
-          <SectionTitle title="도입 문의" desc="서비스 관련 상담 요청" />
+          <SectionTitle title="문의하기" desc="이용 중 궁금한 점이나 도움이 필요하면 문의해 주세요." />
 
           <div className="landing-formStack">
             <input
@@ -524,7 +624,7 @@ export default function UserOverviewTab({ controller }) {
               }
             />
 
-            <select
+            {/* <select
               value={controller.inquiryForm.inquiryType}
               onChange={(e) =>
                 controller.setInquiryForm({
@@ -537,7 +637,36 @@ export default function UserOverviewTab({ controller }) {
               <option>데모 요청</option>
               <option>요금 상담</option>
               <option>기술 협의</option>
-            </select>
+            </select> */}
+
+            <div className={`custom-select ${auth.role === 'DRIVER' ? 'driver' : 'shipper'}`}>
+              <div
+                className="selected"
+                onClick={() => setInquiryOpen(!inquiryOpen)}
+              >
+                {controller.inquiryForm.inquiryType || '문의 유형 선택'}
+              </div>
+
+              {inquiryOpen && (
+                <div className="options">
+                  {['도입 문의', '데모 요청', '요금 상담', '기술 협의'].map(option => (
+                    <div
+                      key={option}
+                      className={`option ${controller.inquiryForm.inquiryType === option ? 'selected-option' : ''}`}
+                      onClick={() => {
+                        controller.setInquiryForm({
+                          ...controller.inquiryForm,
+                          inquiryType: option,
+                        })
+                        setInquiryOpen(false)
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <textarea
               rows="6"

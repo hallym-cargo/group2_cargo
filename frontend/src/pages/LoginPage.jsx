@@ -12,6 +12,33 @@ const LoginPage = ({ controller }) => {
         }
     };
 
+    // 추가
+    const handleKakaoLogin = () => {
+        window.Kakao.Auth.login({
+            success: function (authObj) {
+                console.log("카카오 토큰:", authObj);
+
+                // 사용자 정보 요청 (사용자 id, 닉네임, 프로필 사진)
+                window.Kakao.API.request({
+                    url: "/v2/user/me",
+                    success: function (res) {
+                        console.log("카카오 유저 정보:", res);
+
+                        // 여기서 백엔드로 넘기면 됨
+                        controller.handleKakaoLogin(res);
+                    },
+                    fail: function (error) {
+                        console.error(error);
+                    },
+                });
+            },
+            fail: function (err) {
+                console.error(err);
+            },
+        });
+    };
+    //
+
     return (
         <div className="login-container">
             <div className="login-box">
@@ -75,7 +102,10 @@ const LoginPage = ({ controller }) => {
                 </div>
 
                 {/* 카카오 로그인 */}
-                <button className="kakao-button">카카오 로그인</button>
+                {/* <button className="kakao-button">카카오 로그인</button> */}
+                <button className="kakao-button" onClick={handleKakaoLogin}>
+                    카카오 로그인
+                </button>
 
                 {/* 회원가입 */}
                 <div className="signup">

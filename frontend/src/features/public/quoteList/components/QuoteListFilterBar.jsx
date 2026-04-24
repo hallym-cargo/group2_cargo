@@ -30,28 +30,6 @@ export default function QuoteListFilterBar({
           <label>도착지</label>
           <RegionSelect value={destination} onChange={onChangeDestination} />
         </div>
-
-        {isLoggedIn && isShipper && (
-          <div className="quote-list-filter-item">
-            <label>보기 범위</label>
-            <div className="quote-list-owner-toggle">
-              <button
-                type="button"
-                className={ownerFilter === "전체" ? "is-active" : ""}
-                onClick={() => onChangeOwnerFilter?.("전체")}
-              >
-                전체
-              </button>
-              <button
-                type="button"
-                className={ownerFilter === "내 견적" ? "is-active" : ""}
-                onClick={() => onChangeOwnerFilter?.("내 견적")}
-              >
-                내 견적
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

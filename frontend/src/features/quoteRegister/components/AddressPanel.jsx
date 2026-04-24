@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DaumPostcode from "react-daum-postcode";
 
 const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_MAP_APP_KEY || "";
@@ -8,6 +8,7 @@ function loadKakaoSdk() {
 
   return new Promise((resolve, reject) => {
     const existing = document.querySelector('script[data-kakao="true"]');
+
     if (existing) {
       existing.addEventListener("load", () =>
         window.kakao.maps.load(() => resolve(window.kakao)),
@@ -37,6 +38,7 @@ export default function AddressPanel({
   currentValue,
   currentDetailValue,
   updateField,
+  setRouteAddress,
   closePanel,
 }) {
   const [panelStep, setPanelStep] = useState("search");
@@ -44,7 +46,22 @@ export default function AddressPanel({
   const [detailAddress, setDetailAddress] = useState("");
   const [floor, setFloor] = useState("");
   const [hasElevator, setHasElevator] = useState("");
-  const [resolvedCoords, setResolvedCoords] = useState({ lat: null, lng: null });
+  const [isClient, setIsClient] = useState(false);
+  const [resolvedCoords, setResolvedCoords] = useState({
+    lat: null,
+    lng: null,
+  });
+
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    setIsClient(true);
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (currentValue) {
@@ -109,6 +126,8 @@ export default function AddressPanel({
   };
 
   const handleComplete = async (data) => {
+    if (!mountedRef.current) return;
+
     let fullAddress = data.address;
     let extraAddress = "";
 
@@ -118,7 +137,9 @@ export default function AddressPanel({
       }
 
       if (data.buildingName) {
-        extraAddress += extraAddress ? `, ${data.buildingName}` : data.buildingName;
+        extraAddress += extraAddress
+          ? `, ${data.buildingName}`
+          : data.buildingName;
       }
 
       if (extraAddress) {
@@ -127,16 +148,23 @@ export default function AddressPanel({
     }
 
     updateField(fieldName, fullAddress);
+
+    if (!mountedRef.current) return;
     setSelectedBaseAddress(fullAddress);
     setPanelStep("detail");
 
     try {
-      const coords = await resolveAddressCoords(fullAddress);
+      const coords = await resolveAddressCoords(
+        data.roadAddress || data.address,
+      );
+
+      if (!mountedRef.current) return;
+
       setResolvedCoords(coords);
       updateField(getLatFieldName(), coords.lat);
       updateField(getLngFieldName(), coords.lng);
     } catch (error) {
-      console.error(error);
+      console.error("좌표 변환 실패:", error);
     }
   };
 
@@ -187,6 +215,7 @@ export default function AddressPanel({
   };
 
   const handleBackToSearch = () => {
+    if (!mountedRef.current) return;
     setPanelStep("search");
   };
 
@@ -216,11 +245,14 @@ export default function AddressPanel({
           )}
 
           <div className="daum-postcode-wrapper">
-            <DaumPostcode
-              onComplete={handleComplete}
-              autoClose={false}
-              style={{ width: "100%", height: "100%" }}
-            />
+            {isClient ? (
+              <DaumPostcode
+                key={`${fieldName}-postcode`}
+                onComplete={handleComplete}
+                autoClose={false}
+                style={{ width: "100%", height: "100%" }}
+              />
+            ) : null}
           </div>
         </div>
       )}
@@ -272,6 +304,11 @@ export default function AddressPanel({
               <span className="floor-unit">층</span>
             </div>
 
+            <p className="helper-text">
+              지하, 단독주택, 야외 상차/하차처럼 층수로 표현하기 어려운 경우
+              1층으로 입력하고 상세 주소 또는 요청사항에 실제 위치를 적어주세요.
+            </p>
+
             {!floor && <p className="error-text">층수를 입력해주세요.</p>}
 
             {floor && !isValidFloor && (
@@ -283,6 +320,7 @@ export default function AddressPanel({
             <label>
               건물 내 엘리베이터 <span className="required-mark">*</span>
             </label>
+
             <div className="elevator-toggle-group">
               <button
                 type="button"

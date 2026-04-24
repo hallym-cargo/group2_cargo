@@ -1,9 +1,32 @@
+function getStatusLabel(status) {
+  switch (status) {
+    case "BIDDING":
+      return "입찰 진행중";
+    case "CONFIRMED":
+      return "배차 완료";
+    case "IN_TRANSIT":
+      return "운송 중";
+    case "COMPLETED":
+      return "운송 완료";
+    case "CANCELLED":
+      return "취소됨";
+    case "REQUESTED":
+      return "요청됨";
+    default:
+      return status || "입찰 진행중";
+  }
+}
+
 function getStatusClass(status) {
   switch (status) {
+    case "BIDDING":
     case "입찰 진행중":
       return "is-bidding";
+
+    case "CONFIRMED":
     case "배차 완료":
       return "is-matched";
+
     default:
       return "is-default";
   }
@@ -13,17 +36,27 @@ export default function QuoteDetailHeader({
   quote,
   onToggleBookmark,
   isShipper,
+  isDriver,
+  onClickBid,
   onClickDelete,
 }) {
-  const statusText = quote.status || "입찰 진행중";
-  const statusClass = getStatusClass(statusText);
+  const rawStatus = quote.status || "BIDDING";
+  const statusText = getStatusLabel(rawStatus);
+  const statusClass = getStatusClass(rawStatus);
+
+  const canBid =
+    isDriver && (rawStatus === "BIDDING" || rawStatus === "입찰 진행중");
 
   return (
     <section className="quote-detail-header">
       <div className="quote-detail-header__top-row">
         <div className="quote-detail-header__title-wrap">
+          <div className="quote-detail-header__hero-badge-wrap">
+            <div className="quote-detail-hero__badge">DETAIL PAGE</div>
+          </div>
+
           <h1 className="quote-detail-header__title">
-            {quote.estimateName || "견적명"}
+            {quote.estimateName || quote.title || "견적명"}
           </h1>
 
           <div className="quote-detail-header__badge-row">
@@ -42,25 +75,28 @@ export default function QuoteDetailHeader({
         </div>
 
         <div className="quote-detail-header__actions">
-          <button
-            type="button"
-            className={
-              quote.bookmarked ? "bookmark-btn is-active" : "bookmark-btn"
-            }
-            onClick={() => onToggleBookmark?.(quote.id)}
-          >
-            ★
-          </button>
-
-          {isShipper && (
+          {canBid && (
             <button
               type="button"
-              className="quote-detail-header__delete-btn"
-              onClick={onClickDelete}
+              className="quote-detail-bid-btn"
+              onClick={onClickBid}
             >
-              삭제하기
+              입찰하기
             </button>
           )}
+
+          {
+            <button
+              type="button"
+              className={
+                quote.bookmarked ? "bookmark-btn is-active" : "bookmark-btn"
+              }
+              onClick={() => onToggleBookmark?.(quote.id)}
+              aria-label="북마크 토글"
+            >
+              ★
+            </button>
+          }
         </div>
       </div>
     </section>

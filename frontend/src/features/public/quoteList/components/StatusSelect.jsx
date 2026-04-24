@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const STATUS_OPTIONS = ["전체", "입찰 진행중", "배차 완료"];
+const STATUS_OPTIONS = ["전체", "입찰 진행중", "입찰 완료"];
 
 export default function StatusSelect({ value, onChange }) {
   const [open, setOpen] = useState(false);

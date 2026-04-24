@@ -12,6 +12,7 @@ import UserRegisterDriverTab from './tabs/UserRegisterDriverTab';
 import UserRegisterShipperTab from './tabs/UserRegisterShipperTab';
 import TransportStatus from '../../pages/TransportStatus';
 import QuoteListPage from '../public/QuoteListPage';  // 추가
+import CreateQuotePage from '../public/QuoteRegisterPage';  // 추가
 
 function resolveTitle(authRole, dashboardTab) {
   if (dashboardTab === 'register') {
@@ -45,6 +46,10 @@ function resolveTabComponent(authRole, dashboardTab) {
 export default function UserConsolePage({ controller }) {
   if (controller.routePage === 'quotes') {
     return <QuoteListPage controller={controller} />;
+  } // 추가
+
+  if (controller.routePage === 'createQuote') {
+    return <CreateQuotePage controller={controller} />;
   } // 추가
 
   if (controller.routePage === 'status') {
