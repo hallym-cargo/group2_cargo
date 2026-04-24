@@ -84,6 +84,12 @@
 }
 
 /* 추가 */
+.list-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* 추가 */
 .bookmark-status {
   margin-left: 3px;
 }

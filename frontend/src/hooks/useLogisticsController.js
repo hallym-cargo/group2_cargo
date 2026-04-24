@@ -1838,7 +1838,15 @@ export function useLogisticsController() {
         return;
       }
 
+
+
+      console.log("내 ID:", localStorage.getItem('userId'))
+      console.log("shipperId:", selected.shipperId)
+      console.log("driverId:", selected.assignedDriverId)
+
+
       setCancelSubmitting(true);
+
       await cancelShipment(selectedId, {
         reason: cancelForm.reason,
         detail: cancelForm.detail.trim(),

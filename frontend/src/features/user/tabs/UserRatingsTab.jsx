@@ -43,21 +43,22 @@ export default function UserRatingsTab({ controller }) {
         <div className="console-grid two">
           <div className="surface ratings-pending">
             <SectionTitle title="평가 대기 목록" desc="완료된 거래에 대해 상대방을 평가할 수 있습니다." />
-            <div className="list-stack">
-              {(ratingsDashboard.pendingRatings || []).length ?
-                ratingsDashboard.pendingRatings.map(item => {
-                  const draft = ratingDrafts[item.shipmentId] || { score: 5, comment: '' };
-                  return (
-                    <div key={item.shipmentId} className="offer-card">
-                      <div className="detail-head">
-                        <div>
-                          <strong>{item.shipmentTitle}</strong>
-                          <small>{item.counterpartName} · {roleText(item.counterpartRole)}</small>
+            <div className="list-scroll">
+              <div className="list-stack">
+                {(ratingsDashboard.pendingRatings || []).length ?
+                  ratingsDashboard.pendingRatings.map(item => {
+                    const draft = ratingDrafts[item.shipmentId] || { score: 5, comment: '' };
+                    return (
+                      <div key={item.shipmentId} className="offer-card">
+                        <div className="detail-head">
+                          <div>
+                            <strong>{item.shipmentTitle}</strong>
+                            <small>{item.counterpartName} · {roleText(item.counterpartRole)}</small>
+                          </div>
+                          <span className="badge badge-neutral">{formatDate(item.completedAt)}</span>
                         </div>
-                        <span className="badge badge-neutral">{formatDate(item.completedAt)}</span>
-                      </div>
-                      <div className="split-2">
-                        {/* <div>
+                        <div className="split-2">
+                          {/* <div>
                         <label>점수</label>
                         <select
                           value={draft.score}
@@ -73,89 +74,94 @@ export default function UserRatingsTab({ controller }) {
                           ))}
                         </select>
                       </div> */}
-                        <div>
-                          <label>점수</label>
+                          <div>
+                            <label>점수</label>
 
-                          <div className="rating-select">
-                            <div
-                              className="rating-selected"
-                              onClick={() =>
-                                setOpenId(openId === item.shipmentId ? null : item.shipmentId)
-                              }
-                            >
-                              {draft.score}점
+                            <div className="rating-select">
+                              <div
+                                className="rating-selected"
+                                onClick={() =>
+                                  setOpenId(openId === item.shipmentId ? null : item.shipmentId)
+                                }
+                              >
+                                {draft.score}점
+                              </div>
+
+                              {openId === item.shipmentId && (
+                                <div className="rating-options">
+                                  {[5, 4, 3, 2, 1].map(score => (
+                                    <div
+                                      key={score}
+                                      className={`rating-option ${draft.score == score ? 'active' : ''}`}
+                                      onClick={() => {
+                                        setRatingDrafts({
+                                          ...ratingDrafts,
+                                          [item.shipmentId]: { ...draft, score }
+                                        })
+                                        setOpenId(null)
+                                      }}
+                                    >
+                                      {score}점
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
 
-                            {openId === item.shipmentId && (
-                              <div className="rating-options">
-                                {[5, 4, 3, 2, 1].map(score => (
-                                  <div
-                                    key={score}
-                                    className={`rating-option ${draft.score == score ? 'active' : ''}`}
-                                    onClick={() => {
-                                      setRatingDrafts({
-                                        ...ratingDrafts,
-                                        [item.shipmentId]: { ...draft, score }
-                                      })
-                                      setOpenId(null)
-                                    }}
-                                  >
-                                    {score}점
-                                  </div>
-                                ))}
-                              </div>
-                            )}
                           </div>
-
-                        </div>
-                        <div>
-                          <label>미리보기</label>
-                          <div className="surface-sub">
-                            <strong>{renderStars(Number(draft.score || 0))}</strong>
+                          <div>
+                            <label>미리보기</label>
+                            <div className="surface-sub">
+                              <strong>{renderStars(Number(draft.score || 0))}</strong>
+                            </div>
                           </div>
                         </div>
+                        <textarea
+                          rows="3"
+                          placeholder="거래 경험을 남겨주세요"
+                          value={draft.comment}
+                          onChange={(e) =>
+                            setRatingDrafts({
+                              ...ratingDrafts,
+                              [item.shipmentId]: { ...draft, comment: e.target.value }
+                            })
+                          }
+                        />
+                        <button className="btn btn-primary" onClick={() => handleCreateRating(item.shipmentId, item.counterpartName)}>평가 등록</button>
                       </div>
-                      <textarea
-                        rows="3"
-                        placeholder="거래 경험을 남겨주세요"
-                        value={draft.comment}
-                        onChange={(e) =>
-                          setRatingDrafts({
-                            ...ratingDrafts,
-                            [item.shipmentId]: { ...draft, comment: e.target.value }
-                          })
-                        }
-                      />
-                      <button className="btn btn-primary" onClick={() => handleCreateRating(item.shipmentId, item.counterpartName)}>평가 등록</button>
-                    </div>
-                  )
-                }) : <div className="empty-box small">평가 대기 중인 완료 화물이 없습니다.</div>}
+                    )
+                  }) : <div className="empty-box small">평가 대기 중인 완료 화물이 없습니다.</div>}
+              </div>
             </div>
           </div>
           <div className="content-stack">
             <div className="surface">
               <SectionTitle title="최근 받은 평점" desc="상대방이 남긴 최근 평가를 확인할 수 있습니다." />
-              <div className="list-stack">
-                {(ratingsDashboard.receivedSummary?.recentRatings || []).length ? ratingsDashboard.receivedSummary.recentRatings.map(item => <div key={item.id} className="list-row block">
-                  <strong>{renderStars(item.score)} · {item.fromUserName}</strong>
-                  <small>{item.shipmentTitle} · {formatDate(item.createdAt)}</small>
-                  <div>
-                    {item.comment || '코멘트 없음'}
-                  </div>
-                </div>) : <div className="empty-box small">아직 받은 평점이 없습니다.
-                </div>}
+              <div className="list-scroll">
+                <div className="list-stack">
+                  {(ratingsDashboard.receivedSummary?.recentRatings || []).length ? ratingsDashboard.receivedSummary.recentRatings.map(item => <div key={item.id} className="list-row block">
+                    <strong>{renderStars(item.score)} · {item.fromUserName}</strong>
+                    <small>{item.shipmentTitle} · {formatDate(item.createdAt)}</small>
+                    <div>
+                      {item.comment || '코멘트 없음'}
+                    </div>
+                  </div>) : <div className="empty-box small">아직 받은 평점이 없습니다.
+                  </div>}
+                </div>
               </div>
             </div>
             <div className="surface">
               <SectionTitle title="내 평가 내역" desc="작성한 평가 내역을 확인할 수 있습니다." />
-              <div className="list-stack">{(ratingsDashboard.givenRatings || []).length ? ratingsDashboard.givenRatings.slice(0, 8).map(item =>
-                <div key={item.id} className="list-row block">
-                  <strong>{renderStars(item.score)} · {item.toUserName}</strong>
-                  <small>{item.shipmentTitle} · {formatDate(item.createdAt)}</small>
-                  <div>{item.comment || '코멘트 없음'}</div>
-                </div>) :
-                <div className="empty-box small">아직 등록한 평가가 없습니다.
-                </div>}
+              <div className="list-scroll">
+                <div className="list-stack">{(ratingsDashboard.givenRatings || []).length ? ratingsDashboard.givenRatings.slice(0, 8).map(item =>
+                  <div key={item.id} className="list-row block">
+                    <strong>{renderStars(item.score)} · {item.toUserName}</strong>
+                    <small>{item.shipmentTitle} · {formatDate(item.createdAt)}</small>
+                    <div>{item.comment || '코멘트 없음'}</div>
+                  </div>) :
+                  <div className="empty-box small">아직 등록한 평가가 없습니다.
+                  </div>}
+                </div>
               </div>
             </div>
           </div>

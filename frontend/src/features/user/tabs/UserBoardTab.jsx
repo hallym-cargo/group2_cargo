@@ -4,7 +4,6 @@ import ProfilePreviewCard from '../../../components/common/ProfilePreviewCard'
 import SectionTitle from '../../../components/common/SectionTitle'
 import ShipmentCancelModal from '../../../components/common/ShipmentCancelModal'
 import { formatCurrency, formatDate, formatRatingSummary, roleText, statusText } from '../../../utils/formatters'
-// 추가
 import { useMemo, useState } from 'react'
 
 export default function UserBoardTab({ controller }) {
@@ -78,6 +77,10 @@ export default function UserBoardTab({ controller }) {
 
     return `${hours}시간 ${minutes}분`
   }
+
+  // 추가
+  const [previewImages, setPreviewImages] = useState([])
+  const [previewIndex, setPreviewIndex] = useState(0)
 
   return (
     <div className="page-stack">
@@ -289,7 +292,16 @@ export default function UserBoardTab({ controller }) {
                   <strong>등록 화물 사진</strong>
                   <div className="image-preview-row">
                     {selected.cargoImageUrls.map((src, idx) => (
-                      <img key={idx} src={src} alt={`cargo-detail-${idx}`} className="image-preview-thumb" />
+                      <img
+                        key={idx}
+                        src={src}
+                        alt={`cargo-detail-${idx}`}
+                        className="image-preview-thumb"
+                        onClick={() => {
+                          setPreviewImages(selected.cargoImageUrls)
+                          setPreviewIndex(idx)
+                        }}
+                      />
                     ))}
                   </div>
                 </div>
@@ -299,46 +311,60 @@ export default function UserBoardTab({ controller }) {
                 <div className="surface-sub">
                   <strong>배송 완료 사진</strong>
                   <div className="image-preview-row">
-                    <img src={selected.completionImageUrl} alt="completion" className="image-preview-thumb" />
+                    <img
+                      src={selected.completionImageUrl}
+                      alt="completion"
+                      className="image-preview-thumb"
+                      onClick={() => {
+                        setPreviewImages([selected.completionImageUrl])
+                        setPreviewIndex(0)
+                      }}
+                    />
                   </div>
                 </div>
               )}
 
-              <ProfilePreviewCard
-                title={auth.role === 'DRIVER' ? '거래 전 확인할 화주 정보' : '거래 전 확인할 차주 정보'}
-                profile={
-                  auth.role === 'DRIVER'
-                    ? {
-                      id: selected.shipperId,
-                      name: selected.shipperName,
-                      role: 'SHIPPER',
-                      companyName: selected.companyName,
-                      bio: selected.shipperBio,
-                      profileImageUrl: selected.shipperProfileImageUrl,
-                      contactEmail: selected.shipperContactEmail,
-                      contactPhone: selected.shipperContactPhone,
-                      averageRating: selected.shipperAverageRating,
-                      ratingCount: selected.shipperRatingCount,
-                      completedCount: undefined,
-                      highCancelBadge: selected.counterpartyHighCancelBadge,
-                    }
-                    : selected.assignedDriverName
+              <div className="profile-section">
+                <ProfilePreviewCard
+                  title={auth.role === 'DRIVER' ? '거래 전 확인할 화주 정보' : '거래 전 확인할 차주 정보'}
+                  profile={
+                    auth.role === 'DRIVER'
                       ? {
-                        id: selected.assignedDriverId,
-                        name: selected.assignedDriverName,
-                        role: 'DRIVER',
-                        bio: selected.assignedDriverBio,
-                        profileImageUrl: selected.assignedDriverProfileImageUrl,
-                        contactEmail: selected.assignedDriverContactEmail,
-                        contactPhone: selected.assignedDriverContactPhone,
-                        averageRating: selected.assignedDriverAverageRating,
-                        ratingCount: selected.assignedDriverRatingCount,
+                        id: selected.shipperId,
+                        name: selected.shipperName,
+                        role: 'SHIPPER',
+                        companyName: selected.companyName,
+                        bio: selected.shipperBio,
+                        profileImageUrl: selected.shipperProfileImageUrl,
+                        contactEmail: selected.shipperContactEmail,
+                        contactPhone: selected.shipperContactPhone,
+                        averageRating: selected.shipperAverageRating,
+                        ratingCount: selected.shipperRatingCount,
                         completedCount: undefined,
                         highCancelBadge: selected.counterpartyHighCancelBadge,
                       }
-                      : null
-                }
-              />
+                      : selected.assignedDriverName
+                        ? {
+                          id: selected.assignedDriverId,
+                          name: selected.assignedDriverName,
+                          role: 'DRIVER',
+                          bio: selected.assignedDriverBio,
+                          profileImageUrl: selected.assignedDriverProfileImageUrl,
+                          contactEmail: selected.assignedDriverContactEmail,
+                          contactPhone: selected.assignedDriverContactPhone,
+                          averageRating: selected.assignedDriverAverageRating,
+                          ratingCount: selected.assignedDriverRatingCount,
+                          completedCount: undefined,
+                          highCancelBadge: selected.counterpartyHighCancelBadge,
+                        }
+                        : null
+                  }
+                  onImageClick={(imageUrl) => {
+                    setPreviewImages([imageUrl])
+                    setPreviewIndex(0)
+                  }}
+                />
+              </div>
               <div className="map-section">
                 <KakaoMapView shipment={selected} />
               </div>
@@ -366,7 +392,14 @@ export default function UserBoardTab({ controller }) {
           {selected ? (
             <>
               {/* <SectionTitle title="제안 업체 목록" desc={`${roleText(auth.role)} 기준으로 표시됩니다.`} /> */}
-              <SectionTitle title="제안 업체 목록" desc="입찰에 참여한 업체 목록을 확인할 수 있습니다." />
+              <SectionTitle
+                title={auth.role === 'SHIPPER' ? '제안 업체 목록' : '입찰 현황'}
+                desc={
+                  auth.role === 'SHIPPER'
+                    ? '입찰에 참여한 업체 목록을 확인할 수 있습니다.'
+                    : '내 입찰 및 배차 참여 상태를 확인할 수 있습니다.'
+                }
+              />
 
               {/* <div className="surface-sub role-side-guide">
                 <strong>{roleTheme?.label}</strong>
@@ -560,6 +593,52 @@ export default function UserBoardTab({ controller }) {
         isSubmitting={cancelSubmitting}
         auth={auth}
       />
+
+      {/* 추가 */}
+      {previewImages.length > 0 && (
+        <div className="image-modal" onClick={() => setPreviewImages([])}>
+          <div className="image-modal-inner" onClick={(e) => e.stopPropagation()}>
+
+            {/* 왼쪽 버튼 */}
+            {previewImages.length > 1 && (
+              <button
+                className="image-nav left"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPreviewIndex((prev) =>
+                    prev === 0 ? previewImages.length - 1 : prev - 1
+                  )
+                }}
+              >
+                ‹
+              </button>
+            )}
+
+            {/* 이미지 */}
+            <img
+              src={previewImages[previewIndex]}
+              alt="preview"
+              className="image-modal-content"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* 오른쪽 버튼 */}
+            {previewImages.length > 1 && (
+              <button
+                className="image-nav right"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPreviewIndex((prev) =>
+                    prev === previewImages.length - 1 ? 0 : prev + 1
+                  )
+                }}
+              >
+                ›
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
