@@ -17,14 +17,20 @@ import DriverBidPanel from "./quoteDetail/components/DriverBidPanel";
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+
     reader.onload = () =>
       resolve({
         dataUrl: typeof reader.result === "string" ? reader.result : "",
         name: file.name,
       });
+
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+function isBiddingStatus(status) {
+  return status === "BIDDING" || status === "입찰 진행중";
 }
 
 export default function QuoteDetailPage({ controller, routeParams }) {
@@ -46,12 +52,29 @@ export default function QuoteDetailPage({ controller, routeParams }) {
     controller.profile?.id &&
     controller.profile.id === quoteState?.shipperId;
 
-  const canBid =
-    isDriver &&
-    (quoteState?.status === "BIDDING" || quoteState?.status === "입찰 진행중");
+  const hasMyOffer = !!quoteState?.hasMyOffer;
+
+  const canBid = isDriver && isBiddingStatus(quoteState?.status);
+
+  const canEdit = isOwner && isBiddingStatus(quoteState?.status);
+
+  const moveToQuoteList = () => {
+    controller.setRoutePage("quotes");
+  };
 
   const openBidModal = () => {
-    if (!canBid) return;
+    if (!isDriver) return;
+
+    if (!isBiddingStatus(quoteState?.status)) {
+      alert("입찰 진행 중인 견적에만 입찰할 수 있습니다.");
+      return;
+    }
+
+    if (hasMyOffer) {
+      alert("이미 입찰한 견적입니다.");
+      return;
+    }
+
     setIsBidModalOpen(true);
   };
 
@@ -80,6 +103,7 @@ export default function QuoteDetailPage({ controller, routeParams }) {
     } catch (err) {
       const message =
         err.response?.data?.message || "견적을 불러오지 못했습니다.";
+
       setError(message);
       setQuoteState(null);
       controller.setMessage?.(message);
@@ -111,13 +135,15 @@ export default function QuoteDetailPage({ controller, routeParams }) {
   };
 
   const openEditStep = (step) => {
-    if (!quoteState || !isOwner) return;
+    if (!quoteState || !canEdit) return;
+
     setDraftQuote({ ...quoteState });
     setEditStep(step);
   };
 
   const closeEditModal = () => {
     if (saving) return;
+
     setEditStep(null);
     setDraftQuote(null);
   };
@@ -130,7 +156,7 @@ export default function QuoteDetailPage({ controller, routeParams }) {
   };
 
   const handleSaveEdit = async () => {
-    if (!draftQuote) return;
+    if (!draftQuote || !canEdit) return;
 
     try {
       setSaving(true);
@@ -139,35 +165,53 @@ export default function QuoteDetailPage({ controller, routeParams }) {
         ? draftQuote.cargoImages
         : [];
 
-      const existingUrls = mixedImages.filter(
-        (item) => typeof item === "string",
-      );
       const newFiles = mixedImages.filter((item) => item instanceof File);
 
-      const converted = await Promise.all(newFiles.map(fileToDataUrl));
+      await Promise.all(newFiles.map(fileToDataUrl));
 
-      const payload = quoteFormToShipmentPayload(
-        draftQuote,
-        [...existingUrls, ...converted.map((item) => item.dataUrl)],
-        [
-          ...existingUrls.map((_, index) => `existing-image-${index + 1}`),
-          ...converted.map((item) => item.name),
-        ],
-      );
+      const payload = quoteFormToShipmentPayload(draftQuote, [], []);
+
+      console.log("수정 요청 payload:", payload);
 
       const updated = await updateShipment(quoteId, payload);
+
+      console.log("수정 응답 updated:", updated);
+
       const shipment = updated?.data ?? updated;
       const mapped = shipmentToQuote(shipment);
 
-      setQuoteState(mapped);
+      setQuoteState((prev) => ({
+        ...prev,
+        ...mapped,
+        ...draftQuote,
+      }));
+
       setBookmarked(!!mapped.bookmarked);
       closeEditModal();
       controller.setMessage?.("견적이 수정되었습니다.");
     } catch (err) {
+      console.log("수정 실패 전체 에러:", err);
+      console.log("수정 실패 응답:", err.response);
+      console.log("수정 실패 응답 데이터:", err.response?.data);
+
       controller.setMessage?.(err.response?.data?.message || "견적 수정 실패");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleBidSuccess = () => {
+    setQuoteState((prev) =>
+      prev
+        ? {
+            ...prev,
+            hasMyOffer: true,
+            offerCount: Number(prev.offerCount || 0) + 1,
+          }
+        : prev,
+    );
+
+    closeBidModal();
   };
 
   const quote = useMemo(() => {
@@ -243,15 +287,16 @@ export default function QuoteDetailPage({ controller, routeParams }) {
           onToggleBookmark={handleToggleBookmark}
           isShipper={isOwner}
           isDriver={isDriver}
-          onClickBid={openBidModal}
+          onClickBid={isDriver ? openBidModal : null}
         />
 
         <div className="quote-detail-layout">
           <div className="quote-detail-left-column">
             <QuoteDetailMapSection quote={quote} />
+
             <QuoteDetailBasicInfoCard
               quote={quote}
-              canEdit={isOwner}
+              canEdit={canEdit}
               onClickEdit={() => openEditStep(1)}
             />
           </div>
@@ -259,10 +304,20 @@ export default function QuoteDetailPage({ controller, routeParams }) {
           <div className="quote-detail-right-column">
             <QuoteDetailCargoSection
               quote={quote}
-              canEdit={isOwner}
+              canEdit={canEdit}
               onClickEdit={() => openEditStep(2)}
             />
           </div>
+        </div>
+
+        <div className="quote-detail-bottom-actions">
+          <button
+            type="button"
+            className="quote-detail-list-button"
+            onClick={moveToQuoteList}
+          >
+            목록으로 가기
+          </button>
         </div>
       </div>
 
@@ -288,6 +343,7 @@ export default function QuoteDetailPage({ controller, routeParams }) {
               >
                 취소
               </button>
+
               <button
                 type="button"
                 className="quote-edit-modal__save-btn"
@@ -323,6 +379,7 @@ export default function QuoteDetailPage({ controller, routeParams }) {
               >
                 취소
               </button>
+
               <button
                 type="button"
                 className="quote-edit-modal__save-btn"
@@ -341,7 +398,13 @@ export default function QuoteDetailPage({ controller, routeParams }) {
         title="입찰 제안하기"
         onClose={closeBidModal}
       >
-        <DriverBidPanel onClose={closeBidModal} />
+        <DriverBidPanel
+          shipmentId={quoteId}
+          defaultBidPrice={
+            quote.desiredPrice ?? quote.agreedPrice ?? quote.bestOfferPrice
+          }
+          onClose={handleBidSuccess}
+        />
       </QuoteEditModal>
     </div>
   );

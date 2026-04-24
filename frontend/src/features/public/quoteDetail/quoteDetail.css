@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .quote-detail-page {
   width: min(1520px, calc(100vw - 96px));
   margin: 0 auto;
@@ -408,7 +414,6 @@
   padding-bottom: 12px;
 }
 
-/* 사진 영역: 남는 높이 전부 사용 */
 .quote-detail-cargo-section__photos {
   height: 400px;
   min-height: 400px;
@@ -420,13 +425,11 @@
   box-sizing: border-box;
 }
 
-/* 사진 없을 때: 아래까지 채우기 */
 .quote-detail-cargo-section__photos:has(.quote-detail-photo-card__placeholder) {
   flex: 1;
   min-height: 0;
 }
 
-/* 사진 개수 배지 */
 .quote-detail-photo-card__count {
   display: inline-flex;
   align-items: center;
@@ -440,14 +443,12 @@
   font-weight: 700;
 }
 
-/* 사진 그리드 */
 .quote-detail-photo-card__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-/* 사진 그리드: 고정된 사진 영역 안에서만 스크롤 */
 .quote-detail-photo-card__grid--in-section {
   width: 100%;
   height: 100%;
@@ -460,7 +461,6 @@
   box-sizing: border-box;
 }
 
-/* 사진 크기 */
 .quote-detail-photo-card__image {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -471,7 +471,6 @@
   display: block;
 }
 
-/* 사진 없을 때 placeholder는 남은 높이 채움 */
 .quote-detail-photo-card__placeholder {
   width: 100%;
   height: 100%;
@@ -487,6 +486,40 @@
   text-align: center;
   padding: 20px;
   box-sizing: border-box;
+}
+
+/* 목록으로 가기 버튼 */
+.quote-detail-bottom-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  margin-bottom: 80px;
+}
+
+.quote-detail-list-button {
+  min-width: 160px;
+  height: 44px;
+  border: 1px solid #d6deef;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1f2a44;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.quote-detail-list-button:hover {
+  background: #f5f8ff;
+  border-color: #b9c7e6;
+}
+
+.quote-detail-list-button:active {
+  transform: translateY(1px);
 }
 
 /* 모달 */
@@ -513,7 +546,7 @@
 .quote-edit-modal__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   padding: 20px 24px;
   border-bottom: 1px solid #eef2f7;
@@ -714,7 +747,6 @@
 }
 
 /* 반응형 */
-/* 반응형 */
 @media (max-width: 1200px) {
   .quote-detail-page {
     width: calc(100vw - 48px);
@@ -743,12 +775,15 @@
   }
 
   .quote-detail-cargo-section__photos {
-    overflow: visible;
+    height: auto;
+    max-height: none;
     min-height: 340px;
+    overflow: visible;
   }
 
   .quote-detail-photo-card__grid--in-section {
     height: auto;
+    max-height: none;
     overflow-y: visible;
     padding-right: 0;
   }
@@ -756,12 +791,17 @@
   .quote-detail-map-real {
     height: 400px;
   }
+
+  .quote-detail-bottom-actions {
+    margin-top: 28px;
+    margin-bottom: 72px;
+  }
 }
 
 @media (max-width: 768px) {
   .quote-detail-page {
-    width: calc(100vw - 24px);
-    padding: 28px 0 60px;
+    width: 100%;
+    padding: 28px 12px 60px;
   }
 
   .quote-detail-header__top-row {
@@ -796,6 +836,7 @@
 
   .quote-detail-cargo-section__photos {
     padding: 0 16px 20px;
+    min-height: 300px;
   }
 
   .quote-detail-info-table__row {
@@ -836,6 +877,17 @@
   .quote-detail-photo-card__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+  }
+
+  .quote-detail-bottom-actions {
+    margin-top: 24px;
+    margin-bottom: 56px;
+  }
+
+  .quote-detail-list-button {
+    width: 100%;
+    height: 48px;
+    font-size: 14px;
   }
 
   .quote-edit-modal-overlay {
@@ -891,39 +943,35 @@
     font-size: 15px;
   }
 }
-
 @media (max-width: 480px) {
   .quote-detail-page {
-    width: calc(100vw - 16px);
-    padding: 20px 0 48px;
+    width: 100%;
+    padding: 20px 12px 48px;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   .quote-detail-header__title {
-    font-size: 24px;
+    font-size: 22px;
+    line-height: 1.3;
+    word-break: keep-all;
   }
 
   .quote-detail-card {
-    border-radius: 18px;
+    border-radius: 16px;
   }
 
   .quote-detail-card__title-row {
-    padding: 16px 14px 0;
+    padding: 14px 14px 0;
   }
 
   .quote-detail-card__title {
     font-size: 18px;
   }
 
-  .quote-detail-info-table {
-    padding: 12px 14px 18px;
-  }
-
-  .quote-detail-cargo-section__photos {
-    padding: 0 14px 18px;
-  }
-
   .quote-detail-map-real {
     height: 260px;
+    overflow: hidden;
   }
 
   .quote-detail-map-real__meta-row {
@@ -931,20 +979,48 @@
     right: 10px;
     bottom: 10px;
     gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .quote-detail-map-real__meta-card {
+    min-width: 0;
     padding: 8px 10px;
     border-radius: 12px;
   }
 
   .quote-detail-map-real__meta-card span {
     font-size: 10px;
-    margin-bottom: 3px;
   }
 
   .quote-detail-map-real__meta-card strong {
     font-size: 13px;
+  }
+
+  .quote-detail-info-table {
+    padding: 10px 14px 16px;
+  }
+
+  .quote-detail-info-table__row {
+    gap: 6px;
+    padding: 14px 0;
+  }
+
+  .quote-detail-info-table__label {
+    font-size: 12px;
+  }
+
+  .quote-detail-info-table__content strong {
+    font-size: 15px;
+    word-break: keep-all;
+  }
+
+  .quote-detail-info-table__content p {
+    font-size: 13px;
+  }
+
+  .quote-detail-cargo-section__photos {
+    padding: 0 14px 18px;
+    min-height: 240px;
   }
 
   .quote-detail-photo-card__grid {
@@ -952,39 +1028,15 @@
     gap: 8px;
   }
 
-  .quote-detail-header__actions {
+  .quote-detail-bottom-actions {
+    margin-top: 20px;
+    margin-bottom: 44px;
+  }
+
+  .quote-detail-list-button {
     width: 100%;
-  }
-
-  .quote-detail-bid-btn {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .bookmark-btn {
-    flex-shrink: 0;
-  }
-
-  .driver-bid-panel__title {
-    font-size: 22px;
-  }
-
-  .driver-bid-panel__desc {
-    font-size: 13px;
-    line-height: 1.6;
-  }
-
-  .driver-bid-panel__input,
-  .driver-bid-panel__textarea {
+    height: 46px;
+    border-radius: 14px;
     font-size: 14px;
-  }
-
-  .driver-bid-panel__price-unit {
-    left: 14px;
-    font-size: 16px;
-  }
-
-  .driver-bid-panel__input--price {
-    padding-left: 38px;
   }
 }

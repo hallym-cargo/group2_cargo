@@ -65,7 +65,6 @@
   color: #344054;
 }
 
-/* 진행상태 커스텀 드롭다운 */
 .custom-select {
   position: relative;
   width: 100%;
@@ -164,7 +163,7 @@
 
 .quote-list-summary-bar__right {
   display: flex;
-  align-items: flex-end; /* center -> flex-end 로 변경 */
+  align-items: flex-end;
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: nowrap;
@@ -176,11 +175,11 @@
 }
 
 .quote-list-owner-toggle button {
-  height: 42px; /* select랑 같은 높이 */
+  height: 42px;
   border: 1px solid rgba(15, 23, 42, 0.12);
   background: #fff;
   border-radius: 999px;
-  padding: 0 16px; /* 세로 패딩 대신 높이 고정 */
+  padding: 0 16px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -294,7 +293,6 @@
   width: 100%;
 }
 
-/* 카드 */
 .quote-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 190px;
@@ -357,6 +355,20 @@
   color: #4b5563;
 }
 
+.quote-card__price-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff4e5;
+  color: #b54708;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .quote-card__title {
   margin: 0;
   font-size: 18px;
@@ -376,7 +388,6 @@
   border-radius: 999px;
 }
 
-/* 핵심 본문 */
 .quote-card__body {
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr);
@@ -407,10 +418,7 @@
   min-height: 24px;
 }
 
-.quote-card__route-row--top {
-  justify-content: flex-start;
-}
-
+.quote-card__route-row--top,
 .quote-card__route-row--bottom {
   justify-content: flex-start;
 }
@@ -478,39 +486,19 @@
   justify-content: space-between;
 }
 
-.quote-card__price-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.quote-card__price-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 24px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #fff4e5;
-  color: #b54708;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.quote-card__cargo-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .quote-card__cargo,
 .quote-card__price-wrap {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.quote-card__cargo-row,
+.quote-card__price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .quote-card__info-label {
@@ -535,7 +523,6 @@
   letter-spacing: -0.04em;
 }
 
-/* 오른쪽 패널 */
 .quote-card__side {
   background: linear-gradient(180deg, #f5f8ff 0%, #eef3ff 100%);
   border-left: 1px solid #dde7fb;
@@ -615,7 +602,6 @@
   opacity: 0.85;
 }
 
-/* 페이지네이션 */
 .quote-list-pagination {
   display: flex;
   justify-content: center;
@@ -657,7 +643,6 @@
   border-color: #4463f0;
 }
 
-/* RegionSelect */
 .region-select {
   position: relative;
   width: 100%;
@@ -738,9 +723,6 @@
   color: #2f5cf0;
   font-weight: 700;
 }
-
-/* 반응형 */
-/* 반응형 */
 @media (max-width: 1400px) {
   .quote-card {
     grid-template-columns: minmax(0, 1fr) 170px;
@@ -762,10 +744,7 @@
     width: 110px;
   }
 
-  .quote-card__route-text {
-    font-size: 15px;
-  }
-
+  .quote-card__route-text,
   .quote-card__cargo-value {
     font-size: 15px;
   }
@@ -824,10 +803,7 @@
     left: 9px;
   }
 
-  .quote-card__route-text {
-    font-size: 15px;
-  }
-
+  .quote-card__route-text,
   .quote-card__cargo-value {
     font-size: 15px;
   }
@@ -899,17 +875,31 @@
   }
 
   .quote-list-summary-bar__right {
-    justify-content: flex-start;
-    flex-wrap: wrap;
     width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
   }
 
-  .quote-list-summary-bar__right label {
-    width: 100%;
+  .quote-list-summary-bar__right .simple-select {
+    width: auto;
+    flex: 0 0 auto;
   }
 
-  .quote-list-summary-bar__right select {
-    width: 100%;
+  .quote-list-summary-bar__right .simple-select-trigger {
+    height: 40px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .quote-list-size-select .simple-select-trigger {
+    min-width: 106px;
+  }
+
+  .quote-list-sort-select .simple-select-trigger {
+    min-width: 114px;
   }
 
   .quote-card {
@@ -938,33 +928,69 @@
 
   .quote-card__route-column {
     min-height: auto;
-    align-items: flex-start;
+    width: 100%;
+    display: flex;
+    align-items: center;
   }
 
   .quote-card__route-track {
+    position: static;
     width: 100%;
     min-height: auto;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
   }
 
   .quote-card__route-row {
-    width: 100%;
+    width: auto;
     min-height: auto;
-    gap: 10px;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+
+  .quote-card__route-dot {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
   }
 
   .quote-card__route-text {
-    white-space: normal;
+    white-space: nowrap;
     text-align: left;
     font-size: 15px;
     line-height: 1.2;
   }
 
-  .quote-card__route-center,
+  .quote-card__route-center {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    height: auto;
+    flex: 0 0 auto;
+  }
+
   .quote-card__route-line {
+    position: static;
+    width: auto;
+    height: auto;
+    background: transparent;
+    transform: none;
+  }
+
+  .quote-card__route-line::before {
+    content: "→";
+    display: inline-block;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .quote-card__route-line::after {
     display: none;
   }
 
@@ -998,10 +1024,6 @@
     min-width: 0;
   }
 
-  .quote-card__deadline-block {
-    gap: 2px;
-  }
-
   .quote-card__deadline-title {
     font-size: 13px;
   }
@@ -1027,21 +1049,42 @@
     font-size: 13px;
     white-space: nowrap;
   }
-}
 
-@media (max-width: 640px) {
-  .quote-card__meta-grid {
-    grid-template-columns: 1fr;
+  .region-select-dropdown {
+    width: 100%;
+    grid-template-columns: minmax(120px, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .region-select-left,
+  .region-select-right {
+    max-height: 260px;
+    padding: 8px;
+  }
+
+  .region-item {
+    padding: 10px 12px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 480px) {
-  .quote-list-summary-bar__right label {
-    width: 100%;
+  .quote-card__route-track {
+    gap: 6px;
   }
 
-  .quote-list-summary-bar__right select {
-    width: 100%;
+  .quote-card__route-row {
+    gap: 5px;
+  }
+
+  .quote-card__route-dot {
+    width: 12px;
+    height: 12px;
+    flex-basis: 12px;
+  }
+
+  .quote-card__route-text,
+  .quote-card__route-line::before {
+    font-size: 14px;
   }
 
   .quote-card__side {
@@ -1049,16 +1092,32 @@
     align-items: flex-start;
   }
 
-  .quote-card__side-bottom {
+  .quote-card__side-bottom,
+  .quote-card__detail-button {
     width: 100%;
   }
 
   .quote-card__detail-button {
-    width: 100%;
     text-align: left;
   }
 
   .quote-card__deadline {
     font-size: 22px;
+  }
+
+  .region-select-dropdown {
+    width: 100%;
+    grid-template-columns: minmax(130px, 1fr) minmax(0, 1.4fr);
+  }
+
+  .region-select-left,
+  .region-select-right {
+    max-height: 250px;
+    padding: 8px;
+  }
+
+  .region-item {
+    padding: 10px 10px;
+    font-size: 13px;
   }
 }

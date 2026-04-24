@@ -9,6 +9,8 @@ import QuoteCard from "./quoteList/components/QuoteCard";
 import QuoteListPagination from "./quoteList/components/QuoteListPagination";
 import { shipmentToQuote } from "./quoteUtils";
 
+const VISIBLE_QUOTE_STATUSES = ["입찰 진행중", "입찰 완료"];
+
 export default function QuoteListPage({ controller }) {
   const [status, setStatus] = useState("전체");
   const [origin, setOrigin] = useState("전체");
@@ -31,6 +33,10 @@ export default function QuoteListPage({ controller }) {
   const filteredQuotes = useMemo(() => {
     return mappedQuotes.filter((quote) => {
       const quoteStatus = quote.status || "입찰 진행중";
+
+      // 취소됨 상태는 견적 목록에서 제외
+      const matchVisibleStatus = VISIBLE_QUOTE_STATUSES.includes(quoteStatus);
+
       const quoteOrigin = quote.originAddress || "";
       const quoteDestination = quote.destinationAddress || "";
       const isMine = profileId && quote.shipperId === profileId;
@@ -42,7 +48,13 @@ export default function QuoteListPage({ controller }) {
       const matchOwner =
         ownerFilter === "전체" || (ownerFilter === "내 견적만" && isMine);
 
-      return matchStatus && matchOrigin && matchDestination && matchOwner;
+      return (
+        matchVisibleStatus &&
+        matchStatus &&
+        matchOrigin &&
+        matchDestination &&
+        matchOwner
+      );
     });
   }, [mappedQuotes, status, origin, destination, ownerFilter, profileId]);
 
@@ -78,6 +90,7 @@ export default function QuoteListPage({ controller }) {
   const paginatedQuotes = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
+
     return sortedQuotes.slice(startIndex, endIndex);
   }, [sortedQuotes, currentPage, pageSize]);
 
@@ -138,6 +151,7 @@ export default function QuoteListPage({ controller }) {
           isLoggedIn={controller.isLoggedIn}
           isShipper={controller.auth?.role === "SHIPPER"}
         />
+
         <QuoteListSummaryBar
           totalCount={totalCount}
           ownerFilter={ownerFilter}

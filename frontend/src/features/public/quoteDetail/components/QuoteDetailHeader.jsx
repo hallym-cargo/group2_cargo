@@ -85,7 +85,7 @@ export default function QuoteDetailHeader({
             </button>
           )}
 
-          {isDriver && (
+          {
             <button
               type="button"
               className={
@@ -96,7 +96,7 @@ export default function QuoteDetailHeader({
             >
               ★
             </button>
-          )}
+          }
         </div>
       </div>
     </section>

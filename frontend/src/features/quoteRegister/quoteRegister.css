@@ -1720,6 +1720,14 @@
   padding: 0;
   line-height: 1;
 }
+
+.helper-text {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
 @media (max-width: 1024px) {
   .quote-review-image-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));

@@ -495,9 +495,11 @@
 .messages-page {
   min-height: 100vh;
   padding: 32px;
-  background: linear-gradient(180deg,
-      rgba(248, 250, 252, 0.96),
-      rgba(241, 245, 249, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0.96),
+    rgba(241, 245, 249, 0.96)
+  );
 }
 
 .messages-page__head {
@@ -682,7 +684,7 @@
   margin-top: 22px;
 }
 
-.profile-modal__grid>div {
+.profile-modal__grid > div {
   padding: 16px 18px;
   border-radius: 18px;
   background: #f8fafc;
@@ -1059,9 +1061,11 @@
 .messages-page {
   min-height: 100vh;
   padding: 32px;
-  background: linear-gradient(180deg,
-      rgba(248, 250, 252, 0.96),
-      rgba(241, 245, 249, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0.96),
+    rgba(241, 245, 249, 0.96)
+  );
 }
 
 .messages-page__head {
@@ -1220,7 +1224,7 @@
   margin-top: 22px;
 }
 
-.profile-modal__grid>div {
+.profile-modal__grid > div {
   padding: 16px 18px;
   border-radius: 18px;
   background: #f8fafc;
@@ -1348,6 +1352,20 @@
   .floating-quick-menu {
     right: 12px;
     bottom: 12px;
+  }
+
+  .scroll-top-floating-button--compact {
+    right: 12px;
+  }
+
+  .floating-quick-menu {
+    right: 24px;
+    bottom: 24px;
+  }
+
+  .scroll-top-floating-button {
+    right: 104px;
+    bottom: 24px;
   }
 }
 
@@ -1481,4 +1499,20 @@
   background: #ecfdf5;
   color: #059669;
   font-weight: 600;
+}
+
+.scroll-top-floating-button {
+  width: 68px;
+  height: 68px;
+  right: 88px;
+  bottom: 12px;
+}
+.floating-quick-menu {
+  right: 16px;
+  bottom: 16px;
+}
+
+.scroll-top-floating-button {
+  right: 92px;
+  bottom: 16px;
 }
