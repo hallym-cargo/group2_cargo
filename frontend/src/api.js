@@ -8,17 +8,24 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  let token = localStorage.getItem('accessToken');
+
+  if (!token) {
+    const member = localStorage.getItem('member');
+    if (member) {
+      const parsed = JSON.parse(member);
+      token = parsed.accessToken || parsed.token;
+    }
+  }
 
   if (config.skipAuth) {
-    delete config.headers.Authorization; // 🔥 강제 제거
+    delete config.headers.Authorization;
   } else if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
   return config;
 });
-
 
 export const login = async (payload) =>
   (await api.post('/auth/login', payload)).data;
