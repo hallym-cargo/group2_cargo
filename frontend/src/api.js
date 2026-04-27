@@ -299,20 +299,11 @@ export const updateAdminAssistantGuideline = async (id, payload) =>
 export const deleteAdminAssistantGuideline = async (id) =>
   (await api.delete(`/api/admin/assistant/guidelines/${id}`)).data;
 
-// 추가
-export const kakaoLogin = async (kakaoUser) => {
-  const res = await fetch("http://localhost:8080/api/auth/kakao", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(kakaoUser),
-  });
-
-  if (!res.ok) {
-    throw new Error("서버 응답 실패");
-  }
-
-  return res.json();
-};
-//
+export const kakaoLogin = async (accessToken, role = 'SHIPPER') =>
+  (
+    await api.post(
+      '/auth/kakao',
+      { accessToken, role },
+      { skipAuth: true },
+    )
+  ).data;

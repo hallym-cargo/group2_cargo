@@ -39,14 +39,16 @@ export default function App() {
 
   const controller = useLogisticsController();
 
-  // 추가
   useEffect(() => {
+    const kakaoJavascriptKey = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;
+
+    if (!window.Kakao || !kakaoJavascriptKey) return;
+
     if (window.Kakao && !window.Kakao.isInitialized()) {
-      window.Kakao.init("407fb7380c789fe40575dd71b72a5b4e");
-      console.log("Kakao initialized");
+      window.Kakao.init(import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY);
+      console.log("Kakao init 완료");
     }
   }, []);
-  //
 
   let page = null;
 

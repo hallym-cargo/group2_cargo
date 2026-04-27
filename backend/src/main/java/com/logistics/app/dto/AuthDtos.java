@@ -31,6 +31,15 @@ public class AuthDtos {
     }
 
     @Data
+    public static class KakaoLoginRequest {
+        private String accessToken;
+        private String kakaoId;
+        private String nickname;
+        private String profileImage;
+        private UserRole role;
+    }
+
+    @Data
     public static class PasswordResetSendCodeRequest {
         @Email
         @NotBlank

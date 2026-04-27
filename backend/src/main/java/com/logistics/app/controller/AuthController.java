@@ -29,6 +29,11 @@ public class AuthController {
         return authService.login(request);
     }
 
+    @PostMapping("/kakao")
+    public AuthDtos.AuthResponse kakaoLogin(@Valid @RequestBody AuthDtos.KakaoLoginRequest request) {
+        return authService.kakaoLogin(request);
+    }
+
     @PostMapping("/password-reset/send-code")
     public AuthDtos.GenericMessageResponse sendPasswordResetCode(
             @Valid @RequestBody AuthDtos.PasswordResetSendCodeRequest request

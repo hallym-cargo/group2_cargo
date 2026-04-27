@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
+    Optional<User> findByKakaoId(String kakaoId);
     long countByRole(UserRole role);
     long countByStatus(UserStatus status);
     List<User> findAllByOrderByCreatedAtDesc();
