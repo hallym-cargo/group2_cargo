@@ -2180,34 +2180,25 @@ export function useLogisticsController() {
     }
   };
 
-  // 추가
-  const handleKakaoLogin = async (kakaoUser) => {
+  const handleKakaoLogin = async (accessToken, role = 'SHIPPER') => {
     try {
-      console.log("카카오 로그인 처리:", kakaoUser);
+      const data = await kakaoLogin(accessToken, role);
 
-      // 백엔드로 보내기
-      const res = await kakaoLogin(kakaoUser);
-
-      console.log("서버 응답:", res);
-
-      // 서버에서 JWT 받아야 함
-      const userData = {
-        token: res.accessToken, // 서버 JWT
-        email: res.email,
-        name: res.name,
-        role: res.role,
-        profileCompleted: res.profileCompleted,
-      };
-
-      // 진짜 로그인 처리
-      syncAuth(userData);
-
+      syncAuth(data);
+      setDashboardTab(data.profileCompleted ? "home" : "overview");
+      setMessage(
+        data.profileCompleted
+          ? "카카오 계정으로 로그인되었습니다."
+          : "카카오 계정으로 자동 회원가입되었습니다. 간단한 정보 확인 후 모든 기능을 바로 이용할 수 있어요.",
+      );
       setRoutePage("main");
+      return true;
     } catch (err) {
       console.error("카카오 로그인 실패:", err);
+      setMessage(err.response?.data?.message || err.message || "카카오 로그인 실패");
+      return false;
     }
   };
-  //
 
   return {
     API_BASE_URL,

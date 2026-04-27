@@ -1,52 +1,70 @@
-import React from "react";
+import React, { useState } from "react";
 import "./LoginPage.css";
 
 const LoginPage = ({ controller }) => {
+    const { loginForm, setLoginForm } = controller;
 
-    const { loginForm, setLoginForm, handleLogin } = controller;
+    const [kakaoAccessToken, setKakaoAccessToken] = useState("");
+    const [showRoleModal, setShowRoleModal] = useState(false);
 
     const handleClickLogin = async () => {
         const success = await controller.handleLogin();
         if (success) {
-            controller.setRoutePage("main"); // 로그인 성공 시 바로 이동
+            controller.setRoutePage("main");
         }
     };
 
-    // 추가
     const handleKakaoLogin = () => {
+        if (!window.Kakao || !window.Kakao.Auth) {
+            controller.setMessage?.(
+                "카카오 SDK를 불러오지 못했습니다. index.html의 카카오 SDK 스크립트를 확인해 주세요."
+            );
+            return;
+        }
+
         window.Kakao.Auth.login({
-            success: function (authObj) {
-                console.log("카카오 토큰:", authObj);
+            scope: "profile_nickname,profile_image",
 
-                // 사용자 정보 요청 (사용자 id, 닉네임, 프로필 사진)
-                window.Kakao.API.request({
-                    url: "/v2/user/me",
-                    success: function (res) {
-                        console.log("카카오 유저 정보:", res);
+            success: async (authObj) => {
+                console.log("카카오 로그인 성공 authObj:", authObj);
 
-                        // 여기서 백엔드로 넘기면 됨
-                        controller.handleKakaoLogin(res);
-                    },
-                    fail: function (error) {
-                        console.error(error);
-                    },
-                });
+                if (!authObj?.access_token) {
+                    controller.setMessage?.("카카오 accessToken을 받아오지 못했습니다.");
+                    return;
+                }
+
+                setKakaoAccessToken(authObj.access_token);
+                setShowRoleModal(true);
             },
-            fail: function (err) {
-                console.error(err);
+
+            fail: (err) => {
+                console.error("카카오 로그인 실패:", err);
+                controller.setMessage?.("카카오 로그인에 실패했습니다.");
             },
         });
     };
-    //
+
+    const handleSelectKakaoRole = async (role) => {
+        if (!kakaoAccessToken) {
+            controller.setMessage?.("카카오 로그인 정보가 없습니다. 다시 시도해 주세요.");
+            setShowRoleModal(false);
+            return;
+        }
+
+        const success = await controller.handleKakaoLogin(kakaoAccessToken, role);
+
+        if (success) {
+            setShowRoleModal(false);
+            setKakaoAccessToken("");
+            controller.setRoutePage("main");
+        }
+    };
 
     return (
         <div className="login-container">
             <div className="login-box">
-
-                {/* 제목 */}
                 <h2 className="login-title">로그인</h2>
 
-                {/* 이메일 */}
                 <label className="login-label">이메일</label>
                 <input
                     type="email"
@@ -58,7 +76,6 @@ const LoginPage = ({ controller }) => {
                     }
                 />
 
-                {/* 비밀번호 */}
                 <label className="login-label">비밀번호</label>
                 <input
                     type="password"
@@ -70,12 +87,10 @@ const LoginPage = ({ controller }) => {
                     }
                 />
 
-                {/* 샘플 계정 안내 */}
                 <div className="login-hint">
                     샘플 계정: shipper@test.com / driver@test.com / admin@test.com · 비밀번호 1111
                 </div>
 
-                {/* 옵션 영역 */}
                 <div className="login-options">
                     <label className="checkbox-label">
                         <input type="checkbox" />
@@ -89,25 +104,18 @@ const LoginPage = ({ controller }) => {
                     </div>
                 </div>
 
-                <button
-                    className="login-button"
-                    onClick={handleClickLogin}
-                >
+                <button className="login-button" onClick={handleClickLogin}>
                     로그인
                 </button>
 
-                {/* 구분 */}
                 <div className="divider">
                     <span>또는 소셜 계정으로 로그인</span>
                 </div>
 
-                {/* 카카오 로그인 */}
-                {/* <button className="kakao-button">카카오 로그인</button> */}
                 <button className="kakao-button" onClick={handleKakaoLogin}>
                     카카오 로그인
                 </button>
 
-                {/* 회원가입 */}
                 <div className="signup">
                     계정이 없으신가요?{" "}
                     <span
@@ -118,7 +126,6 @@ const LoginPage = ({ controller }) => {
                     </span>
                 </div>
 
-                {/* 메인 페이지 이동 (링크 스타일) */}
                 <div
                     className="back-to-main"
                     onClick={() => {
@@ -127,8 +134,47 @@ const LoginPage = ({ controller }) => {
                 >
                     메인 페이지로 이동
                 </div>
-
             </div>
+
+            {showRoleModal && (
+                <div className="kakao-role-modal-backdrop">
+                    <div className="kakao-role-modal">
+                        <h3>카카오 계정 유형 선택</h3>
+                        <p>
+                            처음 카카오 로그인을 진행하는 경우 사용할 계정 유형을 선택해 주세요.
+                        </p>
+
+                        <div className="kakao-role-actions">
+                            <button
+                                type="button"
+                                className="kakao-role-button shipper"
+                                onClick={() => handleSelectKakaoRole("SHIPPER")}
+                            >
+                                화주로 시작하기
+                            </button>
+
+                            <button
+                                type="button"
+                                className="kakao-role-button driver"
+                                onClick={() => handleSelectKakaoRole("DRIVER")}
+                            >
+                                차주로 시작하기
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="kakao-role-cancel"
+                            onClick={() => {
+                                setShowRoleModal(false);
+                                setKakaoAccessToken("");
+                            }}
+                        >
+                            취소
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
