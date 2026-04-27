@@ -919,3 +919,51 @@
     height: 420px !important;
   }
 }
+
+
+.rounds-lite-map-chip {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.rounds-lite-map-chip strong {
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.rounds-lite-map-chip span {
+  font-size: 12px;
+  color: #475569;
+}
+
+.rounds-lite-arena--dual-towers {
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(244, 114, 182, 0.16), transparent 24%),
+    linear-gradient(180deg, #f6fbff 0%, #e7f0ff 48%, #e8edf9 100%);
+}
+
+.rounds-lite-arena--center-chaos {
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(168, 85, 247, 0.14), transparent 24%),
+    linear-gradient(180deg, #fffaf0 0%, #f4ecff 48%, #e8edf9 100%);
+}
+
+.rounds-lite-arena--crossfire-yard {
+  background:
+    radial-gradient(circle at top left, rgba(52, 211, 153, 0.14), transparent 28%),
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.16), transparent 24%),
+    linear-gradient(180deg, #f3fffb 0%, #e4f7f0 48%, #ebf2ff 100%);
+}

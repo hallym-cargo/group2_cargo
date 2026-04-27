@@ -12,13 +12,14 @@ import {
   sendRoundsLiteInput,
 } from '../../api'
 import './roundsLite.css'
+import { getMapDecor } from './maps'
 
 const LAST_ROOM_KEY = 'roundsLite:lastRoomCode'
 const POLL_INTERVAL = 55
 const INPUT_INTERVAL = 45
 const VISUAL_LERP = 0.28
-const ARENA_WIDTH = 1280
-const ARENA_HEIGHT = 680
+const ARENA_WIDTH = 1360
+const ARENA_HEIGHT = 760
 
 const phaseText = {
   WAITING: '상대를 기다리는 중',
@@ -27,18 +28,6 @@ const phaseText = {
   CARD_PICK: '승리 카드 선택',
   MATCH_END: '매치 종료',
 }
-
-const platforms = [
-  { x: 0, y: 620, w: 1280, h: 60, kind: 'floor' },
-  { x: 110, y: 500, w: 210, h: 18, kind: 'platform' },
-  { x: 380, y: 430, w: 200, h: 18, kind: 'platform' },
-  { x: 700, y: 470, w: 190, h: 18, kind: 'platform' },
-  { x: 990, y: 390, w: 180, h: 18, kind: 'platform' },
-  { x: 500, y: 320, w: 250, h: 18, kind: 'platform' },
-  { x: 250, y: 560, w: 38, h: 60, kind: 'wall' },
-  { x: 612, y: 520, w: 56, h: 100, kind: 'wall' },
-  { x: 940, y: 545, w: 42, h: 75, kind: 'wall' },
-]
 
 function getErrorMessage(error, fallback) {
   return error?.response?.data?.message || fallback
@@ -107,6 +96,7 @@ export default function RoundsLiteArena({ controller }) {
   const visualTargetRef = useRef(null)
 
   const currentRoom = displayRoom || room
+  const mapDecor = getMapDecor(currentRoom?.mapKey)
 
   const me = useMemo(
     () => room?.players?.find((player) => player.seat === room?.mySeat) ?? null,
@@ -429,7 +419,7 @@ export default function RoundsLiteArena({ controller }) {
             <p className="rounds-lite-eyebrow">PLAYGROUND MODE</p>
             <h1 className="rounds-lite-title">Rounds Lite Duel</h1>
             <p className="rounds-lite-subtitle">
-              메인페이지 톤과 맞춘 밝은 글래스 UI 위에, 아레나 액션과 카드 선택을 얹은 2인용 웹 대전 모드야.
+              메인페이지 톤과 맞춘 밝은 글래스 UI 위에, 여러 맵을 라운드마다 바꿔가며 싸우는 2인용 웹 대전 모드야.
             </p>
           </div>
 
@@ -611,7 +601,7 @@ export default function RoundsLiteArena({ controller }) {
 
                 <div
                   ref={arenaRef}
-                  className="rounds-lite-arena"
+                  className={`rounds-lite-arena rounds-lite-arena--${currentRoom?.mapKey || "sky-bridges"}`}
                   style={{ width: ARENA_WIDTH, height: ARENA_HEIGHT }}
                   onMouseMove={(event) => updateAim(event.clientX, event.clientY)}
                   onMouseDown={(event) => {
@@ -630,28 +620,30 @@ export default function RoundsLiteArena({ controller }) {
                   <div className="rounds-lite-sky-glow rounds-lite-sky-glow--left" />
                   <div className="rounds-lite-sky-glow rounds-lite-sky-glow--right" />
                   <div className="rounds-lite-arena-grid" />
-                  <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--one" />
-                  <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--two" />
-                  <div className="rounds-lite-arena-cloud rounds-lite-arena-cloud--three" />
+                  {mapDecor.clouds.map((key) => (
+                    <div key={key} className={`rounds-lite-arena-cloud rounds-lite-arena-cloud--${key}`} />
+                  ))}
                   <div className="rounds-lite-cityline">
-                    <span className="rounds-lite-building rounds-lite-building--a" />
-                    <span className="rounds-lite-building rounds-lite-building--b" />
-                    <span className="rounds-lite-building rounds-lite-building--c" />
-                    <span className="rounds-lite-building rounds-lite-building--d" />
-                    <span className="rounds-lite-building rounds-lite-building--e" />
-                    <span className="rounds-lite-building rounds-lite-building--f" />
-                    <span className="rounds-lite-building rounds-lite-building--g" />
+                    {mapDecor.skyline.map((key) => (
+                      <span key={key} className={`rounds-lite-building rounds-lite-building--${key}`} />
+                    ))}
                   </div>
                   <div className="rounds-lite-foreground">
-                    <span className="rounds-lite-foreground-rock rounds-lite-foreground-rock--left" />
-                    <span className="rounds-lite-foreground-rock rounds-lite-foreground-rock--right" />
+                    {mapDecor.rocks.map((key) => (
+                      <span key={key} className={`rounds-lite-foreground-rock rounds-lite-foreground-rock--${key}`} />
+                    ))}
                     <span className="rounds-lite-foreground-light" />
-                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--left" />
-                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--center" />
-                    <span className="rounds-lite-foreground-bush rounds-lite-foreground-bush--right" />
+                    {mapDecor.bushes.map((key) => (
+                      <span key={key} className={`rounds-lite-foreground-bush rounds-lite-foreground-bush--${key}`} />
+                    ))}
                   </div>
 
-                  {platforms.map((platform, index) => (
+                  <div className="rounds-lite-map-chip">
+                    <strong>{mapDecor.title}</strong>
+                    <span>{mapDecor.subtitle}</span>
+                  </div>
+
+                  {(currentRoom?.platforms || []).map((platform, index) => (
                     <div
                       key={`${platform.kind}-${index}`}
                       className={`rounds-lite-platform rounds-lite-platform--${platform.kind}`}
@@ -705,6 +697,7 @@ export default function RoundsLiteArena({ controller }) {
               <div>
                 <strong>현재 안내</strong>
                 <p>{room?.message || '방을 만들거나, 방 코드를 입력하거나, 자동 매칭으로 시작하세요.'}</p>
+                <p>{currentRoom?.mapKey ? `현재 맵: ${mapDecor.title}` : '맵 로딩 전'}</p>
               </div>
               <div>
                 <strong>전투 팁</strong>
