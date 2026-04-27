@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs";
-//추가
+import axios from "axios";
 import { kakaoLogin } from "../api.js";
 
 import {
@@ -1091,7 +1091,7 @@ export function useLogisticsController() {
       );
       setMessage(
         err.response?.data?.message ||
-          "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
+        "AI 비서 서버 응답이 불안정하여 기본 안내로 전환했습니다.",
       );
     } finally {
       setAssistantSending(false);
@@ -1568,7 +1568,7 @@ export function useLogisticsController() {
   };
 
   useEffect(() => {
-    loadPublic().catch(() => {});
+    loadPublic().catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -1601,19 +1601,19 @@ export function useLogisticsController() {
       loadAdmin().catch((err) =>
         setMessage(err.response?.data?.message || "관리자 데이터 로드 실패"),
       );
-      loadFinance().catch(() => {});
-      loadRatings().catch(() => {});
+      loadFinance().catch(() => { });
+      loadRatings().catch(() => { });
     } else {
       loadShipments().catch((err) =>
         setMessage(err.response?.data?.message || "목록 로드 실패"),
       );
-      loadBookmarks().catch(() => {});
-      loadFinance().catch(() => {});
-      loadRatings().catch(() => {});
-      loadProfile().catch(() => {});
-      loadChatRooms().catch(() => {});
-      loadNotifications().catch(() => {});
-      loadAllNotifications().catch(() => {});
+      loadBookmarks().catch(() => { });
+      loadFinance().catch(() => { });
+      loadRatings().catch(() => { });
+      loadProfile().catch(() => { });
+      loadChatRooms().catch(() => { });
+      loadNotifications().catch(() => { });
+      loadAllNotifications().catch(() => { });
     }
   }, [isLoggedIn, isAdmin]);
 
@@ -1646,28 +1646,28 @@ export function useLogisticsController() {
       reconnectDelay: 4000,
       onConnect: () => {
         client.subscribe("/topic/shipments", () => {
-          loadPublic().catch(() => {});
+          loadPublic().catch(() => { });
 
           if (isAdmin) {
-            loadAdmin().catch(() => {});
-            loadFinance().catch(() => {});
-            loadRatings().catch(() => {});
+            loadAdmin().catch(() => { });
+            loadFinance().catch(() => { });
+            loadRatings().catch(() => { });
           } else if (isLoggedIn) {
-            loadShipments().catch(() => {});
-            loadBookmarks().catch(() => {});
-            loadFinance().catch(() => {});
-            loadRatings().catch(() => {});
-            loadChatRooms().catch(() => {});
-            loadNotifications().catch(() => {});
-            loadAllNotifications().catch(() => {});
-            if (selectedId) loadDetail(selectedId).catch(() => {});
+            loadShipments().catch(() => { });
+            loadBookmarks().catch(() => { });
+            loadFinance().catch(() => { });
+            loadRatings().catch(() => { });
+            loadChatRooms().catch(() => { });
+            loadNotifications().catch(() => { });
+            loadAllNotifications().catch(() => { });
+            if (selectedId) loadDetail(selectedId).catch(() => { });
           }
         });
 
         if (selectedId) {
           client.subscribe(`/topic/shipments/${selectedId}`, () => {
             if (!isAdmin && isLoggedIn && selectedId) {
-              loadDetail(selectedId).catch(() => {});
+              loadDetail(selectedId).catch(() => { });
             }
           });
         }
@@ -2180,23 +2180,61 @@ export function useLogisticsController() {
     }
   };
 
-  const handleKakaoLogin = async (accessToken, role = 'SHIPPER') => {
+  const handleKakaoLogin = async (kakaoAccessToken, role = null) => {
     try {
-      const data = await kakaoLogin(accessToken, role);
+      const response = await axios.post("http://localhost:8080/auth/kakao", {
+        accessToken: kakaoAccessToken,
+        role,
+      });
 
-      syncAuth(data);
-      setDashboardTab(data.profileCompleted ? "home" : "overview");
-      setMessage(
-        data.profileCompleted
-          ? "카카오 계정으로 로그인되었습니다."
-          : "카카오 계정으로 자동 회원가입되었습니다. 간단한 정보 확인 후 모든 기능을 바로 이용할 수 있어요.",
-      );
-      setRoutePage("main");
-      return true;
-    } catch (err) {
-      console.error("카카오 로그인 실패:", err);
-      setMessage(err.response?.data?.message || err.message || "카카오 로그인 실패");
-      return false;
+      const data = response.data;
+
+      if (data.isNewUser) {
+        return {
+          success: false,
+          isNewUser: true,
+        };
+      }
+
+      const member = {
+        accessToken: data.token,
+        token: data.token,
+        email: data.email,
+        name: data.name,
+        role: data.role,
+        profileCompleted: data.profileCompleted,
+        loginType: "KAKAO",
+      };
+
+      localStorage.setItem("member", JSON.stringify(member));
+      localStorage.setItem("accessToken", data.token);
+
+      document.cookie = `member=${encodeURIComponent(
+        JSON.stringify(member)
+      )}; path=/; max-age=${60 * 60 * 24 * 7}`;
+
+      setAuth({
+        token: data.token,
+        member,
+        role: data.role,
+        isLoggedIn: true,
+      });
+
+      setMessage?.("카카오 로그인 성공");
+
+      return {
+        success: true,
+        isNewUser: false,
+        member,
+      };
+    } catch (error) {
+      console.error("카카오 로그인 실패:", error);
+      setMessage?.("카카오 로그인에 실패했습니다.");
+
+      return {
+        success: false,
+        isNewUser: false,
+      };
     }
   };
 

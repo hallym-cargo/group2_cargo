@@ -26,15 +26,27 @@ const LoginPage = ({ controller }) => {
             scope: "profile_nickname,profile_image",
 
             success: async (authObj) => {
-                console.log("카카오 로그인 성공 authObj:", authObj);
+                try {
+                    if (!authObj?.access_token) {
+                        controller.setMessage?.("카카오 accessToken을 받아오지 못했습니다.");
+                        return;
+                    }
 
-                if (!authObj?.access_token) {
-                    controller.setMessage?.("카카오 accessToken을 받아오지 못했습니다.");
-                    return;
+                    const result = await controller.handleKakaoLogin(authObj.access_token);
+
+                    if (result?.isNewUser) {
+                        setKakaoAccessToken(authObj.access_token);
+                        setShowRoleModal(true);
+                        return;
+                    }
+
+                    if (result?.success) {
+                        controller.setRoutePage("main");
+                    }
+                } catch (error) {
+                    console.error("카카오 로그인 처리 중 오류:", error);
+                    controller.setMessage?.("카카오 로그인 처리 중 오류가 발생했습니다.");
                 }
-
-                setKakaoAccessToken(authObj.access_token);
-                setShowRoleModal(true);
             },
 
             fail: (err) => {
@@ -51,9 +63,9 @@ const LoginPage = ({ controller }) => {
             return;
         }
 
-        const success = await controller.handleKakaoLogin(kakaoAccessToken, role);
+        const result = await controller.handleKakaoLogin(kakaoAccessToken, role);
 
-        if (success) {
+        if (result?.success) {
             setShowRoleModal(false);
             setKakaoAccessToken("");
             controller.setRoutePage("main");
@@ -128,9 +140,7 @@ const LoginPage = ({ controller }) => {
 
                 <div
                     className="back-to-main"
-                    onClick={() => {
-                        controller.setRoutePage("main");
-                    }}
+                    onClick={() => controller.setRoutePage("main")}
                 >
                     메인 페이지로 이동
                 </div>
@@ -142,6 +152,7 @@ const LoginPage = ({ controller }) => {
                         <h3>카카오 계정 유형 선택</h3>
                         <p>
                             처음 카카오 로그인을 진행하는 경우 사용할 계정 유형을 선택해 주세요.
+                            이후에는 선택한 역할로 자동 로그인됩니다.
                         </p>
 
                         <div className="kakao-role-actions">

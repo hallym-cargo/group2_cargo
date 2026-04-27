@@ -4,6 +4,8 @@ import com.logistics.app.dto.AuthDtos;
 import com.logistics.app.service.AuthService;
 import com.logistics.app.service.PasswordResetService;
 import jakarta.validation.Valid;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -11,47 +13,44 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
-    private final AuthService authService;
-    private final PasswordResetService passwordResetService;
+	private final AuthService authService;
+	private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthService authService, PasswordResetService passwordResetService) {
-        this.authService = authService;
-        this.passwordResetService = passwordResetService;
-    }
+	public AuthController(AuthService authService, PasswordResetService passwordResetService) {
+		this.authService = authService;
+		this.passwordResetService = passwordResetService;
+	}
 
-    @PostMapping("/signup")
-    public AuthDtos.AuthResponse signup(@Valid @RequestBody AuthDtos.SignUpRequest request) {
-        return authService.signUp(request);
-    }
+	@PostMapping("/signup")
+	public AuthDtos.AuthResponse signup(@Valid @RequestBody AuthDtos.SignUpRequest request) {
+		return authService.signUp(request);
+	}
 
-    @PostMapping("/login")
-    public AuthDtos.AuthResponse login(@Valid @RequestBody AuthDtos.LoginRequest request) {
-        return authService.login(request);
-    }
+	@PostMapping("/login")
+	public AuthDtos.AuthResponse login(@Valid @RequestBody AuthDtos.LoginRequest request) {
+		return authService.login(request);
+	}
 
-    @PostMapping("/kakao")
-    public AuthDtos.AuthResponse kakaoLogin(@Valid @RequestBody AuthDtos.KakaoLoginRequest request) {
-        return authService.kakaoLogin(request);
-    }
+	@PostMapping("/kakao")
+	public ResponseEntity<AuthDtos.AuthResponse> kakaoLogin(@RequestBody AuthDtos.KakaoLoginRequest request) {
+		return ResponseEntity.ok(authService.kakaoLogin(request));
+	}
 
-    @PostMapping("/password-reset/send-code")
-    public AuthDtos.GenericMessageResponse sendPasswordResetCode(
-            @Valid @RequestBody AuthDtos.PasswordResetSendCodeRequest request
-    ) {
-        return passwordResetService.sendCode(request);
-    }
+	@PostMapping("/password-reset/send-code")
+	public AuthDtos.GenericMessageResponse sendPasswordResetCode(
+			@Valid @RequestBody AuthDtos.PasswordResetSendCodeRequest request) {
+		return passwordResetService.sendCode(request);
+	}
 
-    @PostMapping("/password-reset/verify-code")
-    public AuthDtos.PasswordResetVerifyResponse verifyPasswordResetCode(
-            @Valid @RequestBody AuthDtos.PasswordResetVerifyCodeRequest request
-    ) {
-        return passwordResetService.verifyCode(request);
-    }
+	@PostMapping("/password-reset/verify-code")
+	public AuthDtos.PasswordResetVerifyResponse verifyPasswordResetCode(
+			@Valid @RequestBody AuthDtos.PasswordResetVerifyCodeRequest request) {
+		return passwordResetService.verifyCode(request);
+	}
 
-    @PostMapping("/password-reset/confirm")
-    public AuthDtos.GenericMessageResponse confirmPasswordReset(
-            @Valid @RequestBody AuthDtos.PasswordResetConfirmRequest request
-    ) {
-        return passwordResetService.confirmReset(request);
-    }
+	@PostMapping("/password-reset/confirm")
+	public AuthDtos.GenericMessageResponse confirmPasswordReset(
+			@Valid @RequestBody AuthDtos.PasswordResetConfirmRequest request) {
+		return passwordResetService.confirmReset(request);
+	}
 }

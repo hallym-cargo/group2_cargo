@@ -89,5 +89,6 @@ public class AuthDtos {
         private String name;
         private UserRole role;
         private Boolean profileCompleted;
+        private Boolean isNewUser;
     }
 }
