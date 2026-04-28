@@ -1207,18 +1207,72 @@ export function useLogisticsController() {
     setPendingScrollTarget("");
   };
 
+  const emptyProfileForm = {
+    bio: "",
+    profileImageUrl: "",
+    paymentMethod: "",
+    contactEmail: "",
+    contactPhone: "",
+    vehicleType: "",
+  };
+
+  const clearAuthStorage = () => {
+    [
+      "token",
+      "accessToken",
+      "refreshToken",
+      "member",
+      "email",
+      "name",
+      "role",
+      "userId",
+      "profileCompleted",
+      "profileImageUrl",
+    ].forEach((key) => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+
+    document.cookie = "member=; Max-Age=0; path=/";
+    document.cookie = "accessToken=; Max-Age=0; path=/";
+    document.cookie = "refreshToken=; Max-Age=0; path=/";
+  };
+
+  const resetProfileState = () => {
+    setProfile(null);
+    setProfileForm(emptyProfileForm);
+    setSelectedProfileImageName("");
+    setProfileImageUploadError("");
+    setProfileSaveSuccessOpen(false);
+  };
+
   const syncAuth = (data) => {
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("email", data.email);
-    localStorage.setItem("name", data.name);
-    localStorage.setItem("role", data.role);
-    if (data.id) localStorage.setItem("userId", String(data.id));
-    localStorage.setItem("profileCompleted", String(!!data.profileCompleted));
-    setAuth(data);
+    clearAuthStorage();
+
+    const normalizedAuth = {
+      token: data.token || data.accessToken || "",
+      email: data.email || "",
+      name: data.name || "",
+      role: data.role || "",
+      profileCompleted: !!data.profileCompleted,
+      id: data.id || data.userId || null,
+      loginType: data.loginType || "NORMAL",
+    };
+
+    localStorage.setItem("token", normalizedAuth.token);
+    localStorage.setItem("accessToken", normalizedAuth.token);
+    localStorage.setItem("email", normalizedAuth.email);
+    localStorage.setItem("name", normalizedAuth.name);
+    localStorage.setItem("role", normalizedAuth.role);
+    if (normalizedAuth.id) localStorage.setItem("userId", String(normalizedAuth.id));
+    localStorage.setItem("profileCompleted", String(normalizedAuth.profileCompleted));
+
+    resetProfileState();
+    setAuth(normalizedAuth);
   };
 
   const logout = () => {
-    localStorage.clear();
+    clearAuthStorage();
     localStorage.removeItem("routePage");
     localStorage.removeItem("routeParams");
     localStorage.removeItem("dashboardTab");
@@ -1234,6 +1288,7 @@ export function useLogisticsController() {
       profileCompleted: false,
     });
 
+    resetProfileState();
     setDashboardTab("overview");
     setSelectedId(null);
     setSelected(null);
@@ -2206,18 +2261,28 @@ export function useLogisticsController() {
         loginType: "KAKAO",
       };
 
+      clearAuthStorage();
       localStorage.setItem("member", JSON.stringify(member));
+      localStorage.setItem("token", data.token);
       localStorage.setItem("accessToken", data.token);
+      localStorage.setItem("email", data.email || "");
+      localStorage.setItem("name", data.name || "");
+      localStorage.setItem("role", data.role || "");
+      if (data.id) localStorage.setItem("userId", String(data.id));
+      localStorage.setItem("profileCompleted", String(!!data.profileCompleted));
 
       document.cookie = `member=${encodeURIComponent(
         JSON.stringify(member)
       )}; path=/; max-age=${60 * 60 * 24 * 7}`;
 
+      resetProfileState();
       setAuth({
         token: data.token,
-        member,
-        role: data.role,
-        isLoggedIn: true,
+        email: data.email || "",
+        name: data.name || "",
+        role: data.role || "",
+        profileCompleted: !!data.profileCompleted,
+        loginType: "KAKAO",
       });
 
       setMessage?.("카카오 로그인 성공");
