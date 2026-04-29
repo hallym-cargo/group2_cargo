@@ -3,7 +3,6 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs";
 import axios from "axios";
 import { kakaoLogin } from "../api.js";
-
 import {
   API_BASE_URL,
   acceptOffer,
@@ -2237,10 +2236,25 @@ export function useLogisticsController() {
 
   const handleKakaoLogin = async (kakaoAccessToken, role = null) => {
     try {
-      const response = await axios.post("http://localhost:8080/auth/kakao", {
-        accessToken: kakaoAccessToken,
-        role,
-      });
+      localStorage.removeItem("token");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("member");
+
+      document.cookie =
+        "member=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+      const response = await axios.post(
+        "http://localhost:8080/auth/kakao",
+        {
+          accessToken: kakaoAccessToken,
+          role,
+        },
+        {
+          headers: {
+            Authorization: "",
+          },
+        }
+      );
 
       const data = response.data;
 
