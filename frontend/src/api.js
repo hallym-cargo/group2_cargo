@@ -8,7 +8,9 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  let token = localStorage.getItem('accessToken');
+  let token =
+    localStorage.getItem('accessToken') ||
+    localStorage.getItem('token');
 
   if (!token) {
     const member = localStorage.getItem('member');

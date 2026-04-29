@@ -3,7 +3,6 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs";
 import axios from "axios";
 import { kakaoLogin } from "../api.js";
-
 import {
   API_BASE_URL,
   acceptOffer,
@@ -2182,10 +2181,25 @@ export function useLogisticsController() {
 
   const handleKakaoLogin = async (kakaoAccessToken, role = null) => {
     try {
-      const response = await axios.post("http://localhost:8080/auth/kakao", {
-        accessToken: kakaoAccessToken,
-        role,
-      });
+      localStorage.removeItem("token");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("member");
+
+      document.cookie =
+        "member=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+      const response = await axios.post(
+        "http://localhost:8080/auth/kakao",
+        {
+          accessToken: kakaoAccessToken,
+          role,
+        },
+        {
+          headers: {
+            Authorization: "",
+          },
+        }
+      );
 
       const data = response.data;
 
@@ -2208,6 +2222,18 @@ export function useLogisticsController() {
 
       localStorage.setItem("member", JSON.stringify(member));
       localStorage.setItem("accessToken", data.token);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("email", data.email || "");
+      localStorage.setItem("name", data.name || "");
+      localStorage.setItem("role", data.role || "");
+      localStorage.setItem(
+        "profileCompleted",
+        String(!!data.profileCompleted)
+      );
+
+      if (data.id) {
+        localStorage.setItem("userId", String(data.id));
+      }
 
       document.cookie = `member=${encodeURIComponent(
         JSON.stringify(member)
@@ -2215,9 +2241,14 @@ export function useLogisticsController() {
 
       setAuth({
         token: data.token,
+        accessToken: data.token,
         member,
+        email: data.email,
+        name: data.name,
         role: data.role,
         isLoggedIn: true,
+        profileCompleted: data.profileCompleted,
+        loginType: "KAKAO",
       });
 
       setMessage?.("카카오 로그인 성공");
