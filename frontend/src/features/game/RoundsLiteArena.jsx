@@ -419,7 +419,7 @@ export default function RoundsLiteArena({ controller }) {
             <p className="rounds-lite-eyebrow">PLAYGROUND MODE</p>
             <h1 className="rounds-lite-title">Rounds Lite Duel</h1>
             <p className="rounds-lite-subtitle">
-              메인페이지 톤과 맞춘 밝은 글래스 UI 위에, 여러 맵을 라운드마다 바꿔가며 싸우는 2인용 웹 대전 모드야.
+              2인용 PVP 슈팅 게임입니다.
             </p>
           </div>
 
