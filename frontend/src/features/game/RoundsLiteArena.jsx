@@ -144,8 +144,13 @@ export default function RoundsLiteArena({ controller }) {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (!roomRef.current?.roomCode || roomRef.current.phase !== 'ACTIVE') return
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return
+
+      if (event.code === 'Space' || event.key === 'ArrowDown') {
+        event.preventDefault()
+      }
+
+      if (!roomRef.current?.roomCode || roomRef.current.phase !== 'ACTIVE') return
 
       const next = { ...inputRef.current }
 
