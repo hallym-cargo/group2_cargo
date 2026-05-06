@@ -1,5 +1,8 @@
+import { useEffect, useMemo, useState } from 'react'
 import { formatCurrency, formatDate, statusText } from '../../../utils/formatters'
 import { formatMinutesToHourMinute } from '../../../utils/formatters'
+
+const BOARD_PAGE_SIZE = 10
 
 export default function PublicBoardSection({ controller }) {
   const {
@@ -10,6 +13,34 @@ export default function PublicBoardSection({ controller }) {
     setPublicSelectedId,
     selectedPublic,
   } = controller
+
+  const [boardPage, setBoardPage] = useState(1)
+
+  const boardTotalPages = Math.max(1, Math.ceil(publicBoard.length / BOARD_PAGE_SIZE))
+
+  const pagedPublicBoard = useMemo(() => {
+    const startIndex = (boardPage - 1) * BOARD_PAGE_SIZE
+    return publicBoard.slice(startIndex, startIndex + BOARD_PAGE_SIZE)
+  }, [publicBoard, boardPage])
+
+  useEffect(() => {
+    setBoardPage(1)
+  }, [publicStatusFilter])
+
+  useEffect(() => {
+    if (boardPage > boardTotalPages) {
+      setBoardPage(boardTotalPages)
+    }
+  }, [boardPage, boardTotalPages])
+
+  const handleStatusFilterClick = (status) => {
+    setPublicStatusFilter(status)
+    setBoardPage(1)
+  }
+
+  const handleBoardPageChange = (nextPage) => {
+    setBoardPage(Math.min(Math.max(nextPage, 1), boardTotalPages))
+  }
 
   return (
     <section className="landing-board" id="board">
@@ -25,7 +56,7 @@ export default function PublicBoardSection({ controller }) {
             <button
               key={status}
               className={publicStatusFilter === status ? 'landing-filterChip active' : 'landing-filterChip'}
-              onClick={() => setPublicStatusFilter(status)}
+              onClick={() => handleStatusFilterClick(status)}
             >
               {status === 'ALL' ? '전체' : statusText(status)}
             </button>
@@ -47,7 +78,7 @@ export default function PublicBoardSection({ controller }) {
                 </tr>
               </thead>
               <tbody>
-                {publicBoard.map((item) => (
+                {pagedPublicBoard.map((item) => (
                   <tr key={item.id} className={publicSelectedId === item.id ? 'is-selected' : ''} onClick={() => setPublicSelectedId(item.id)}>
                     <td><span className={`badge badge-${item.status.toLowerCase()}`}>{statusText(item.status)}</span></td>
                     <td><strong>{item.title}</strong><small>{item.cargoType} · {item.weightKg || 0}kg</small></td>
@@ -61,6 +92,40 @@ export default function PublicBoardSection({ controller }) {
                 ))}
               </tbody>
             </table>
+
+            <div className="landing-boardPagination" aria-label="실시간 배차 목록 페이지 이동">
+              <button
+                type="button"
+                className="landing-pageButton"
+                onClick={() => handleBoardPageChange(boardPage - 1)}
+                disabled={boardPage === 1}
+              >
+                이전
+              </button>
+
+              <div className="landing-pageNumbers">
+                {Array.from({ length: boardTotalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    className={boardPage === page ? 'landing-pageNumber active' : 'landing-pageNumber'}
+                    onClick={() => handleBoardPageChange(page)}
+                    aria-current={boardPage === page ? 'page' : undefined}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="landing-pageButton"
+                onClick={() => handleBoardPageChange(boardPage + 1)}
+                disabled={boardPage === boardTotalPages}
+              >
+                다음
+              </button>
+            </div>
           </div>
 
           <aside className="landing-boardAside" data-reveal>

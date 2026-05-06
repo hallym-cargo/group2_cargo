@@ -424,9 +424,6 @@ export default function RoundsLiteArena({ controller }) {
           </div>
 
           <div className="rounds-lite-hero-actions">
-            <button type="button" className="rounds-lite-ghost" onClick={() => controller.setRoutePage('main')}>
-              메인으로
-            </button>
             <button type="button" className="rounds-lite-ghost" onClick={handleLeave}>
               나가기
             </button>

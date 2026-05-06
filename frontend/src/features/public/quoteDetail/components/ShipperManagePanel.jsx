@@ -40,15 +40,11 @@ export default function ShipperManagePanel({ quote }) {
   };
 
   const handleSave = () => {
-    alert("현재는 더미데이터 단계라 수정 저장은 예시 처리입니다.");
     setIsEditMode(false);
   };
 
   const handleDelete = () => {
     const isConfirmed = window.confirm("이 견적을 삭제하시겠습니까?");
-    if (isConfirmed) {
-      alert("현재는 더미데이터 단계라 삭제는 예시 처리입니다.");
-    }
   };
 
   const handleCancel = () => {

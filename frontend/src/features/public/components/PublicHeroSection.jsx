@@ -40,7 +40,6 @@ function AccessPanel({ authMode, setAuthMode, loginForm, setLoginForm, signupFor
           <input placeholder="이메일" value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} />
           <input type="password" placeholder="비밀번호" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
           <button className="landing-btn landing-btn--primary landing-btn--full" onClick={handleLogin}>로그인</button>
-          <small className="landing-authHint">샘플 계정: shipper@test.com / driver@test.com / admin@test.com · 비밀번호 1111</small>
         </div>
       ) : (
         <div className="landing-formStack">

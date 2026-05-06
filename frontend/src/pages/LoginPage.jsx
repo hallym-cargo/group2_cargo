@@ -99,10 +99,6 @@ const LoginPage = ({ controller }) => {
                     }
                 />
 
-                <div className="login-hint">
-                    샘플 계정: shipper@test.com / driver@test.com / admin@test.com · 비밀번호 1111
-                </div>
-
                 <div className="login-options">
                     <label className="checkbox-label">
                         <input type="checkbox" />
