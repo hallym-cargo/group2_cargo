@@ -68,6 +68,7 @@ public class GameDtos {
         private String seat;
         private String name;
         private boolean ready;
+        private boolean cardPickPending;
         private int wins;
         private int hp;
         private int maxHp;
@@ -77,7 +78,6 @@ public class GameDtos {
         private double height;
         private boolean facingRight;
         private double aimAngleDeg;
-        private boolean cardPickPending;
         private List<String> selectedCards;
     }
 
@@ -116,6 +116,7 @@ public class GameDtos {
         private String phase;
         private String mySeat;
         private String pickerSeat;
+        private boolean myCardPickPending;
         private String roundWinnerSeat;
         private String matchWinnerSeat;
         private String message;

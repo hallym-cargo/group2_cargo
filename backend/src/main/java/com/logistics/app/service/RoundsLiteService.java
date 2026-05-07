@@ -179,7 +179,7 @@ public class RoundsLiteService {
     }
 
     public void cancelMatchmaking(String roomCode, User user) {
-        RoundsLiteRoom room = getRoom(roomCode);
+        RoundsLiteRoom room = getRoomForUpdate(roomCode);
         RoundsLitePlayer me = requireMember(room, user.getId());
 
         if (!Boolean.TRUE.equals(room.getMatchmakingRoom())) {
@@ -198,7 +198,7 @@ public class RoundsLiteService {
     }
 
     public GameDtos.RoundsLiteRoomResponse joinRoom(String roomCode, User user) {
-        RoundsLiteRoom room = getRoom(roomCode);
+        RoundsLiteRoom room = getRoomForUpdate(roomCode);
         simulateRoom(room);
 
         Optional<RoundsLitePlayer> existing = room.getPlayers().stream()
@@ -228,7 +228,7 @@ public class RoundsLiteService {
     }
 
     public GameDtos.RoundsLiteRoomResponse getState(String roomCode, User user) {
-        RoundsLiteRoom room = getRoom(roomCode);
+        RoundsLiteRoom room = getRoomForUpdate(roomCode);
         requireMember(room, user.getId());
         simulateRoom(room);
         roomRepository.saveAndFlush(room);
@@ -236,7 +236,7 @@ public class RoundsLiteService {
     }
 
     public GameDtos.RoundsLiteRoomResponse ready(String roomCode, User user) {
-        RoundsLiteRoom room = getRoom(roomCode);
+        RoundsLiteRoom room = getRoomForUpdate(roomCode);
         simulateRoom(room);
         RoundsLitePlayer me = requireMember(room, user.getId());
 
@@ -248,16 +248,18 @@ public class RoundsLiteService {
         }
 
         me.setReady(Boolean.TRUE);
-        room.setMessage(me.getName() + " 님이 준비했습니다.");
+
         if (room.getPlayers().stream().allMatch(player -> Boolean.TRUE.equals(player.getReady()))) {
             prepareRound(room);
+        } else {
+            room.setMessage(me.getName() + " 님이 준비했습니다. 상대의 준비를 기다리는 중입니다.");
         }
         roomRepository.saveAndFlush(room);
         return toResponse(room, user.getId());
     }
 
     public GameDtos.RoundsLiteRoomResponse applyInput(String roomCode, User user, GameDtos.RoundsLiteInputRequest request) {
-        RoundsLiteRoom room = getRoom(roomCode);
+        RoundsLiteRoom room = getRoomForUpdate(roomCode);
         simulateRoom(room);
         RoundsLitePlayer me = requireMember(room, user.getId());
 
@@ -279,7 +281,7 @@ public class RoundsLiteService {
     }
 
     public GameDtos.RoundsLiteRoomResponse selectCard(String roomCode, User user, String cardKey) {
-        RoundsLiteRoom room = getRoom(roomCode);
+        RoundsLiteRoom room = getRoomForUpdate(roomCode);
         simulateRoom(room);
         RoundsLitePlayer me = requireMember(room, user.getId());
 
@@ -333,7 +335,7 @@ public class RoundsLiteService {
     }
 
     public GameDtos.RoundsLiteRoomResponse resetMatch(String roomCode, User user) {
-        RoundsLiteRoom room = getRoom(roomCode);
+        RoundsLiteRoom room = getRoomForUpdate(roomCode);
         requireMember(room, user.getId());
         resetEntireMatch(room);
         roomRepository.saveAndFlush(room);
@@ -700,10 +702,12 @@ public class RoundsLiteService {
         room.setRoundWinnerSeat(winnerSeat);
 
         room.setPhase("CARD_PICK");
-        room.setPickerSeat(writeSeatSet(activePlayerSeats(room)));
+        room.setPickerSeat(writeSeatSet(room.getPlayers().stream()
+                .map(RoundsLitePlayer::getSeat)
+                .collect(Collectors.toCollection(LinkedHashSet::new))));
         room.setCardOptionsJson(writeJson(drawCards()));
         room.setProjectilesJson("[]");
-        room.setMessage(winner.getName() + " 님이 라운드 승리! 양쪽 플레이어 모두 카드 1장을 선택하세요.");
+        room.setMessage(winner.getName() + " 님이 라운드에서 승리했습니다. 양쪽 플레이어 모두 능력 카드 1장을 선택하세요.");
     }
 
 
@@ -726,15 +730,6 @@ public class RoundsLiteService {
                 .filter(seat -> !seat.isBlank())
                 .distinct()
                 .collect(Collectors.joining(","));
-    }
-
-    private Set<String> activePlayerSeats(RoundsLiteRoom room) {
-        return room.getPlayers().stream()
-                .map(RoundsLitePlayer::getSeat)
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(seat -> !seat.isBlank())
-                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private String opponentSeat(RoundsLiteRoom room, String loserSeat) {
@@ -835,6 +830,11 @@ public class RoundsLiteService {
         return dx * dx + dy * dy <= projectile.getRadius() * projectile.getRadius();
     }
 
+    private RoundsLiteRoom getRoomForUpdate(String roomCode) {
+        return roomRepository.findByRoomCodeForUpdate(normalize(roomCode))
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 방입니다."));
+    }
+
     private RoundsLiteRoom getRoom(String roomCode) {
         return roomRepository.findByRoomCode(normalize(roomCode))
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 방입니다."));
@@ -905,6 +905,7 @@ public class RoundsLiteService {
                 .orElse(null);
 
         Set<String> pendingPickers = parseSeatSet(room.getPickerSeat());
+        boolean myCardPickPending = mySeat != null && pendingPickers.contains(mySeat);
 
         List<GameDtos.RoundsLitePlayerView> players = room.getPlayers().stream()
                 .map(player -> GameDtos.RoundsLitePlayerView.builder()
@@ -912,6 +913,7 @@ public class RoundsLiteService {
                         .seat(player.getSeat())
                         .name(player.getName())
                         .ready(Boolean.TRUE.equals(player.getReady()))
+                        .cardPickPending(pendingPickers.contains(player.getSeat()))
                         .wins(player.getWins())
                         .hp(player.getHp())
                         .maxHp(player.getMaxHp())
@@ -921,7 +923,6 @@ public class RoundsLiteService {
                         .height(PLAYER_HEIGHT)
                         .facingRight(Boolean.TRUE.equals(player.getFacingRight()))
                         .aimAngleDeg(resolveAimAngleDeg(player))
-                        .cardPickPending(pendingPickers.contains(player.getSeat()))
                         .selectedCards(parseCards(player.getSelectedCardsCsv()))
                         .build())
                 .collect(Collectors.toList());
@@ -960,6 +961,7 @@ public class RoundsLiteService {
                 .phase(room.getPhase())
                 .mySeat(mySeat)
                 .pickerSeat(room.getPickerSeat())
+                .myCardPickPending(myCardPickPending)
                 .roundWinnerSeat(room.getRoundWinnerSeat())
                 .matchWinnerSeat(room.getMatchWinnerSeat())
                 .message(room.getMessage())
@@ -1021,12 +1023,13 @@ public class RoundsLiteService {
         double centerX = spawnX + PLAYER_WIDTH * 0.5d;
         double supportY = FLOOR_Y;
         for (Platform platform : map.platforms()) {
-            if (platform.bulletOnly()) {
+            if (platform.bulletOnly() || platform.oneWay()) {
                 continue;
             }
             boolean overlapsX = centerX >= platform.x() && centerX <= platform.x() + platform.w();
-            if (overlapsX && platform.y() < supportY) {
+            if (overlapsX && platform.y() <= FLOOR_Y) {
                 supportY = platform.y();
+                break;
             }
         }
         double y = supportY - PLAYER_HEIGHT;

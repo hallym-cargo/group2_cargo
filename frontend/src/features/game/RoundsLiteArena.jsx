@@ -15,7 +15,7 @@ import './roundsLite.css'
 import { getMapDecor } from './maps'
 
 const LAST_ROOM_KEY = 'roundsLite:lastRoomCode'
-const POLL_INTERVAL = 55
+const POLL_INTERVAL = 120
 const INPUT_INTERVAL = 45
 const VISUAL_LERP = 0.28
 const ARENA_WIDTH = 900
@@ -106,9 +106,7 @@ export default function RoundsLiteArena({ controller }) {
   const roomRef = useRef(null)
   const visualTargetRef = useRef(null)
   const cardSelectLockRef = useRef(false)
-  const requestSeqRef = useRef(0)
-  const mutationSeqRef = useRef(0)
-  const mutationInFlightRef = useRef(false)
+  const actionInFlightRef = useRef(false)
 
   const currentRoom = displayRoom || room
   const serverArenaWidth = currentRoom?.arenaWidth || ARENA_WIDTH
@@ -129,7 +127,7 @@ export default function RoundsLiteArena({ controller }) {
     [room]
   )
   const pendingPickerSeats = useMemo(() => parsePickerSeats(room?.pickerSeat), [room?.pickerSeat])
-  const isPicker = !!me?.cardPickPending || (!!room?.mySeat && pendingPickerSeats.includes(room.mySeat))
+  const isPicker = Boolean(room?.myCardPickPending || me?.cardPickPending || (!!room?.mySeat && pendingPickerSeats.includes(room.mySeat)))
   const waitingForCardPick = room?.phase === 'CARD_PICK' && !isPicker
 
   useEffect(() => {
@@ -253,8 +251,9 @@ export default function RoundsLiteArena({ controller }) {
     stopLoops()
 
     pollRef.current = setInterval(() => {
-      if (mutationInFlightRef.current) return
-      fetchState(roomCode, true)
+      if (!actionInFlightRef.current && !cardSelectLockRef.current) {
+        fetchState(roomCode, true)
+      }
     }, POLL_INTERVAL)
 
     inputLoopRef.current = setInterval(() => {
@@ -271,14 +270,11 @@ export default function RoundsLiteArena({ controller }) {
   }
 
   async function fetchState(roomCode, silent = false) {
-    const requestSeq = ++requestSeqRef.current
-    const mutationSeqAtStart = mutationSeqRef.current
+    if (silent && (actionInFlightRef.current || cardSelectLockRef.current)) return null
 
     try {
       const response = await getRoundsLiteState(roomCode)
-      if (mutationSeqAtStart !== mutationSeqRef.current || requestSeq < mutationSeqRef.current) {
-        return response
-      }
+      if (silent && (actionInFlightRef.current || cardSelectLockRef.current)) return response
       setRoom(response)
       setTick(Date.now())
       if (!silent) setError('')
@@ -292,6 +288,7 @@ export default function RoundsLiteArena({ controller }) {
   }
 
   async function handleCreateRoom() {
+    actionInFlightRef.current = true
     setLoading(true)
     setError('')
     try {
@@ -302,6 +299,7 @@ export default function RoundsLiteArena({ controller }) {
     } catch (createError) {
       setError(getErrorMessage(createError, '방 만들기에 실패했습니다.'))
     } finally {
+      actionInFlightRef.current = false
       setLoading(false)
     }
   }
@@ -313,6 +311,7 @@ export default function RoundsLiteArena({ controller }) {
       return
     }
 
+    actionInFlightRef.current = true
     setLoading(true)
     setError('')
 
@@ -324,11 +323,13 @@ export default function RoundsLiteArena({ controller }) {
     } catch (joinError) {
       setError(getErrorMessage(joinError, '방 참가에 실패했습니다.'))
     } finally {
+      actionInFlightRef.current = false
       setLoading(false)
     }
   }
 
   async function handleMatchmaking() {
+    actionInFlightRef.current = true
     setLoading(true)
     setError('')
 
@@ -340,6 +341,7 @@ export default function RoundsLiteArena({ controller }) {
     } catch (matchError) {
       setError(getErrorMessage(matchError, '자동 매칭에 실패했습니다.'))
     } finally {
+      actionInFlightRef.current = false
       setLoading(false)
     }
   }
@@ -347,6 +349,7 @@ export default function RoundsLiteArena({ controller }) {
   async function handleCancelMatchmaking() {
     if (!room?.roomCode) return
 
+    actionInFlightRef.current = true
     setLoading(true)
     setError('')
 
@@ -360,6 +363,7 @@ export default function RoundsLiteArena({ controller }) {
     } catch (cancelError) {
       setError(getErrorMessage(cancelError, '매칭 취소에 실패했습니다.'))
     } finally {
+      actionInFlightRef.current = false
       setLoading(false)
     }
   }
@@ -367,6 +371,7 @@ export default function RoundsLiteArena({ controller }) {
   async function handleReady() {
     if (!room?.roomCode) return
 
+    actionInFlightRef.current = true
     setLoading(true)
     setError('')
 
@@ -376,11 +381,14 @@ export default function RoundsLiteArena({ controller }) {
     } catch (readyError) {
       setError(getErrorMessage(readyError, '준비 처리에 실패했습니다.'))
     } finally {
+      actionInFlightRef.current = false
       setLoading(false)
     }
   }
 
   async function sendInput(roomCode, silent = false) {
+    if (actionInFlightRef.current || cardSelectLockRef.current) return
+
     try {
       const response = await sendRoundsLiteInput(roomCode, inputRef.current)
       setRoom(response)
@@ -397,24 +405,22 @@ export default function RoundsLiteArena({ controller }) {
 
     const currentMe = current.players?.find((player) => player.seat === current.mySeat)
     const pendingSeats = parsePickerSeats(current.pickerSeat)
-    const canSelectCard = !!currentMe?.cardPickPending || pendingSeats.includes(current.mySeat)
-    if (!canSelectCard || cardSelectLockRef.current) return
+    const canPickCard = Boolean(current.myCardPickPending || currentMe?.cardPickPending || pendingSeats.includes(current.mySeat))
+    if (!canPickCard || cardSelectLockRef.current) return
 
     cardSelectLockRef.current = true
-    mutationInFlightRef.current = true
-    mutationSeqRef.current = ++requestSeqRef.current
+    actionInFlightRef.current = true
     setLoading(true)
     setError('')
 
     try {
       const response = await selectRoundsLiteCard(current.roomCode, cardKey)
       setRoom(response)
-      await fetchState(current.roomCode, true)
     } catch (cardError) {
       setError(getErrorMessage(cardError, '카드 선택에 실패했습니다.'))
     } finally {
       cardSelectLockRef.current = false
-      mutationInFlightRef.current = false
+      actionInFlightRef.current = false
       setLoading(false)
     }
   }
@@ -422,6 +428,7 @@ export default function RoundsLiteArena({ controller }) {
   async function handleReset() {
     if (!room?.roomCode) return
 
+    actionInFlightRef.current = true
     setLoading(true)
     setError('')
 
@@ -431,6 +438,7 @@ export default function RoundsLiteArena({ controller }) {
     } catch (resetError) {
       setError(getErrorMessage(resetError, '매치 초기화에 실패했습니다.'))
     } finally {
+      actionInFlightRef.current = false
       setLoading(false)
     }
   }
@@ -646,7 +654,7 @@ export default function RoundsLiteArena({ controller }) {
                 {room?.phase === 'CARD_PICK' && (
                   <div className="rounds-lite-overlay rounds-lite-overlay--cards">
                     <h3>{isPicker ? '능력 카드 1장을 선택하세요' : '상대의 카드 선택을 기다리는 중입니다'}</h3>
-                    {waitingForCardPick && <p className="rounds-lite-overlay-note">내 선택은 완료됐거나 아직 선택 대상이 아닙니다.</p>}
+                    {waitingForCardPick && <p className="rounds-lite-overlay-note">내 선택은 완료됐습니다. 상대의 선택을 기다려 주세요.</p>}
                     <div className="rounds-lite-card-options">
                       {room.cardOptions?.map((card) => (
                         <button
