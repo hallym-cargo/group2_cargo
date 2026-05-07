@@ -98,8 +98,13 @@ export default function RoundsLiteArena({ controller }) {
   const visualTargetRef = useRef(null)
 
   const currentRoom = displayRoom || room
-  const arenaWidth = currentRoom?.arenaWidth || ARENA_WIDTH
-  const arenaHeight = currentRoom?.arenaHeight || ARENA_HEIGHT
+  const serverArenaWidth = currentRoom?.arenaWidth || ARENA_WIDTH
+  const serverArenaHeight = currentRoom?.arenaHeight || ARENA_HEIGHT
+  const arenaWidth = ARENA_WIDTH
+  const arenaHeight = ARENA_HEIGHT
+  const coordScaleX = arenaWidth / serverArenaWidth
+  const coordScaleY = arenaHeight / serverArenaHeight
+  const coordScale = Math.min(coordScaleX, coordScaleY)
   const mapDecor = getMapDecor(currentRoom?.mapKey)
 
   const me = useMemo(
@@ -118,7 +123,9 @@ export default function RoundsLiteArena({ controller }) {
 
     const updateScale = () => {
       const rect = viewport.getBoundingClientRect()
-      const nextScale = Math.min(1, rect.width / arenaWidth)
+      const widthScale = rect.width / arenaWidth
+      const heightScale = rect.height / arenaHeight
+      const nextScale = Math.min(widthScale, heightScale, 1.35)
       setArenaScale(Number.isFinite(nextScale) && nextScale > 0 ? nextScale : 1)
     }
 
@@ -131,7 +138,7 @@ export default function RoundsLiteArena({ controller }) {
       observer.disconnect()
       window.removeEventListener('resize', updateScale)
     }
-  }, [arenaWidth])
+  }, [arenaWidth, arenaHeight])
 
   useEffect(() => {
     roomRef.current = room
@@ -431,8 +438,8 @@ export default function RoundsLiteArena({ controller }) {
     const rect = arena.getBoundingClientRect()
     inputRef.current = {
       ...inputRef.current,
-      aimX: Math.max(0, Math.min(arenaWidth, ((clientX - rect.left) / rect.width) * arenaWidth)),
-      aimY: Math.max(0, Math.min(arenaHeight, ((clientY - rect.top) / rect.height) * arenaHeight)),
+      aimX: Math.max(0, Math.min(serverArenaWidth, ((clientX - rect.left) / rect.width) * serverArenaWidth)),
+      aimY: Math.max(0, Math.min(serverArenaHeight, ((clientY - rect.top) / rect.height) * serverArenaHeight)),
     }
   }
 
@@ -593,7 +600,7 @@ export default function RoundsLiteArena({ controller }) {
               <div
                 ref={arenaViewportRef}
                 className="rounds-lite-arena-wrap"
-                style={{ width: '100%', height: arenaHeight * arenaScale }}
+                style={{ width: '100%' }}
               >
                 {room?.phase === 'COUNTDOWN' && (
                   <div className="rounds-lite-overlay">
@@ -678,7 +685,12 @@ export default function RoundsLiteArena({ controller }) {
                     <div
                       key={`${platform.kind}-${index}`}
                       className={`rounds-lite-platform rounds-lite-platform--${platform.kind}`}
-                      style={{ left: platform.x, top: platform.y, width: platform.w, height: platform.h }}
+                      style={{
+                        left: platform.x * coordScaleX,
+                        top: platform.y * coordScaleY,
+                        width: platform.w * coordScaleX,
+                        height: platform.h * coordScaleY,
+                      }}
                     >
                       {platform.kind === 'platform' && <span className="rounds-lite-platform-vine" />}
                     </div>
@@ -689,9 +701,9 @@ export default function RoundsLiteArena({ controller }) {
                       key={projectile.id}
                       className={`rounds-lite-projectile ${projectile.ownerSeat === room?.mySeat ? 'is-mine' : 'is-opponent'}`}
                       style={{
-                        width: projectile.radius * 2,
-                        height: projectile.radius * 2,
-                        transform: `translate3d(${projectile.x - projectile.radius}px, ${projectile.y - projectile.radius}px, 0)`,
+                        width: projectile.radius * 2 * coordScale,
+                        height: projectile.radius * 2 * coordScale,
+                        transform: `translate3d(${(projectile.x - projectile.radius) * coordScaleX}px, ${(projectile.y - projectile.radius) * coordScaleY}px, 0)`,
                       }}
                     />
                   ))}
@@ -701,9 +713,9 @@ export default function RoundsLiteArena({ controller }) {
                       key={player.seat}
                       className={`rounds-lite-player ${player.seat === room?.mySeat ? 'is-me' : 'is-opponent'}`}
                       style={{
-                        width: player.width,
-                        height: player.height,
-                        transform: `translate3d(${player.x}px, ${player.y}px, 0) scaleX(${player.facingRight ? 1 : -1})`,
+                        width: player.width * coordScaleX,
+                        height: player.height * coordScaleY,
+                        transform: `translate3d(${player.x * coordScaleX}px, ${player.y * coordScaleY}px, 0) scaleX(${player.facingRight ? 1 : -1})`,
                       }}
                     >
                       <div className="rounds-lite-player-aura" />
