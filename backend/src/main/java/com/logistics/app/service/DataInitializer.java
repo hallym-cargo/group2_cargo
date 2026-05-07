@@ -66,7 +66,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         if (faqRepository.count() == 0) {
             faqRepository.save(Faq.builder().category("이용 문의").question("회원가입 없이도 배차 현황을 볼 수 있나요?").answer("네. 공개 배차 보드에서 주요 배차 흐름과 공지를 로그인 없이 확인할 수 있습니다.").sortOrder(1).build());
-            faqRepository.save(Faq.builder().category("운송 운영").question("입찰 확정 후 차주는 언제 운반 시작을 누를 수 있나요?").answer("화주가 제안을 확정하면 즉시 운반 시작이 가능하며, 예상 도착 시간이 자동 계산됩니다.").sortOrder(2).build());
+            faqRepository.save(Faq.builder().category("운송 운영").question("입찰 확정 후 차주는 언제 운송 시작을 누를 수 있나요?").answer("화주가 제안을 확정하면 즉시 운송 시작이 가능하며, 예상 도착 시간이 자동 계산됩니다.").sortOrder(2).build());
             faqRepository.save(Faq.builder().category("관리자 기능").question("운영자가 공지나 FAQ를 바로 수정할 수 있나요?").answer("관리자 계정으로 로그인하면 공지, FAQ, 문의, 회원 상태를 직접 관리할 수 있습니다.").sortOrder(3).build());
         }
         if (shipmentRepository.count() == 0) {
@@ -132,8 +132,8 @@ public class DataInitializer implements CommandLineRunner {
             completed.setAcceptedOfferId(completedOffer.getId());
             shipmentRepository.save(completed);
             statusHistoryRepository.save(StatusHistory.builder().shipment(completed).fromStatus(ShipmentStatus.BIDDING).toStatus(ShipmentStatus.CONFIRMED).actorEmail(shipper.getEmail()).note("샘플 차주 확정").build());
-            statusHistoryRepository.save(StatusHistory.builder().shipment(completed).fromStatus(ShipmentStatus.CONFIRMED).toStatus(ShipmentStatus.IN_TRANSIT).actorEmail(driver.getEmail()).note("운반 시작").build());
-            statusHistoryRepository.save(StatusHistory.builder().shipment(completed).fromStatus(ShipmentStatus.IN_TRANSIT).toStatus(ShipmentStatus.COMPLETED).actorEmail(driver.getEmail()).note("운반 완료").build());
+            statusHistoryRepository.save(StatusHistory.builder().shipment(completed).fromStatus(ShipmentStatus.CONFIRMED).toStatus(ShipmentStatus.IN_TRANSIT).actorEmail(driver.getEmail()).note("운송 시작").build());
+            statusHistoryRepository.save(StatusHistory.builder().shipment(completed).fromStatus(ShipmentStatus.IN_TRANSIT).toStatus(ShipmentStatus.COMPLETED).actorEmail(driver.getEmail()).note("운송 완료").build());
             if (moneyTransactionRepository.count() == 0) {
                 int fee = (int) Math.floor(completedOffer.getPrice() * 0.03);
                 int net = completedOffer.getPrice() - fee;
@@ -165,7 +165,7 @@ public class DataInitializer implements CommandLineRunner {
             transit.setAcceptedOfferId(transitOffer.getId());
             shipmentRepository.save(transit);
             statusHistoryRepository.save(StatusHistory.builder().shipment(transit).fromStatus(ShipmentStatus.BIDDING).toStatus(ShipmentStatus.CONFIRMED).actorEmail(shipper.getEmail()).note("샘플 차주 확정").build());
-            statusHistoryRepository.save(StatusHistory.builder().shipment(transit).fromStatus(ShipmentStatus.CONFIRMED).toStatus(ShipmentStatus.IN_TRANSIT).actorEmail(driver.getEmail()).note("운반 시작").build());
+            statusHistoryRepository.save(StatusHistory.builder().shipment(transit).fromStatus(ShipmentStatus.CONFIRMED).toStatus(ShipmentStatus.IN_TRANSIT).actorEmail(driver.getEmail()).note("운송 시작").build());
             locationLogRepository.save(LocationLog.builder().shipment(transit).driver(driver).latitude(37.4442).longitude(126.8787).roughLocation("안양 인근 이동중").remainingMinutes(27).build());
 
             if (customerInquiryRepository.count() == 0) {
@@ -173,7 +173,7 @@ public class DataInitializer implements CommandLineRunner {
                 customerInquiryRepository.save(CustomerInquiry.builder().companyName("진성물류").contactName("박주임").email("hello@jinsung.co.kr").phone("010-5555-2222").inquiryType("기술 협의").message("기존 ERP와 연동 가능한 REST API 범위를 확인하고 싶습니다.").status("ANSWERED").build());
             }
             if (reportRepository.count() == 0) {
-                reportRepository.save(Report.builder().reporter(shipper).targetUser(driver).shipment(transit).reason("위치 갱신 지연").description("운반 중 위치 업데이트가 예상보다 늦어 고객 문의가 발생했습니다.").status("OPEN").build());
+                reportRepository.save(Report.builder().reporter(shipper).targetUser(driver).shipment(transit).reason("위치 갱신 지연").description("운송 중 위치 업데이트가 예상보다 늦어 고객 문의가 발생했습니다.").status("OPEN").build());
             }
             if (disputeRepository.count() == 0) {
                 disputeRepository.save(Dispute.builder().shipment(transit).shipper(shipper).driver(driver).reason("하차 지연").detail("도착 이후 하차 시간이 예상보다 길어져 정산 전 확인이 필요합니다.").status("OPEN").build());

@@ -1,5 +1,5 @@
 export const roleText = (role) => ({ SHIPPER: '화주', DRIVER: '차주', ADMIN: '관리자' }[role] || role)
-export const statusText = (status) => ({ REQUESTED: '요청', BIDDING: '입찰중', CONFIRMED: '확정', IN_TRANSIT: '운반중', COMPLETED: '완료', CANCELLED: '취소', DISPUTED: '분쟁' }[status] || status)
+export const statusText = (status) => ({ REQUESTED: '요청', BIDDING: '입찰중', CONFIRMED: '확정', IN_TRANSIT: '운송중', COMPLETED: '완료', CANCELLED: '취소', DISPUTED: '분쟁' }[status] || status)
 export const memberStatusText = (status) => ({ ACTIVE: '정상', PENDING: '대기', SUSPENDED: '정지', DELETED: '삭제' }[status] || status)
 export const inquiryStatusText = (status) => ({ RECEIVED: '접수', ANSWERED: '답변완료', CLOSED: '종결' }[status] || status)
 export const formatCurrency = (value) => value == null ? '-' : `${Number(value).toLocaleString('ko-KR')}원`

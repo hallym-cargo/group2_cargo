@@ -122,7 +122,7 @@ export default function UserBoardTab({ controller }) {
                 className={statusFilter === "IN_TRANSIT" ? "active" : ""}
                 onClick={() => setStatusFilter("IN_TRANSIT")}
               >
-                운반중
+                운송중
               </button>
 
               <button
@@ -461,7 +461,7 @@ export default function UserBoardTab({ controller }) {
                 <p className="section-desc">
                   {auth.role === 'SHIPPER'
                     ? '화주는 입찰 비교와 차주 확정, 운행 확인이 핵심입니다.'
-                    : '차주는 입찰 등록, 운반 시작, ETA 기준 완료 전환이 핵심입니다.'}
+                    : '차주는 입찰 등록, 운송 시작, ETA 기준 완료 전환이 핵심입니다.'}
                 </p>
                 {selected.viewerMatchingBlockedUntil && (
                   <small>매칭 제한 해제 시각: {formatDate(selected.viewerMatchingBlockedUntil)}</small>
@@ -526,7 +526,7 @@ export default function UserBoardTab({ controller }) {
                   <strong>{selected.paid ? "결제 완료" : "결제 필요"}</strong>
                   <p className="section-desc">
                     {selected.paid
-                      ? "결제가 완료되어 차주가 운반을 시작할 수 있습니다."
+                      ? "결제가 완료되었습니다. 이제 차주가 운송을 시작할 수 있습니다."
                       : `선택한 차주에게 ${formatCurrency(selected.agreedPrice || 0)}을 결제해야 운행이 시작됩니다.`}
                   </p>
                   {!selected.paid && (
@@ -605,7 +605,7 @@ export default function UserBoardTab({ controller }) {
                           <div className="surface-sub">
                             <strong>결제 대기</strong>
                             <p className="section-desc">
-                              화주가 결제를 완료하면 운반 시작 버튼을 사용할 수
+                              화주가 결제를 완료하면 운송 시작 버튼을 사용할 수
                               있습니다.
                             </p>
                           </div>
@@ -615,7 +615,7 @@ export default function UserBoardTab({ controller }) {
                           onClick={handleStart}
                           disabled={!selected.paid}
                         >
-                          운반 시작
+                          운송 시작
                         </button>
                       </>
                     )}
@@ -625,7 +625,7 @@ export default function UserBoardTab({ controller }) {
                         <div className="surface-sub">
                           <strong>자동 이동 시뮬레이션</strong>
                           <p className="section-desc">
-                            운반 시작과 함께 트럭이 출발지에서 도착지까지
+                            운송 시작과 함께 트럭이 출발지에서 도착지까지
                             자동으로 이동하며, 지도에서 진행률과 남은 시간을
                             실시간으로 확인할 수 있습니다.
                           </p>

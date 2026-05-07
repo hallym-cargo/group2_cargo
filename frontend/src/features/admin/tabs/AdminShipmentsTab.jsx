@@ -45,7 +45,7 @@ export default function AdminShipmentsTab({ controller }) {
                       확정
                     </button>
                     <button className="btn btn-ghost small" onClick={() => handleForceShipmentStatus(item.id, 'IN_TRANSIT')}>
-                      운반중
+                      운송중
                     </button>
                     <button className="btn btn-ghost small" onClick={() => handleForceShipmentStatus(item.id, 'COMPLETED')}>
                       완료

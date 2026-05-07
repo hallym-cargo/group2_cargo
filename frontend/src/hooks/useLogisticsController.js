@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs";
-import axios from "axios";
 import { kakaoLogin } from "../api.js";
 import {
   API_BASE_URL,
@@ -733,7 +732,7 @@ export function useLogisticsController() {
       },
       {
         title: "확정된 운행",
-        desc: "화주가 확정한 건만 운반 시작 버튼이 열립니다.",
+        desc: "화주가 확정한 건만 운송 시작 버튼이 열립니다.",
         action: () => {
           setShipmentFilter("ALL");
           setDriverBoardTag("MY_ASSIGNED");
@@ -1967,11 +1966,11 @@ export function useLogisticsController() {
   const handleStart = async () => {
     try {
       await startTrip(selectedId);
-      setMessage("운반이 시작되었습니다.");
+      setMessage("운송이 시작되었습니다.");
 
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
-      setMessage(err.response?.data?.message || "운반 시작 실패");
+      setMessage(err.response?.data?.message || "운송 시작 실패");
     }
   };
 
@@ -1989,7 +1988,7 @@ export function useLogisticsController() {
 
       setCompletionProof({ dataUrl: "", name: "" });
 
-      setMessage("운반이 완료되었습니다.");
+      setMessage("운송이 완료되었습니다.");
 
       await Promise.all([loadShipments(), loadDetail(selectedId)]);
     } catch (err) {
@@ -2243,20 +2242,7 @@ export function useLogisticsController() {
       document.cookie =
         "member=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
-      const response = await axios.post(
-        "http://localhost:8080/auth/kakao",
-        {
-          accessToken: kakaoAccessToken,
-          role,
-        },
-        {
-          headers: {
-            Authorization: "",
-          },
-        }
-      );
-
-      const data = response.data;
+      const data = await kakaoLogin(kakaoAccessToken, role);
 
       if (data.isNewUser) {
         return {
@@ -2266,6 +2252,7 @@ export function useLogisticsController() {
       }
 
       const member = {
+        id: data.id || data.userId || null,
         accessToken: data.token,
         token: data.token,
         email: data.email,
@@ -2291,6 +2278,7 @@ export function useLogisticsController() {
 
       resetProfileState();
       setAuth({
+        id: data.id || data.userId || null,
         token: data.token,
         email: data.email || "",
         name: data.name || "",

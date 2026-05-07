@@ -150,7 +150,7 @@ public class AuthService {
 			String profileImageUrl = profile.path("profile_image_url").asText(null);
 			return new KakaoUserInfo(kakaoId, nickname, profileImageUrl);
 		} catch (RestClientException e) {
-			throw new RuntimeException("카카오 사용자 정보를 불러오지 못했습니다. 카카오 accessToken을 확인해주세요.");
+			throw new RuntimeException("카카오 사용자 정보를 불러오지 못했습니다. 다시 시도해 주세요.");
 		} catch (Exception e) {
 			if (e instanceof RuntimeException runtimeException) {
 				throw runtimeException;
@@ -161,6 +161,7 @@ public class AuthService {
 
 	private AuthDtos.AuthResponse makeAuthResponse(User user) {
 		AuthDtos.AuthResponse response = new AuthDtos.AuthResponse();
+		response.setId(user.getId());
 		response.setToken(jwtUtil.generateToken(user.getEmail(), user.getRole().name()));
 		response.setEmail(user.getEmail());
 		response.setName(user.getName());

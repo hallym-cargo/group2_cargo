@@ -57,6 +57,10 @@
   gap: 18px;
 }
 
+.rounds-lite-main {
+  min-width: 0;
+}
+
 .rounds-lite-card,
 .rounds-lite-game-card,
 .rounds-lite-bottom-card {
@@ -74,7 +78,7 @@
 
 .rounds-lite-game-card {
   border-radius: 30px;
-  padding: 18px;
+  padding: 16px;
 }
 
 .rounds-lite-bottom-card {
@@ -291,9 +295,11 @@
 .rounds-lite-arena-wrap {
   position: relative;
   display: flex;
+  width: 100%;
   justify-content: center;
-  align-items: center;
-  min-height: 720px;
+  align-items: flex-start;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .rounds-lite-arena {
@@ -301,23 +307,24 @@
   overflow: hidden;
   cursor: crosshair;
   border-radius: 32px;
-  background:
-    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0) 24%),
-    linear-gradient(180deg, #dce9ff 0%, #bdd4fb 38%, #98b5ef 62%, #7e95cf 100%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  transform-origin: top center;
+  background: #000;
+  border: 1px solid rgba(226, 232, 240, 0.5);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 30px 70px rgba(37, 99, 235, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 30px 70px rgba(15, 23, 42, 0.28);
+}
+
+
+.rounds-lite-arena .rounds-lite-sky-glow,
+.rounds-lite-arena .rounds-lite-arena-cloud,
+.rounds-lite-arena .rounds-lite-cityline,
+.rounds-lite-arena .rounds-lite-foreground {
+  display: none;
 }
 
 .rounds-lite-arena-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 60px 60px;
-  opacity: 0.45;
+  display: none;
 }
 
 .rounds-lite-sky-glow,
@@ -426,8 +433,8 @@
 .rounds-lite-cityline {
   left: 0;
   right: 0;
-  bottom: 152px;
-  height: 120px;
+  bottom: 120px;
+  height: 104px;
   display: flex;
   align-items: flex-end;
   gap: 20px;
@@ -454,7 +461,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 160px;
+  height: 122px;
 }
 
 .rounds-lite-foreground::before {
@@ -462,12 +469,12 @@
   position: absolute;
   left: -10%;
   right: -10%;
-  bottom: -40px;
-  height: 170px;
+  bottom: -34px;
+  height: 132px;
   border-radius: 50%;
   background:
-    linear-gradient(180deg, rgba(32, 60, 116, 0.1), rgba(35, 48, 82, 0.44)),
-    linear-gradient(90deg, #5c75a8 0%, #6c86bf 28%, #6a77b6 55%, #53669d 100%);
+    linear-gradient(180deg, rgba(13, 28, 58, 0.16), rgba(12, 24, 48, 0.74)),
+    linear-gradient(90deg, #273b68 0%, #334c82 28%, #2f4477 55%, #223557 100%);
 }
 
 .rounds-lite-foreground-rock {
@@ -590,30 +597,35 @@
 }
 
 .rounds-lite-platform--floor {
-  background: linear-gradient(180deg, #4a629c 0%, #41578c 100%);
-  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.4), 0 16px 30px rgba(28, 42, 79, 0.22);
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.42),
+    0 16px 30px rgba(255, 255, 255, 0.16);
 }
 
 .rounds-lite-platform--floor::before {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 24px, transparent 24px 48px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
-  background-size: 48px 100%, 100% 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 232, 240, 0.96));
 }
 
 .rounds-lite-platform--platform {
-  background: linear-gradient(180deg, #fdfefe 0%, #e7edf8 100%);
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.42),
+    0 14px 28px rgba(255, 255, 255, 0.16);
 }
 
 .rounds-lite-platform--wall {
-  background: linear-gradient(180deg, #7f8fbf 0%, #566a9f 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 20px 34px rgba(34, 49, 88, 0.28);
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.42),
+    0 20px 34px rgba(255, 255, 255, 0.16);
 }
 
 .rounds-lite-platform--platform::before {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(189, 210, 248, 0.1));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 232, 240, 0.96));
 }
 
 .rounds-lite-platform-vine {
@@ -627,10 +639,7 @@
 }
 
 .rounds-lite-platform--wall::before {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 0 8px, transparent 8px 16px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
-  background-size: 16px 100%, 100% 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 232, 240, 0.96));
 }
 
 .rounds-lite-projectile {
@@ -914,10 +923,6 @@
     padding: 12px;
   }
 
-  .rounds-lite-arena {
-    width: 100% !important;
-    height: 420px !important;
-  }
 }
 
 
@@ -947,23 +952,26 @@
   color: #475569;
 }
 
+.rounds-lite-arena--split-core {
+  background: #000;
+}
+
+.rounds-lite-arena--tower-fall {
+  background: #000;
+}
+
+.rounds-lite-arena--crossfire-lab {
+  background: #000;
+}
+
 .rounds-lite-arena--dual-towers {
-  background:
-    radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgba(244, 114, 182, 0.16), transparent 24%),
-    linear-gradient(180deg, #f6fbff 0%, #e7f0ff 48%, #e8edf9 100%);
+  background: #000;
 }
 
 .rounds-lite-arena--center-chaos {
-  background:
-    radial-gradient(circle at top left, rgba(250, 204, 21, 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgba(168, 85, 247, 0.14), transparent 24%),
-    linear-gradient(180deg, #fffaf0 0%, #f4ecff 48%, #e8edf9 100%);
+  background: #000;
 }
 
 .rounds-lite-arena--crossfire-yard {
-  background:
-    radial-gradient(circle at top left, rgba(52, 211, 153, 0.14), transparent 28%),
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.16), transparent 24%),
-    linear-gradient(180deg, #f3fffb 0%, #e4f7f0 48%, #ebf2ff 100%);
+  background: #000;
 }

@@ -18,8 +18,8 @@ const LAST_ROOM_KEY = 'roundsLite:lastRoomCode'
 const POLL_INTERVAL = 55
 const INPUT_INTERVAL = 45
 const VISUAL_LERP = 0.28
-const ARENA_WIDTH = 1360
-const ARENA_HEIGHT = 760
+const ARENA_WIDTH = 900
+const ARENA_HEIGHT = 500
 
 const phaseText = {
   WAITING: '상대를 기다리는 중',
@@ -86,8 +86,10 @@ export default function RoundsLiteArena({ controller }) {
   const [error, setError] = useState('')
   const [tick, setTick] = useState(Date.now())
   const [copied, setCopied] = useState(false)
+  const [arenaScale, setArenaScale] = useState(1)
 
   const inputRef = useRef({ left: false, right: false, jump: false, drop: false, shoot: false, aimX: ARENA_WIDTH / 2, aimY: ARENA_HEIGHT / 2 })
+  const arenaViewportRef = useRef(null)
   const arenaRef = useRef(null)
   const pollRef = useRef(null)
   const inputLoopRef = useRef(null)
@@ -96,6 +98,8 @@ export default function RoundsLiteArena({ controller }) {
   const visualTargetRef = useRef(null)
 
   const currentRoom = displayRoom || room
+  const arenaWidth = currentRoom?.arenaWidth || ARENA_WIDTH
+  const arenaHeight = currentRoom?.arenaHeight || ARENA_HEIGHT
   const mapDecor = getMapDecor(currentRoom?.mapKey)
 
   const me = useMemo(
@@ -107,6 +111,27 @@ export default function RoundsLiteArena({ controller }) {
     [room]
   )
   const isPicker = room?.pickerSeat && room?.pickerSeat === room?.mySeat
+
+  useEffect(() => {
+    const viewport = arenaViewportRef.current
+    if (!viewport) return undefined
+
+    const updateScale = () => {
+      const rect = viewport.getBoundingClientRect()
+      const nextScale = Math.min(1, rect.width / arenaWidth)
+      setArenaScale(Number.isFinite(nextScale) && nextScale > 0 ? nextScale : 1)
+    }
+
+    updateScale()
+    const observer = new ResizeObserver(updateScale)
+    observer.observe(viewport)
+    window.addEventListener('resize', updateScale)
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', updateScale)
+    }
+  }, [arenaWidth])
 
   useEffect(() => {
     roomRef.current = room
@@ -406,8 +431,8 @@ export default function RoundsLiteArena({ controller }) {
     const rect = arena.getBoundingClientRect()
     inputRef.current = {
       ...inputRef.current,
-      aimX: Math.max(0, Math.min(ARENA_WIDTH, ((clientX - rect.left) / rect.width) * ARENA_WIDTH)),
-      aimY: Math.max(0, Math.min(ARENA_HEIGHT, ((clientY - rect.top) / rect.height) * ARENA_HEIGHT)),
+      aimX: Math.max(0, Math.min(arenaWidth, ((clientX - rect.left) / rect.width) * arenaWidth)),
+      aimY: Math.max(0, Math.min(arenaHeight, ((clientY - rect.top) / rect.height) * arenaHeight)),
     }
   }
 
@@ -565,7 +590,11 @@ export default function RoundsLiteArena({ controller }) {
 
           <main className="rounds-lite-main">
             <section className="rounds-lite-game-card">
-              <div className="rounds-lite-arena-wrap">
+              <div
+                ref={arenaViewportRef}
+                className="rounds-lite-arena-wrap"
+                style={{ width: '100%', height: arenaHeight * arenaScale }}
+              >
                 {room?.phase === 'COUNTDOWN' && (
                   <div className="rounds-lite-overlay">
                     <div className="rounds-lite-countdown">{countdown}</div>
@@ -604,7 +633,7 @@ export default function RoundsLiteArena({ controller }) {
                 <div
                   ref={arenaRef}
                   className={`rounds-lite-arena rounds-lite-arena--${currentRoom?.mapKey || "sky-bridges"}`}
-                  style={{ width: ARENA_WIDTH, height: ARENA_HEIGHT }}
+                  style={{ width: arenaWidth, height: arenaHeight, transform: `scale(${arenaScale})` }}
                   onMouseMove={(event) => updateAim(event.clientX, event.clientY)}
                   onMouseDown={(event) => {
                     if (event.button !== 0) return

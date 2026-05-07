@@ -84,6 +84,7 @@ public class AuthDtos {
 
     @Data
     public static class AuthResponse {
+        private Long id;
         private String token;
         private String email;
         private String name;

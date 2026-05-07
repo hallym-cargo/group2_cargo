@@ -17,7 +17,7 @@ const LoginPage = ({ controller }) => {
     const handleKakaoLogin = () => {
         if (!window.Kakao || !window.Kakao.Auth) {
             controller.setMessage?.(
-                "카카오 SDK를 불러오지 못했습니다. index.html의 카카오 SDK 스크립트를 확인해 주세요."
+                "카카오 로그인 기능을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
             );
             return;
         }
@@ -28,7 +28,7 @@ const LoginPage = ({ controller }) => {
             success: async (authObj) => {
                 try {
                     if (!authObj?.access_token) {
-                        controller.setMessage?.("카카오 accessToken을 받아오지 못했습니다.");
+                        controller.setMessage?.("카카오 인증 정보를 받아오지 못했습니다. 다시 시도해 주세요.");
                         return;
                     }
 
@@ -138,7 +138,7 @@ const LoginPage = ({ controller }) => {
                     className="back-to-main"
                     onClick={() => controller.setRoutePage("main")}
                 >
-                    메인 페이지로 이동
+                    메인으로 돌아가기
                 </div>
             </div>
 
