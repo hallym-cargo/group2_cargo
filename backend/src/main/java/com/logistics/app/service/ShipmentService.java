@@ -240,10 +240,10 @@ public class ShipmentService {
     public ShipmentDtos.ShipmentResponse startTrip(Long shipmentId, User driver) {
         Shipment shipment = getById(shipmentId);
         if (shipment.getAssignedDriver() == null || !shipment.getAssignedDriver().getId().equals(driver.getId())) {
-            throw new RuntimeException("배정된 차주만 운반을 시작할 수 있습니다.");
+            throw new RuntimeException("배정된 차주만 운송을 시작할 수 있습니다.");
         }
         if (!shipment.isPaid()) {
-            throw new RuntimeException("결제 완료 후에만 운반을 시작할 수 있습니다.");
+            throw new RuntimeException("결제 완료 후에만 운송을 시작할 수 있습니다.");
         }
         ShipmentStatus before = shipment.getStatus();
         shipment.setStatus(ShipmentStatus.IN_TRANSIT);
@@ -260,7 +260,7 @@ public class ShipmentService {
                 .remainingMinutes(shipment.getEstimatedMinutes())
                 .build());
 
-        logStatus(shipment, before, ShipmentStatus.IN_TRANSIT, driver.getEmail(), "운반 시작");
+        logStatus(shipment, before, ShipmentStatus.IN_TRANSIT, driver.getEmail(), "운송 시작");
         ShipmentDtos.ShipmentResponse response = toResponse(shipment, driver);
         realtimePublisher.publishShipmentUpdated(response);
         return response;
@@ -272,7 +272,7 @@ public class ShipmentService {
             throw new RuntimeException("배정된 차주만 위치를 업데이트할 수 있습니다.");
         }
         if (shipment.getStatus() != ShipmentStatus.IN_TRANSIT) {
-            throw new RuntimeException("운반중 상태에서만 위치를 업데이트할 수 있습니다.");
+            throw new RuntimeException("운송중 상태에서만 위치를 업데이트할 수 있습니다.");
         }
 
         int remainingMinutes = estimateMinutes(request.getLatitude(), request.getLongitude(), shipment.getDestinationLat(), shipment.getDestinationLng());
@@ -331,7 +331,7 @@ public class ShipmentService {
         Offer acceptedOffer = shipment.getAcceptedOfferId() != null ? offerRepository.findById(shipment.getAcceptedOfferId()).orElse(null) : null;
         User adminUser = userRepository.findAll().stream().filter(user -> user.getRole() == UserRole.ADMIN).findFirst().orElse(null);
         financeService.settleCompletedShipment(shipment, acceptedOffer, adminUser);
-        logStatus(shipment, before, ShipmentStatus.COMPLETED, driver.getEmail(), "운반 완료");
+        logStatus(shipment, before, ShipmentStatus.COMPLETED, driver.getEmail(), "운송 완료");
         ShipmentDtos.ShipmentResponse response = toResponse(shipment, driver);
         realtimePublisher.publishShipmentUpdated(response);
         return response;

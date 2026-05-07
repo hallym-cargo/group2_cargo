@@ -42,7 +42,7 @@ export default function UserSidebar({
           className="btn btn-ghost block"
           onClick={() => goToMain?.() ?? setDashboardTab("home")}
         >
-          메인 페이지로 이동
+          메인으로 돌아가기
         </button>
         {navItems.map(([key, label]) => (
           <button

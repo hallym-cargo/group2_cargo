@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 @Transactional
 public class RoundsLiteService {
 
-    private static final double ARENA_WIDTH = 1360d;
-    private static final double ARENA_HEIGHT = 760d;
-    private static final double FLOOR_Y = 700d;
+    private static final double ARENA_WIDTH = 900d;
+    private static final double ARENA_HEIGHT = 500d;
+    private static final double FLOOR_Y = 452.4d;
     private static final double PLAYER_WIDTH = 52d;
     private static final double PLAYER_HEIGHT = 84d;
     private static final double PROJECTILE_SPAWN_MARGIN = 18d;
@@ -40,55 +40,41 @@ public class RoundsLiteService {
             new MapDefinition(
                     "sky-bridges",
                     List.of(
-                            platform(0, FLOOR_Y, ARENA_WIDTH, 60, false, false, "ground"),
-                            platform(130, 540, 260, 28, true, false, "stone"),
-                            platform(970, 540, 260, 28, true, false, "stone"),
-                            platform(500, 420, 360, 26, true, false, "bridge"),
-                            platform(260, 320, 220, 24, true, false, "ice"),
-                            platform(880, 320, 220, 24, true, false, "ice"),
-                            platform(640, 250, 100, 110, false, true, "tower")
+                            platform(0, FLOOR_Y, ARENA_WIDTH, 42.9d, false, false, "ground"),
+                            platform(72.3d, 353.2d, 184.8d, 20.6d, true, false, "stone"),
+                            platform(642.9d, 353.2d, 184.8d, 20.6d, true, false, "stone"),
+                            platform(317.4d, 269.8d, 265.2d, 19.0d, true, false, "bridge"),
+                            platform(164.7d, 206.3d, 152.7d, 17.5d, true, false, "ice"),
+                            platform(582.6d, 206.3d, 152.7d, 17.5d, true, false, "ice"),
+                            platform(417.9d, 162.7d, 64.3d, 76.2d, false, true, "tower")
                     )
             ),
             new MapDefinition(
                     "split-core",
                     List.of(
-                            platform(0, FLOOR_Y, 520, 60, false, false, "ground"),
-                            platform(840, FLOOR_Y, 520, 60, false, false, "ground"),
-                            platform(160, 555, 260, 28, true, false, "stone"),
-                            platform(940, 555, 260, 28, true, false, "stone"),
-                            platform(525, 520, 310, 24, true, false, "bridge"),
-                            platform(570, 385, 220, 24, true, false, "ice"),
-                            platform(90, 410, 170, 22, true, false, "ledge"),
-                            platform(1100, 410, 170, 22, true, false, "ledge"),
-                            platform(668, 575, 24, 130, false, true, "wall")
+                            platform(0, FLOOR_Y, 337.5d, 42.9d, false, false, "ground"),
+                            platform(562.5d, FLOOR_Y, 337.5d, 42.9d, false, false, "ground"),
+                            platform(92.4d, 361.1d, 184.8d, 20.6d, true, false, "stone"),
+                            platform(622.8d, 361.1d, 184.8d, 20.6d, true, false, "stone"),
+                            platform(335.9d, 337.3d, 228.2d, 17.5d, true, false, "bridge"),
+                            platform(377.7d, 250.0d, 144.6d, 17.5d, true, false, "ice"),
+                            platform(64.3d, 265.9d, 120.5d, 15.9d, true, false, "ledge"),
+                            platform(715.2d, 265.9d, 120.5d, 15.9d, true, false, "ledge"),
+                            platform(440.4d, 369.0d, 19.3d, 87.3d, false, true, "wall")
                     )
             ),
             new MapDefinition(
                     "tower-fall",
                     List.of(
-                            platform(0, FLOOR_Y, ARENA_WIDTH, 60, false, false, "ground"),
-                            platform(180, 590, 230, 26, true, false, "stone"),
-                            platform(950, 590, 230, 26, true, false, "stone"),
-                            platform(470, 505, 420, 24, true, false, "bridge"),
-                            platform(305, 405, 250, 22, true, false, "ice"),
-                            platform(805, 405, 250, 22, true, false, "ice"),
-                            platform(610, 300, 140, 24, true, false, "crown"),
-                            platform(90, 260, 170, 22, true, false, "ledge"),
-                            platform(1100, 260, 170, 22, true, false, "ledge")
-                    )
-            ),
-            new MapDefinition(
-                    "crossfire-lab",
-                    List.of(
-                            platform(0, FLOOR_Y, ARENA_WIDTH, 60, false, false, "ground"),
-                            platform(120, 560, 300, 28, true, false, "stone"),
-                            platform(940, 560, 300, 28, true, false, "stone"),
-                            platform(500, 575, 360, 24, true, false, "bridge"),
-                            platform(500, 405, 360, 24, true, false, "bridge"),
-                            platform(220, 350, 200, 22, true, false, "ice"),
-                            platform(940, 350, 200, 22, true, false, "ice"),
-                            platform(190, 470, 70, 120, false, true, "wall"),
-                            platform(1100, 470, 70, 120, false, true, "wall")
+                            platform(0, FLOOR_Y, ARENA_WIDTH, 42.9d, false, false, "ground"),
+                            platform(104.5d, 388.9d, 168.8d, 19.0d, true, false, "stone"),
+                            platform(626.8d, 388.9d, 168.8d, 19.0d, true, false, "stone"),
+                            platform(293.3d, 325.4d, 313.4d, 17.5d, true, false, "bridge"),
+                            platform(192.9d, 257.9d, 176.8d, 15.9d, true, false, "ice"),
+                            platform(530.4d, 257.9d, 176.8d, 15.9d, true, false, "ice"),
+                            platform(401.8d, 190.5d, 96.4d, 17.5d, true, false, "crown"),
+                            platform(64.3d, 166.7d, 120.5d, 15.9d, true, false, "ledge"),
+                            platform(715.2d, 166.7d, 120.5d, 15.9d, true, false, "ledge")
                     )
             )
     );
@@ -127,7 +113,7 @@ public class RoundsLiteService {
                 .build();
 
         RoundsLitePlayer player = createBasePlayer(room, user, "P1");
-        player.setX(180d);
+        player.setX(145d);
         player.setY(FLOOR_Y - PLAYER_HEIGHT);
         player.setFacingRight(true);
         room.getPlayers().add(player);
@@ -153,7 +139,7 @@ public class RoundsLiteService {
             }
 
             RoundsLitePlayer player = createBasePlayer(room, user, "P2");
-            player.setX(ARENA_WIDTH - 180d - PLAYER_WIDTH);
+            player.setX(ARENA_WIDTH - 145d - PLAYER_WIDTH);
             player.setY(FLOOR_Y - PLAYER_HEIGHT);
             player.setFacingRight(false);
             room.getPlayers().add(player);
@@ -183,7 +169,7 @@ public class RoundsLiteService {
                 .build();
 
         RoundsLitePlayer player = createBasePlayer(room, user, "P1");
-        player.setX(180d);
+        player.setX(145d);
         player.setY(FLOOR_Y - PLAYER_HEIGHT);
         player.setFacingRight(true);
         room.getPlayers().add(player);
@@ -231,7 +217,7 @@ public class RoundsLiteService {
         detachUserFromExistingRoom(user.getId());
 
         RoundsLitePlayer player = createBasePlayer(room, user, "P2");
-        player.setX(ARENA_WIDTH - 180d - PLAYER_WIDTH);
+        player.setX(ARENA_WIDTH - 145d - PLAYER_WIDTH);
         player.setY(FLOOR_Y - PLAYER_HEIGHT);
         player.setFacingRight(false);
         room.getPlayers().add(player);
@@ -844,7 +830,7 @@ public class RoundsLiteService {
                 .jumpPressed(false)
                 .dropPressed(false)
                 .shootPressed(false)
-                .aimX("P1".equals(seat) ? 280d : ARENA_WIDTH - 280d)
+                .aimX("P1".equals(seat) ? 225d : ARENA_WIDTH - 225d)
                 .aimY(FLOOR_Y - PLAYER_HEIGHT * 0.42d)
                 .selectedCardsCsv("")
                 .build();
@@ -981,7 +967,7 @@ public class RoundsLiteService {
     }
 
     private SpawnPoint spawnPointForSeat(MapDefinition map, String seat) {
-        double spawnX = "P1".equals(seat) ? 180d : ARENA_WIDTH - 180d - PLAYER_WIDTH;
+        double spawnX = "P1".equals(seat) ? 145d : ARENA_WIDTH - 145d - PLAYER_WIDTH;
         double centerX = spawnX + PLAYER_WIDTH * 0.5d;
         double supportY = FLOOR_Y;
         for (Platform platform : map.platforms()) {

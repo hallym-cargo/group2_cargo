@@ -308,7 +308,7 @@ export const updateAdminAssistantGuideline = async (id, payload) =>
 export const deleteAdminAssistantGuideline = async (id) =>
   (await api.delete(`/api/admin/assistant/guidelines/${id}`)).data;
 
-export const kakaoLogin = async (accessToken, role = 'SHIPPER') =>
+export const kakaoLogin = async (accessToken, role = null) =>
   (
     await api.post(
       '/auth/kakao',

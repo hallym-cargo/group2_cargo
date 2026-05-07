@@ -39,7 +39,7 @@ export default function UserBookmarksTab({ controller }) {
               className={statusFilter === 'IN_TRANSIT' ? 'active' : ''}
               onClick={() => setStatusFilter('IN_TRANSIT')}
             >
-              운반중
+              운송중
             </button>
 
             <button

@@ -56,7 +56,7 @@ export default function UserOverviewTab({ controller }) {
     <div className="page-stack">
       {!auth.profileCompleted && (
         <div className="alert-info">
-          첫 로그인입니다. 아래 선택 입력 정보를 저장하면 다음 로그인부터는 바로 메인 페이지로 이동합니다.
+          첫 로그인입니다. 아래 선택 입력 정보를 저장하면 다음 로그인부터는 바로 메인으로 돌아가기합니다.
         </div>
       )}
 

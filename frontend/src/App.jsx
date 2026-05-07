@@ -29,15 +29,11 @@ import QuoteDetailPage from "./features/public/QuoteDetailPage";
 import React, { useEffect } from "react";
 
 export default function App() {
+  const controller = useLogisticsController();
+
   const hasReceiptPdfQuery =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).has("receiptPdf");
-
-  if (hasReceiptPdfQuery) {
-    return <ReceiptPdfBridge />;
-  }
-
-  const controller = useLogisticsController();
 
   useEffect(() => {
     const kakaoJavascriptKey = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;
@@ -46,9 +42,12 @@ export default function App() {
 
     if (window.Kakao && !window.Kakao.isInitialized()) {
       window.Kakao.init(import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY);
-      console.log("Kakao init 완료");
     }
   }, []);
+
+  if (hasReceiptPdfQuery) {
+    return <ReceiptPdfBridge />;
+  }
 
   let page = null;
 

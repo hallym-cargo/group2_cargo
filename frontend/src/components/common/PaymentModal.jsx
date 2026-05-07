@@ -178,7 +178,7 @@ export default function PaymentModal({ controller }) {
           <div className="payment-complete-step">
             <div className="payment-modal-eyebrow">PAYMENT COMPLETE</div>
             <h3 className="payment-modal-title">결제 완료</h3>
-            <p className="payment-complete-step__desc">결제가 완료되어 차주가 운반을 시작할 수 있습니다.</p>
+            <p className="payment-complete-step__desc">결제가 완료되었습니다. 이제 차주가 운송을 시작할 수 있습니다.</p>
 
             <div className="payment-complete-step__card">
               <div className="payment-modal-label">결제 항목</div>
