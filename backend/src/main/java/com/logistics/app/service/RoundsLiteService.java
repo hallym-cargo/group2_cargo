@@ -31,6 +31,8 @@ public class RoundsLiteService {
     private static final double PLAYER_HEIGHT = 84d;
     private static final double PROJECTILE_SPAWN_MARGIN = 18d;
     private static final double SELF_PROJECTILE_BUFFER = 12d;
+    private static final double PROJECTILE_WALL_GRACE_SECONDS = 0.08d;
+    private static final double FALL_DEATH_Y = ARENA_HEIGHT + 120d;
     private static final double GRAVITY = 1500d;
     private static final double TICK_SECONDS = 0.05d;
     private static final double MAX_SIM_SECONDS = 1.0d;
@@ -123,6 +125,15 @@ public class RoundsLiteService {
     }
 
     public GameDtos.RoundsLiteRoomResponse joinMatchmaking(User user) {
+        Optional<RoundsLitePlayer> existingPlayer = playerRepository.findByUserId(user.getId());
+        if (existingPlayer.isPresent()) {
+            RoundsLiteRoom existingRoom = existingPlayer.get().getRoom();
+            simulateRoom(existingRoom);
+            if (Boolean.TRUE.equals(existingRoom.getMatchmakingRoom()) || "WAITING".equals(existingRoom.getPhase())) {
+                return toResponse(existingRoom, user.getId());
+            }
+        }
+
         detachUserFromExistingRoom(user.getId());
 
         List<RoundsLiteRoom> waitingRooms = roomRepository.findByMatchmakingRoomTrueOrderByCreatedAtAsc();
@@ -247,8 +258,12 @@ public class RoundsLiteService {
             throw new RuntimeException("현재 준비할 수 없는 상태입니다.");
         }
 
-        me.setReady(Boolean.TRUE);
-        room.setMessage(me.getName() + " 님이 준비했습니다.");
+        if (Boolean.TRUE.equals(me.getReady())) {
+            room.setMessage(me.getName() + " 님은 이미 준비 완료 상태입니다.");
+        } else {
+            me.setReady(Boolean.TRUE);
+            room.setMessage(me.getName() + " 님이 준비했습니다.");
+        }
         if (room.getPlayers().stream().allMatch(player -> Boolean.TRUE.equals(player.getReady()))) {
             prepareRound(room);
         }
@@ -286,8 +301,8 @@ public class RoundsLiteService {
         if (!"CARD_PICK".equals(room.getPhase())) {
             throw new RuntimeException("지금은 카드를 선택할 수 없습니다.");
         }
-        if (!Objects.equals(room.getPickerSeat(), me.getSeat())) {
-            throw new RuntimeException("이번 라운드 승리자만 카드를 선택할 수 있습니다.");
+        if (Boolean.TRUE.equals(me.getReady())) {
+            throw new RuntimeException("이미 이번 라운드 카드를 선택했습니다.");
         }
 
         List<CardOption> options = readCards(room.getCardOptionsJson());
@@ -298,19 +313,18 @@ public class RoundsLiteService {
 
         applyCard(me, selected);
         me.setSelectedCardsCsv(appendCard(me.getSelectedCardsCsv(), selected.getTitle()));
+        me.setReady(Boolean.TRUE);
 
-        room.setCardOptionsJson("[]");
-        room.setPickerSeat(null);
-        room.setRoundNo(room.getRoundNo() + 1);
-        room.setRoundWinnerSeat(null);
-
-        if (room.getPlayers().stream().anyMatch(player -> player.getWins() >= room.getTargetWins())) {
-            room.setPhase("MATCH_END");
-            room.setMatchWinnerSeat(me.getSeat());
-            room.setMessage(me.getName() + " 님이 매치에서 승리했습니다.");
+        boolean everyonePicked = room.getPlayers().stream().allMatch(player -> Boolean.TRUE.equals(player.getReady()));
+        if (!everyonePicked) {
+            room.setMessage(me.getName() + " 님이 " + selected.getTitle() + " 카드를 선택했습니다. 상대의 선택을 기다립니다.");
         } else {
+            room.setCardOptionsJson("[]");
+            room.setPickerSeat(null);
+            room.setRoundNo(room.getRoundNo() + 1);
+            room.setRoundWinnerSeat(null);
             prepareRound(room);
-            room.setMessage(selected.getTitle() + " 카드를 적용했습니다. 다음 라운드를 준비합니다.");
+            room.setMessage("두 플레이어가 모두 카드를 선택했습니다. 다음 라운드를 준비합니다.");
         }
 
         roomRepository.saveAndFlush(room);
@@ -492,7 +506,15 @@ public class RoundsLiteService {
         for (int i = 0; i < steps; i++) {
             for (RoundsLitePlayer player : room.getPlayers()) {
                 updatePlayerInput(player, dt);
+                if (player.getY() > FALL_DEATH_Y) {
+                    player.setHp(0);
+                    handleRoundWin(room, opponentSeat(player.getSeat()));
+                    break;
+                }
                 maybeFireProjectile(player, room, projectiles);
+            }
+            if (!"ACTIVE".equals(room.getPhase())) {
+                break;
             }
             updateProjectiles(room, projectiles, dt);
             if (!"ACTIVE".equals(room.getPhase())) {
@@ -559,11 +581,6 @@ public class RoundsLiteService {
                 grounded = true;
             }
         }
-        if (player.getY() + PLAYER_HEIGHT >= FLOOR_Y) {
-            player.setY(FLOOR_Y - PLAYER_HEIGHT);
-            player.setVy(0d);
-            grounded = true;
-        }
         if (grounded) {
             player.setDropThroughUntil(null);
         }
@@ -622,6 +639,7 @@ public class RoundsLiteService {
                     .damage(player.getBulletDamage())
                     .knockback(player.getKnockback())
                     .ttl(2.2d)
+                    .age(0d)
                     .build());
         }
     }
@@ -636,6 +654,7 @@ public class RoundsLiteService {
             projectile.setX(projectile.getX() + projectile.getVx() * dt);
             projectile.setY(projectile.getY() + projectile.getVy() * dt);
             projectile.setTtl(projectile.getTtl() - dt);
+            projectile.setAge(projectile.getAge() + dt);
 
             if (projectile.getTtl() <= 0d || projectile.getX() < -50d || projectile.getX() > ARENA_WIDTH + 50d || projectile.getY() < -50d || projectile.getY() > ARENA_HEIGHT + 50d) {
                 iterator.remove();
@@ -692,10 +711,18 @@ public class RoundsLiteService {
         }
 
         room.setPhase("CARD_PICK");
-        room.setPickerSeat(winnerSeat);
+        room.setPickerSeat(null);
         room.setCardOptionsJson(writeJson(drawCards()));
         room.setProjectilesJson("[]");
-        room.setMessage(winner.getName() + " 님이 라운드 승리! 카드 1장을 선택하세요.");
+        for (RoundsLitePlayer player : room.getPlayers()) {
+            player.setReady(false);
+            player.setMoveLeft(false);
+            player.setMoveRight(false);
+            player.setJumpPressed(false);
+            player.setDropPressed(false);
+            player.setShootPressed(false);
+        }
+        room.setMessage(winner.getName() + " 님이 라운드 승리! 두 플레이어 모두 카드 1장을 선택하세요.");
     }
 
     private List<CardOption> drawCards() {
@@ -725,6 +752,9 @@ public class RoundsLiteService {
     }
 
     private boolean hitsBlockingWall(RoundsLiteRoom room, double previousX, double previousY, ProjectileState projectile) {
+        if (projectile.getAge() < PROJECTILE_WALL_GRACE_SECONDS && isStillInsideOwnerSafeZone(room, projectile)) {
+            return false;
+        }
         for (Platform platform : platforms(room)) {
             if (!platform.bulletOnly()) {
                 continue;
@@ -786,6 +816,11 @@ public class RoundsLiteService {
         double dx = projectile.getX() - closestX;
         double dy = projectile.getY() - closestY;
         return dx * dx + dy * dy <= projectile.getRadius() * projectile.getRadius();
+    }
+
+
+    private String opponentSeat(String seat) {
+        return "P1".equals(seat) ? "P2" : "P1";
     }
 
     private RoundsLiteRoom getRoom(String roomCode) {
@@ -1093,6 +1128,7 @@ public class RoundsLiteService {
         private int damage;
         private double knockback;
         private double ttl;
+        private double age;
     }
 
     @Data

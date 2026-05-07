@@ -96,6 +96,7 @@ export default function RoundsLiteArena({ controller }) {
   const animationRef = useRef(null)
   const roomRef = useRef(null)
   const visualTargetRef = useRef(null)
+  const actionLockRef = useRef(false)
 
   const currentRoom = displayRoom || room
   const serverArenaWidth = currentRoom?.arenaWidth || ARENA_WIDTH
@@ -115,7 +116,8 @@ export default function RoundsLiteArena({ controller }) {
     () => room?.players?.find((player) => player.seat !== room?.mySeat) ?? null,
     [room]
   )
-  const isPicker = room?.pickerSeat && room?.pickerSeat === room?.mySeat
+  const hasPickedCard = !!me?.ready
+  const canPickCard = room?.phase === 'CARD_PICK' && !hasPickedCard
 
   useEffect(() => {
     const viewport = arenaViewportRef.current
@@ -307,6 +309,9 @@ export default function RoundsLiteArena({ controller }) {
   }
 
   async function handleMatchmaking() {
+    if (actionLockRef.current || room?.roomCode) return
+
+    actionLockRef.current = true
     setLoading(true)
     setError('')
 
@@ -318,6 +323,7 @@ export default function RoundsLiteArena({ controller }) {
     } catch (matchError) {
       setError(getErrorMessage(matchError, '자동 매칭에 실패했습니다.'))
     } finally {
+      actionLockRef.current = false
       setLoading(false)
     }
   }
@@ -481,7 +487,7 @@ export default function RoundsLiteArena({ controller }) {
                   type="button"
                   className="rounds-lite-secondary"
                   onClick={handleMatchmaking}
-                  disabled={loading || room?.matchmakingQueued}
+                  disabled={loading || !!room?.roomCode || room?.matchmakingQueued}
                 >
                   {room?.matchmakingQueued ? '자동 매칭 대기 중' : '자동 매칭'}
                 </button>
@@ -559,7 +565,7 @@ export default function RoundsLiteArena({ controller }) {
                 <li>Space : 점프</li>
                 <li>↓ : 공중 발판 아래로 내려가기</li>
                 <li>마우스 좌클릭 : 커서 방향 발사</li>
-                <li>라운드 승리 시 카드 1장 선택</li>
+                <li>라운드 종료 후 양쪽 플레이어 모두 카드 1장 선택</li>
               </ul>
             </section>
 
@@ -611,7 +617,7 @@ export default function RoundsLiteArena({ controller }) {
 
                 {room?.phase === 'CARD_PICK' && (
                   <div className="rounds-lite-overlay rounds-lite-overlay--cards">
-                    <h3>{isPicker ? '승리 카드 1장을 선택하세요' : '상대가 카드를 고르는 중입니다'}</h3>
+                    <h3>{canPickCard ? '능력 카드 1장을 선택하세요' : '상대가 카드를 선택하는 중입니다'}</h3>
                     <div className="rounds-lite-card-options">
                       {room.cardOptions?.map((card) => (
                         <button
@@ -619,7 +625,7 @@ export default function RoundsLiteArena({ controller }) {
                           type="button"
                           className="rounds-lite-upgrade-card"
                           onClick={() => handleSelectCard(card.key)}
-                          disabled={!isPicker || loading}
+                          disabled={!canPickCard || loading}
                         >
                           <strong>{card.title}</strong>
                           <span>{card.description}</span>
