@@ -1,4 +1,4 @@
-import "./PublicFooter.css";
+import "./publicFooter.css";
 
 export default function PublicFooter() {
   return (
