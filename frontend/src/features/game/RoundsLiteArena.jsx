@@ -106,6 +106,9 @@ export default function RoundsLiteArena({ controller }) {
   const roomRef = useRef(null)
   const visualTargetRef = useRef(null)
   const cardSelectLockRef = useRef(false)
+  const requestSeqRef = useRef(0)
+  const mutationSeqRef = useRef(0)
+  const mutationInFlightRef = useRef(false)
 
   const currentRoom = displayRoom || room
   const serverArenaWidth = currentRoom?.arenaWidth || ARENA_WIDTH
@@ -126,7 +129,7 @@ export default function RoundsLiteArena({ controller }) {
     [room]
   )
   const pendingPickerSeats = useMemo(() => parsePickerSeats(room?.pickerSeat), [room?.pickerSeat])
-  const isPicker = !!room?.mySeat && pendingPickerSeats.includes(room.mySeat)
+  const isPicker = !!me?.cardPickPending || (!!room?.mySeat && pendingPickerSeats.includes(room.mySeat))
   const waitingForCardPick = room?.phase === 'CARD_PICK' && !isPicker
 
   useEffect(() => {
@@ -250,6 +253,7 @@ export default function RoundsLiteArena({ controller }) {
     stopLoops()
 
     pollRef.current = setInterval(() => {
+      if (mutationInFlightRef.current) return
       fetchState(roomCode, true)
     }, POLL_INTERVAL)
 
@@ -267,8 +271,14 @@ export default function RoundsLiteArena({ controller }) {
   }
 
   async function fetchState(roomCode, silent = false) {
+    const requestSeq = ++requestSeqRef.current
+    const mutationSeqAtStart = mutationSeqRef.current
+
     try {
       const response = await getRoundsLiteState(roomCode)
+      if (mutationSeqAtStart !== mutationSeqRef.current || requestSeq < mutationSeqRef.current) {
+        return response
+      }
       setRoom(response)
       setTick(Date.now())
       if (!silent) setError('')
@@ -385,20 +395,26 @@ export default function RoundsLiteArena({ controller }) {
     const current = roomRef.current
     if (!current?.roomCode || current.phase !== 'CARD_PICK') return
 
+    const currentMe = current.players?.find((player) => player.seat === current.mySeat)
     const pendingSeats = parsePickerSeats(current.pickerSeat)
-    if (!pendingSeats.includes(current.mySeat) || cardSelectLockRef.current) return
+    const canSelectCard = !!currentMe?.cardPickPending || pendingSeats.includes(current.mySeat)
+    if (!canSelectCard || cardSelectLockRef.current) return
 
     cardSelectLockRef.current = true
+    mutationInFlightRef.current = true
+    mutationSeqRef.current = ++requestSeqRef.current
     setLoading(true)
     setError('')
 
     try {
       const response = await selectRoundsLiteCard(current.roomCode, cardKey)
       setRoom(response)
+      await fetchState(current.roomCode, true)
     } catch (cardError) {
       setError(getErrorMessage(cardError, '카드 선택에 실패했습니다.'))
     } finally {
       cardSelectLockRef.current = false
+      mutationInFlightRef.current = false
       setLoading(false)
     }
   }

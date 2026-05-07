@@ -77,6 +77,7 @@ public class GameDtos {
         private double height;
         private boolean facingRight;
         private double aimAngleDeg;
+        private boolean cardPickPending;
         private List<String> selectedCards;
     }
 

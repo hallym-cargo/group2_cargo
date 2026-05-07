@@ -700,9 +700,7 @@ public class RoundsLiteService {
         room.setRoundWinnerSeat(winnerSeat);
 
         room.setPhase("CARD_PICK");
-        room.setPickerSeat(writeSeatSet(room.getPlayers().stream()
-                .map(RoundsLitePlayer::getSeat)
-                .collect(Collectors.toCollection(LinkedHashSet::new))));
+        room.setPickerSeat(writeSeatSet(activePlayerSeats(room)));
         room.setCardOptionsJson(writeJson(drawCards()));
         room.setProjectilesJson("[]");
         room.setMessage(winner.getName() + " 님이 라운드 승리! 양쪽 플레이어 모두 카드 1장을 선택하세요.");
@@ -728,6 +726,15 @@ public class RoundsLiteService {
                 .filter(seat -> !seat.isBlank())
                 .distinct()
                 .collect(Collectors.joining(","));
+    }
+
+    private Set<String> activePlayerSeats(RoundsLiteRoom room) {
+        return room.getPlayers().stream()
+                .map(RoundsLitePlayer::getSeat)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(seat -> !seat.isBlank())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private String opponentSeat(RoundsLiteRoom room, String loserSeat) {
@@ -897,6 +904,8 @@ public class RoundsLiteService {
                 .findFirst()
                 .orElse(null);
 
+        Set<String> pendingPickers = parseSeatSet(room.getPickerSeat());
+
         List<GameDtos.RoundsLitePlayerView> players = room.getPlayers().stream()
                 .map(player -> GameDtos.RoundsLitePlayerView.builder()
                         .userId(player.getUser().getId())
@@ -912,6 +921,7 @@ public class RoundsLiteService {
                         .height(PLAYER_HEIGHT)
                         .facingRight(Boolean.TRUE.equals(player.getFacingRight()))
                         .aimAngleDeg(resolveAimAngleDeg(player))
+                        .cardPickPending(pendingPickers.contains(player.getSeat()))
                         .selectedCards(parseCards(player.getSelectedCardsCsv()))
                         .build())
                 .collect(Collectors.toList());
