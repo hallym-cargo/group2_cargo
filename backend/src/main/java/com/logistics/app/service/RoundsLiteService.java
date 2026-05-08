@@ -708,11 +708,13 @@ public class RoundsLiteService {
             room.setMatchWinnerSeat(winnerSeat);
             room.setPickerSeat(null);
             room.setCardOptionsJson("[]");
+            room.setCountdownEndsAt(null);
             room.setMessage(winner.getName() + " 님이 " + targetWins + "승을 달성해 매치에서 승리했습니다.");
             return;
         }
 
         room.setPhase("CARD_PICK");
+        room.setMatchWinnerSeat(null);
         room.setPickerSeat(writeSeatSet(room.getPlayers().stream()
                 .map(RoundsLitePlayer::getSeat)
                 .collect(Collectors.toCollection(LinkedHashSet::new))));
