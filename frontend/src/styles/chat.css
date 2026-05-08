@@ -1682,3 +1682,132 @@
   right: 92px;
   bottom: 16px;
 }
+
+/* 사용자 프로필 팝업 정렬 보정 */
+.profile-modal--user {
+  width: min(620px, calc(100vw - 32px));
+  padding: 30px;
+  border-radius: 26px;
+}
+
+.profile-modal--user .modal-close {
+  top: 18px;
+  right: 18px;
+}
+
+.profile-modal--user .profile-modal__head {
+  align-items: center;
+  gap: 20px;
+  padding: 0 42px 22px 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+.profile-modal--user .profile-modal__summary {
+  min-width: 0;
+}
+
+.profile-modal--user .profile-modal__avatar {
+  width: 88px;
+  height: 88px;
+}
+
+.profile-modal--user .profile-modal__role {
+  min-height: 26px;
+  padding: 0 11px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.profile-modal--user .profile-modal__head h3 {
+  margin: 9px 0 4px;
+  font-size: 26px;
+  line-height: 1.22;
+  letter-spacing: -0.03em;
+}
+
+.profile-modal--user .profile-modal__head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.profile-modal--user .profile-modal__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.profile-modal--user .profile-modal__grid > div {
+  min-height: 86px;
+  padding: 15px 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.profile-modal--user .profile-modal__grid span,
+.profile-modal--user .profile-modal__bio span {
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.profile-modal--user .profile-modal__grid strong {
+  margin-top: 7px;
+  font-size: 15px;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+}
+
+.profile-modal--user .profile-modal__bio {
+  margin-top: 14px;
+  padding: 17px 18px;
+  border-radius: 16px;
+}
+
+.profile-modal--user .profile-modal__bio p {
+  margin-top: 9px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.profile-modal--user .profile-modal__actions {
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 0;
+  overflow: visible;
+}
+
+.profile-modal--user .profile-modal__actions .btn {
+  min-width: 120px;
+  height: 42px;
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .profile-modal--user {
+    padding: 22px;
+  }
+
+  .profile-modal--user .profile-modal__head {
+    align-items: flex-start;
+    gap: 14px;
+    padding-right: 36px;
+  }
+
+  .profile-modal--user .profile-modal__avatar {
+    width: 72px;
+    height: 72px;
+  }
+
+  .profile-modal--user .profile-modal__head h3 {
+    font-size: 22px;
+  }
+
+  .profile-modal--user .profile-modal__grid {
+    grid-template-columns: 1fr;
+  }
+}

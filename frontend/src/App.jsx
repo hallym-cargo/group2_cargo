@@ -185,6 +185,7 @@ export default function App() {
       ) : (
         <ScrollTopFloatingButton compact />
       )}
+
       {controller.routePage !== "dashboard" && <PublicFooter />}
     </>
   );

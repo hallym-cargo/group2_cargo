@@ -15,7 +15,7 @@ export default function PublicFooter() {
           </div>
 
           <div className="public-footer__info">
-            <p>서비스명: WANT 운송 운영 플랫폼</p>
+            <p>서비스명: WANT</p>
             <p>문의: support@want-logistics.com</p>
             <p>운영시간: 평일 09:00 - 18:00</p>
           </div>
