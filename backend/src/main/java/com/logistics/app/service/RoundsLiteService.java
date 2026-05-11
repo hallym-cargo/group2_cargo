@@ -125,7 +125,7 @@ public class RoundsLiteService {
     public GameDtos.RoundsLiteRoomResponse joinMatchmaking(User user) {
         detachUserFromExistingRoom(user.getId());
 
-        List<RoundsLiteRoom> waitingRooms = roomRepository.findMatchmakingRoomsForUpdate();
+        List<RoundsLiteRoom> waitingRooms = roomRepository.findByMatchmakingRoomTrueOrderByCreatedAtAsc();
         for (RoundsLiteRoom room : waitingRooms) {
             simulateRoom(room);
             if (room.getPlayers().size() != 1) {
@@ -359,28 +359,20 @@ public class RoundsLiteService {
     }
 
     private void detachUserFromExistingRoom(Long userId) {
-        List<RoundsLitePlayer> existingPlayers = playerRepository.findAllByUserId(userId);
-        if (existingPlayers.isEmpty()) {
+        Optional<RoundsLitePlayer> existing = playerRepository.findByUserId(userId);
+        if (existing.isEmpty()) {
             return;
         }
-
-        Set<RoundsLiteRoom> rooms = existingPlayers.stream()
-                .map(RoundsLitePlayer::getRoom)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        for (RoundsLiteRoom room : rooms) {
-            room.getPlayers().removeIf(item -> Objects.equals(item.getUser().getId(), userId));
-
-            if (room.getPlayers().isEmpty()) {
-                roomRepository.delete(room);
-                continue;
-            }
-
-            normalizeSeats(room);
-            resetRoomAfterLeave(room);
-            roomRepository.saveAndFlush(room);
+        RoundsLitePlayer player = existing.get();
+        RoundsLiteRoom room = player.getRoom();
+        room.getPlayers().removeIf(item -> Objects.equals(item.getUser().getId(), userId));
+        if (room.getPlayers().isEmpty()) {
+            roomRepository.delete(room);
+            return;
         }
+        normalizeSeats(room);
+        resetRoomAfterLeave(room);
+        roomRepository.saveAndFlush(room);
     }
 
     private void resetRoomAfterLeave(RoundsLiteRoom room) {
@@ -563,22 +555,18 @@ public class RoundsLiteService {
             player.setOnGround(false);
         }
 
-        double previousX = player.getX();
-        double previousY = player.getY();
-
         player.setVy(player.getVy() + GRAVITY * dt);
         player.setX(clamp(player.getX() + player.getVx() * dt, 0d, ARENA_WIDTH - PLAYER_WIDTH));
         player.setY(player.getY() + player.getVy() * dt);
 
-        resolveVerticalCollision(player, previousX, previousY, dt);
+        resolveVerticalCollision(player);
     }
 
-    private void resolveVerticalCollision(RoundsLitePlayer player, double previousX, double previousY, double dt) {
+    private void resolveVerticalCollision(RoundsLitePlayer player) {
         List<Platform> platforms = platforms(player.getRoom());
         boolean grounded = false;
         LocalDateTime now = LocalDateTime.now();
         boolean ignoreDropPlatforms = player.getDropThroughUntil() != null && now.isBefore(player.getDropThroughUntil());
-
         for (Platform platform : platforms) {
             if (platform.bulletOnly()) {
                 continue;
@@ -586,48 +574,19 @@ public class RoundsLiteService {
             if (platform.oneWay() && ignoreDropPlatforms) {
                 continue;
             }
-
-            double previousBottom = previousY + PLAYER_HEIGHT;
             double playerBottom = player.getY() + PLAYER_HEIGHT;
-            boolean fallingOntoPlatform = canLandOnPlatform(platform, player.getVy(), previousBottom, playerBottom);
-            boolean approachedFromAbove = canLandHorizontally(player, previousX, platform);
-
-            if (approachedFromAbove && fallingOntoPlatform) {
+            double previousBottom = playerBottom - player.getVy() * TICK_SECONDS;
+            boolean overlapsX = player.getX() + PLAYER_WIDTH > platform.x && player.getX() < platform.x + platform.w;
+            if (overlapsX && player.getVy() >= 0d && previousBottom <= platform.y && playerBottom >= platform.y) {
                 player.setY(platform.y - PLAYER_HEIGHT);
                 player.setVy(0d);
                 grounded = true;
             }
         }
-
         if (grounded) {
             player.setDropThroughUntil(null);
         }
         player.setOnGround(grounded);
-    }
-
-    private boolean canLandOnPlatform(Platform platform, double vy, double previousBottom, double playerBottom) {
-        if (vy < 0d) {
-            return false;
-        }
-
-        if (!platform.oneWay()) {
-            return previousBottom <= platform.y && playerBottom >= platform.y;
-        }
-
-        double oneWayLandingTolerance = 4d;
-        return previousBottom <= platform.y - oneWayLandingTolerance && playerBottom >= platform.y;
-    }
-
-    private boolean canLandHorizontally(RoundsLitePlayer player, double previousX, Platform platform) {
-        double currentCenterX = player.getX() + PLAYER_WIDTH * 0.5d;
-        double previousCenterX = previousX + PLAYER_WIDTH * 0.5d;
-        double platformLeft = platform.x;
-        double platformRight = platform.x + platform.w;
-
-        return previousCenterX >= platformLeft
-                && previousCenterX <= platformRight
-                && currentCenterX >= platformLeft
-                && currentCenterX <= platformRight;
     }
 
     private boolean isStandingOnDropPlatform(RoundsLitePlayer player) {
@@ -1072,8 +1031,7 @@ public class RoundsLiteService {
     }
 
     private SpawnPoint spawnPointForSeat(MapDefinition map, String seat) {
-        double spawnMargin = 40d;
-        double spawnX = "P1".equals(seat) ? spawnMargin : ARENA_WIDTH - spawnMargin - PLAYER_WIDTH;
+        double spawnX = "P1".equals(seat) ? 145d : ARENA_WIDTH - 145d - PLAYER_WIDTH;
         double centerX = spawnX + PLAYER_WIDTH * 0.5d;
         double supportY = FLOOR_Y;
         for (Platform platform : map.platforms()) {
