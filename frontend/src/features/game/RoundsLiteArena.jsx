@@ -15,8 +15,8 @@ import './roundsLite.css'
 import { getMapDecor } from './maps'
 
 const LAST_ROOM_KEY = 'roundsLite:lastRoomCode'
-const POLL_INTERVAL = 120
-const INPUT_INTERVAL = 45
+const POLL_INTERVAL = 500
+const INPUT_INTERVAL = 75
 const VISUAL_LERP = 0.28
 const ARENA_WIDTH = 900
 const ARENA_HEIGHT = 500
@@ -175,13 +175,7 @@ export default function RoundsLiteArena({ controller }) {
   useEffect(() => {
     roomRef.current = room
     visualTargetRef.current = room
-
-    if (!room) {
-      setDisplayRoom(null)
-      return
-    }
-
-    setDisplayRoom((previous) => (shouldSnapVisualRoom(previous, room) ? room : blendVisualRoom(previous, room)))
+    setDisplayRoom(room || null)
   }, [room])
 
   useEffect(() => {
@@ -277,16 +271,13 @@ export default function RoundsLiteArena({ controller }) {
       inputLoopRef.current = null
     }
 
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-      animationRef.current = null
-    }
   }
 
   function startLoops(roomCode) {
     stopLoops()
 
     pollRef.current = setInterval(() => {
+      if (roomRef.current?.phase === 'ACTIVE') return
       if (!actionInFlightRef.current && !cardSelectLockRef.current) {
         fetchState(roomCode, true)
       }
@@ -296,13 +287,6 @@ export default function RoundsLiteArena({ controller }) {
       if (roomRef.current?.phase !== 'ACTIVE') return
       sendInput(roomCode, true)
     }, INPUT_INTERVAL)
-
-    const animate = () => {
-      setDisplayRoom((previous) => blendVisualRoom(previous, visualTargetRef.current))
-      animationRef.current = requestAnimationFrame(animate)
-    }
-
-    animationRef.current = requestAnimationFrame(animate)
   }
 
   function applyRoomResponse(response, snapVisual = true) {

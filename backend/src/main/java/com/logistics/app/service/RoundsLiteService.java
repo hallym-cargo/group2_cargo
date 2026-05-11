@@ -587,7 +587,7 @@ public class RoundsLiteService {
             double playerBottom = player.getY() + PLAYER_HEIGHT;
             double previousBottom = playerBottom - player.getVy() * dt;
             boolean overlapsX = player.getX() + PLAYER_WIDTH > platform.x && player.getX() < platform.x + platform.w;
-            boolean fallingOntoPlatform = player.getVy() >= 0d && previousBottom <= platform.y && playerBottom >= platform.y;
+            boolean fallingOntoPlatform = canLandOnPlatform(platform, player.getVy(), previousBottom, playerBottom);
 
             if (overlapsX && fallingOntoPlatform) {
                 player.setY(platform.y - PLAYER_HEIGHT);
@@ -600,6 +600,19 @@ public class RoundsLiteService {
             player.setDropThroughUntil(null);
         }
         player.setOnGround(grounded);
+    }
+
+    private boolean canLandOnPlatform(Platform platform, double vy, double previousBottom, double playerBottom) {
+        if (vy < 0d) {
+            return false;
+        }
+
+        if (!platform.oneWay()) {
+            return previousBottom <= platform.y && playerBottom >= platform.y;
+        }
+
+        double oneWayLandingTolerance = 4d;
+        return previousBottom <= platform.y - oneWayLandingTolerance && playerBottom >= platform.y;
     }
 
     private boolean isStandingOnDropPlatform(RoundsLitePlayer player) {
@@ -1044,7 +1057,8 @@ public class RoundsLiteService {
     }
 
     private SpawnPoint spawnPointForSeat(MapDefinition map, String seat) {
-        double spawnX = "P1".equals(seat) ? 145d : ARENA_WIDTH - 145d - PLAYER_WIDTH;
+        double spawnMargin = 40d;
+        double spawnX = "P1".equals(seat) ? spawnMargin : ARENA_WIDTH - spawnMargin - PLAYER_WIDTH;
         double centerX = spawnX + PLAYER_WIDTH * 0.5d;
         double supportY = FLOOR_Y;
         for (Platform platform : map.platforms()) {
