@@ -2101,6 +2101,45 @@ export function useLogisticsController() {
     }
   };
 
+
+  const handleSaveMemberManagementBatch = async (changes) => {
+    try {
+      const targetChanges = Array.isArray(changes) ? changes : [];
+
+      for (const item of targetChanges) {
+        const original = item.original || {};
+
+        if (item.role && item.role !== original.role) {
+          await updateMemberRole(item.id, item.role);
+        }
+
+        if (item.status && item.status !== original.status) {
+          await updateMemberStatus(item.id, item.status);
+        }
+
+        const penaltyChanged =
+          Number(item.penaltyScore30d ?? 0) !== Number(original.penaltyScore30d ?? 0) ||
+          (item.tradingBlockedUntil || "") !== (original.tradingBlockedUntil || "") ||
+          Boolean(item.note?.trim()) ||
+          item.matchingBlockedUntil === null;
+
+        if (penaltyChanged) {
+          await updateMemberPenalty(item.id, {
+            penaltyScore30d: item.penaltyScore30d,
+            matchingBlockedUntil: item.matchingBlockedUntil ?? null,
+            tradingBlockedUntil: item.tradingBlockedUntil,
+            note: item.note || "회원 관리 일괄 저장",
+          });
+        }
+      }
+
+      setMessage(`회원 관리 변경사항 ${targetChanges.length}건이 저장되었습니다.`);
+      await loadAdmin();
+    } catch (err) {
+      setMessage(err.response?.data?.message || "회원 관리 저장 실패");
+    }
+  };
+
   const handleForceShipmentStatus = async (shipmentId, status) => {
     try {
       await forceShipmentStatus(shipmentId, status, "관리자 운영 조정");
@@ -2513,6 +2552,7 @@ export function useLogisticsController() {
     handleCreateRating,
     handleUpdateMember,
     handleUpdateMemberPenalty,
+    handleSaveMemberManagementBatch,
     handleForceShipmentStatus,
     submitNotice,
     submitFaq,

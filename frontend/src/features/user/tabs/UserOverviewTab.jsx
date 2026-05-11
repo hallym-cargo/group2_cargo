@@ -14,9 +14,17 @@ function isFutureDateTime(value) {
 
 function renderPenaltyStatus(profile) {
   if (!profile) return '정보 불러오는 중'
+
+  const score = Number(profile.penaltyScore30d || 0)
+
   if (isFutureDateTime(profile.tradingBlockedUntil)) return '거래 금지 적용 중'
-  if (isFutureDateTime(profile.matchingBlockedUntil)) return '매칭 제한 적용 중'
-  if (profile.highCancelBadge) return '취소율 높음 주의 상태'
+  if (score >= 20) return '관리자 검토 필요'
+  if (score >= 15) return '중징계 대상'
+  if (score >= 10) return '거래 금지 대상'
+  if (score >= 8 || profile.highCancelBadge) return '고위험 주의 상태'
+  if (score >= 5) return '주의 상태'
+  if (score >= 3) return '경고 상태'
+
   return '정상'
 }
 export default function UserOverviewTab({ controller }) {

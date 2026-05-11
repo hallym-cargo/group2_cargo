@@ -9,11 +9,61 @@ function isFutureDateTime(value) {
 
 function renderPenaltyStatus(profile) {
   if (!profile) return '정보 불러오는 중'
+
+  const score = Number(profile.penaltyScore30d || 0)
+
   if (isFutureDateTime(profile.tradingBlockedUntil)) return '거래 금지 적용 중'
-  if (isFutureDateTime(profile.matchingBlockedUntil)) return '매칭 제한 적용 중'
-  if (profile.highCancelBadge) return '취소율 높음 주의 상태'
+  if (score >= 20) return '관리자 검토 필요'
+  if (score >= 15) return '중징계 대상'
+  if (score >= 10) return '거래 금지 대상'
+  if (score >= 8 || profile.highCancelBadge) return '고위험 주의 상태'
+  if (score >= 5) return '주의 상태'
+  if (score >= 3) return '경고 상태'
+
   return '정상'
 }
+
+function resolveActiveSanctions(profile) {
+  if (!profile) {
+    return [{ title: '정보 불러오는 중', desc: '패널티 정보를 확인하고 있습니다.' }]
+  }
+
+  const score = Number(profile.penaltyScore30d || 0)
+  const sanctions = []
+
+  if (isFutureDateTime(profile.tradingBlockedUntil)) {
+    sanctions.push({
+      title: '거래 금지 적용 중',
+      desc: `${formatDate(profile.tradingBlockedUntil)}까지 입찰 제안 및 차주 확정이 제한됩니다.`,
+    })
+  }
+
+  if (profile.highCancelBadge || score >= 8) {
+    sanctions.push({
+      title: '취소율 높음 주의 상태',
+      desc: '반복 취소 위험 회원으로 분류되어 서비스 이용 시 주의 상태가 표시됩니다.',
+    })
+  }
+
+  if (score >= 20) {
+    sanctions.push({ title: '관리자 검토 단계', desc: '누적 점수가 높아 관리자 검토 대상입니다.' })
+  } else if (score >= 15) {
+    sanctions.push({ title: '중징계 단계', desc: '누적 점수가 높아 장기 거래 제한 대상입니다.' })
+  } else if (score >= 10) {
+    sanctions.push({ title: '거래 금지 단계', desc: '거래 금지 기준 점수에 도달했습니다.' })
+  } else if (score >= 5) {
+    sanctions.push({ title: '주의 단계', desc: '추가 취소 시 거래 제한으로 이어질 수 있습니다.' })
+  } else if (score >= 3) {
+    sanctions.push({ title: '경고 단계', desc: '취소 누적으로 경고 기준에 도달했습니다.' })
+  }
+
+  if (sanctions.length === 0) {
+    sanctions.push({ title: '현재 적용 중인 제재 없음', desc: '현재 계정에 적용된 거래 제한이 없습니다.' })
+  }
+
+  return sanctions
+}
+
 function resolvePenaltyStage(score) {
   const value = Number(score || 0)
   if (value >= 20) return '관리자 검토 단계'
@@ -34,12 +84,12 @@ const PENALTY_RULES = [
 ]
 
 const PENALTY_ACTIONS = [
-  ['3점 이상', '2시간 매칭 제한'],
-  ['5점 이상', '24시간 매칭 제한'],
-  ['8점 이상', '72시간 매칭 제한 + 취소율 높음 뱃지 가능'],
-  ['10점 이상', '3일 거래 금지'],
-  ['15점 이상', '7일 거래 금지 + 평점 강등'],
-  ['20점 이상', '14일 거래 금지 + 관리자 검토'],
+  ['3점 이상', '경고 단계'],
+  ['5점 이상', '주의 단계'],
+  ['8점 이상', '고위험 단계 + 취소율 높음 주의 상태'],
+  ['10점 이상', '거래 금지 단계'],
+  ['15점 이상', '중징계 단계 + 평점 강등 가능'],
+  ['20점 이상', '관리자 검토 단계'],
 ]
 
 export default function UserPenaltyTab({ controller }) {
@@ -51,6 +101,7 @@ export default function UserPenaltyTab({ controller }) {
   const cancelRate = Number(profile?.cancelRate || 0)
   const penaltyStatus = renderPenaltyStatus(profile)
   const penaltyStage = resolvePenaltyStage(penaltyScore)
+  const activeSanctions = resolveActiveSanctions(profile)
 
   return (
     // <div className="page-stack">
@@ -91,22 +142,12 @@ export default function UserPenaltyTab({ controller }) {
           />
 
           <div className="list-stack">
-            <div className="bookmark-item" as="div">
-              <strong>매칭 제한 종료 시각</strong><br />
-              <small>{formatDate(profile?.matchingBlockedUntil)}</small>
-            </div>
-            <div className="bookmark-item" as="div">
-              <strong>거래 금지 종료 시각</strong><br />
-              <small>{formatDate(profile?.tradingBlockedUntil)}</small>
-            </div>
-            <div className="bookmark-item" as="div">
-              <strong>취소율 높음 뱃지</strong><br />
-              <small>{profile?.highCancelBadge ? '표시 중' : '없음'}</small>
-            </div>
-            <div className="bookmark-item" as="div">
-              <strong>안내</strong><br />
-              <small>취소 직전 모달에서도 이번 취소로 추가될 예상 점수를 다시 확인할 수 있습니다.</small>
-            </div>
+            {activeSanctions.map(({ title, desc }) => (
+              <div key={title} className="bookmark-item" as="div">
+                <strong>{title}</strong><br />
+                <small>{desc}</small>
+              </div>
+            ))}
           </div>
         </div>
 
