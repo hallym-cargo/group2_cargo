@@ -97,7 +97,6 @@ public class UserService {
         String normalizedKeyword = keyword == null ? "" : keyword.trim().toLowerCase();
 
         return userRepository.findByRoleAndStatusOrderByCreatedAtDesc(userRole, UserStatus.ACTIVE).stream()
-                .filter(user -> user.getTradingBlockedUntil() == null || user.getTradingBlockedUntil().isBefore(java.time.LocalDateTime.now()))
                 .filter(user -> excludeUserId == null || !user.getId().equals(excludeUserId))
                 .filter(user -> normalizedKeyword.isBlank()
                         || (user.getName() != null && user.getName().toLowerCase().contains(normalizedKeyword)))
