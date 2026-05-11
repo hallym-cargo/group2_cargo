@@ -260,6 +260,7 @@ public class RoundsLiteService {
 
     public GameDtos.RoundsLiteRoomResponse applyInput(String roomCode, User user, GameDtos.RoundsLiteInputRequest request) {
         RoundsLiteRoom room = getRoomForUpdate(roomCode);
+        simulateRoom(room);
         RoundsLitePlayer me = requireMember(room, user.getId());
 
         me.setMoveLeft(request.isLeft());
@@ -562,14 +563,17 @@ public class RoundsLiteService {
             player.setOnGround(false);
         }
 
+        double previousX = player.getX();
+        double previousY = player.getY();
+
         player.setVy(player.getVy() + GRAVITY * dt);
         player.setX(clamp(player.getX() + player.getVx() * dt, 0d, ARENA_WIDTH - PLAYER_WIDTH));
         player.setY(player.getY() + player.getVy() * dt);
 
-        resolveVerticalCollision(player, dt);
+        resolveVerticalCollision(player, previousX, previousY, dt);
     }
 
-    private void resolveVerticalCollision(RoundsLitePlayer player, double dt) {
+    private void resolveVerticalCollision(RoundsLitePlayer player, double previousX, double previousY, double dt) {
         List<Platform> platforms = platforms(player.getRoom());
         boolean grounded = false;
         LocalDateTime now = LocalDateTime.now();
@@ -583,12 +587,12 @@ public class RoundsLiteService {
                 continue;
             }
 
+            double previousBottom = previousY + PLAYER_HEIGHT;
             double playerBottom = player.getY() + PLAYER_HEIGHT;
-            double previousBottom = playerBottom - player.getVy() * dt;
-            boolean canLandHorizontally = canLandHorizontally(player, platform);
             boolean fallingOntoPlatform = canLandOnPlatform(platform, player.getVy(), previousBottom, playerBottom);
+            boolean approachedFromAbove = canLandHorizontally(player, previousX, platform);
 
-            if (canLandHorizontally && fallingOntoPlatform) {
+            if (approachedFromAbove && fallingOntoPlatform) {
                 player.setY(platform.y - PLAYER_HEIGHT);
                 player.setVy(0d);
                 grounded = true;
@@ -614,16 +618,16 @@ public class RoundsLiteService {
         return previousBottom <= platform.y - oneWayLandingTolerance && playerBottom >= platform.y;
     }
 
-    private boolean canLandHorizontally(RoundsLitePlayer player, Platform platform) {
-        double playerLeft = player.getX();
-        double playerRight = player.getX() + PLAYER_WIDTH;
-        double playerCenterX = player.getX() + PLAYER_WIDTH * 0.5d;
-        double overlapWidth = Math.min(playerRight, platform.x + platform.w) - Math.max(playerLeft, platform.x);
+    private boolean canLandHorizontally(RoundsLitePlayer player, double previousX, Platform platform) {
+        double currentCenterX = player.getX() + PLAYER_WIDTH * 0.5d;
+        double previousCenterX = previousX + PLAYER_WIDTH * 0.5d;
+        double platformLeft = platform.x;
+        double platformRight = platform.x + platform.w;
 
-        if (overlapWidth < PLAYER_WIDTH * 0.35d) {
-            return false;
-        }
-        return playerCenterX >= platform.x + 2d && playerCenterX <= platform.x + platform.w - 2d;
+        return previousCenterX >= platformLeft
+                && previousCenterX <= platformRight
+                && currentCenterX >= platformLeft
+                && currentCenterX <= platformRight;
     }
 
     private boolean isStandingOnDropPlatform(RoundsLitePlayer player) {
